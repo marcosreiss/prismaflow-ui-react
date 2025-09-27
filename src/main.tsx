@@ -16,7 +16,17 @@ import { ThemeProvider } from '@emotion/react';
 import { prismaTheme } from './design-system/theme/prismaTheme.ts';
 import PFToast from './design-system/components/pfnotifications/PFToast.tsx';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,  // não refaz requisição ao focar a aba
+      refetchOnReconnect: false,    // não refaz ao reconectar a internet
+      retry: 1,                     // número de tentativas de retry
+      staleTime: 1000 * 60 * 5      // 5 minutos antes de considerar "stale"
+    }
+  }
+});
+
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
