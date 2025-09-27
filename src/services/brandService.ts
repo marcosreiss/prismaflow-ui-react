@@ -1,41 +1,25 @@
+import type { EntityService } from "@/interfaces/entityService";
+import type { Brand } from "@/types/brandTypes";
+import api from "./config/api";
 
-import baseApi from './config/api';
-import type { PagedApiResponse, ApiResponse, DeleteResult } from '@/types/apiResponse';
-import type { Brand } from '@/types/brandTypes';
-
-
-export const getBrandsService = async (params: {
-    page: number;
-    size: number;
-    search?: string;
-}): Promise<PagedApiResponse<Brand>> => {
-    const response = await baseApi.get<PagedApiResponse<Brand>>('api/brands', { params });
-    return response.data;
-};
-
-
-export const getBrandByIdService = async (id: number): Promise<ApiResponse<Brand>> => {
-    const response = await baseApi.get<ApiResponse<Brand>>(`api/brands/${id}`);
-    return response.data;
-};
-
-
-export const createBrandService = async (brandData: Omit<Brand, 'id'>): Promise<ApiResponse<Brand>> => {
-    const response = await baseApi.post<ApiResponse<Brand>>('api/brands', brandData);
-    return response.data;
-};
-
-
-export const updateBrandService = async (
-    id: number,
-    brandData: Partial<Brand>
-): Promise<ApiResponse<Brand>> => {
-    const response = await baseApi.put<ApiResponse<Brand>>(`api/brands/${id}`, brandData);
-    return response.data;
-};
-
-
-export const deleteBrandService = async (id: number): Promise<ApiResponse<DeleteResult<Brand>>> => {
-    const response = await baseApi.delete<ApiResponse<DeleteResult<Brand>>>(`api/brands/${id}`);
-    return response.data;
+export const brandService: EntityService<Brand> = {
+  list: async ({ skip, take, search }) => {
+    const res = await api.get("/brands", { params: { skip, take, search } });
+    return { items: res.data.items, total: res.data.total };
+  },
+  get: async (id) => {
+    const res = await api.get(`/brands/${id}`);
+    return res.data;
+  },
+  create: async (data) => {
+    const res = await api.post("/brands", data);
+    return res.data;
+  },
+  update: async (id, data) => {
+    const res = await api.put(`/brands/${id}`, data);
+    return res.data;
+  },
+  remove: async (id) => {
+    await api.delete(`/brands/${id}`);
+  },
 };

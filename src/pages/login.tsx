@@ -47,7 +47,7 @@ export default function Login() {
                 }
             },
             onError: (err) => {
-                addNotification("Erro ao gerar token. Tente novamente.", "error");
+                addNotification("Erro ao fazer login. Tente novamente.", "error");
                 console.error(err);
             },
         });
