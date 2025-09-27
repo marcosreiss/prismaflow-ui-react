@@ -23,14 +23,14 @@ export function useEntity<T>({
   // 📌 Listagem
   const listQuery = useQuery<{ items: T[]; total: number }>({
     queryKey: [queryKey, { page, take, search }],
-    queryFn: () => service.list({ skip: page * take, take, search }),
+    queryFn: () => service.getAll({ skip: page * take, take, search }),
     placeholderData: (prev) => prev,
   });
 
   // 📌 Detalhe (desativado se não houver id)
   const detailQuery = useQuery<T>({
     queryKey: [queryKey, "detail", detailId],
-    queryFn: () => service.get(detailId as number | string),
+    queryFn: () => service.getById(detailId as number | string),
     enabled: !!detailId,
     placeholderData: (prev) => prev,
   });
@@ -53,7 +53,7 @@ export function useEntity<T>({
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number | string) => service.remove(id),
+    mutationFn: (id: number | string) => service.delete(id),
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.removeQueries({ queryKey: [queryKey, "detail", id] });

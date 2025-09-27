@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PFTopToolbar from "@/design-system/crud/PFTopToolbar";
 import PFTable from "@/design-system/crud/PFTable";
 import PFDrawerModal from "@/design-system/crud/PFDrawerModal";
@@ -23,23 +23,6 @@ export default function BrandsPage() {
     const [confirmOpen, setConfirmOpen] = useState(false);
 
     const selectedBrand: Brand | null = detail.data ?? null;
-
-    // 🔎 Logs de debug
-    useEffect(() => {
-        if (isLoading) {
-            console.log("[BrandsPage] list → carregando...");
-        } else if (data.length > 0) {
-            console.log("[BrandsPage] list → dados recebidos:", { total, data });
-        } else {
-            console.log("[BrandsPage] list → nenhum dado recebido.");
-        }
-    }, [data, total, isLoading]);
-
-    useEffect(() => {
-        if (selectedBrand) {
-            console.log("[BrandsPage] detail → dados recebidos:", selectedBrand);
-        }
-    }, [selectedBrand]);
 
     return (
         <Box>

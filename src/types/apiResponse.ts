@@ -7,7 +7,7 @@ export type ApiResponse<T> = {
   path: string;
 };
 
-export type PageResponse<T> = {
+export type PaginatedResponse<T> = {
   currentPage: number;
   totalPages: number;
   totalElements: number;

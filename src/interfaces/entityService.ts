@@ -1,8 +1,9 @@
-// src/interfaces/entityService.ts
+import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
+
 export interface EntityService<T> {
-  list: (params: { skip: number; take: number; search: string }) => Promise<{ items: T[]; total: number }>;
-  get: (id: number | string) => Promise<T>;
-  create: (data: Partial<T>) => Promise<T>;
-  update: (id: number | string, data: Partial<T>) => Promise<T>;
-  remove: (id: number | string) => Promise<void>;
+  getAll: (params: { skip: number; take: number; search: string }) => Promise<ApiResponse<PaginatedResponse<T>>>;
+  getById: (id: number | string) => Promise<ApiResponse<T>>;
+  create: (data: Partial<T>) => Promise<ApiResponse<T>>;
+  update: (id: number | string, data: Partial<T>) => Promise<ApiResponse<T>>;
+  delete: (id: number | string) => Promise<ApiResponse<null>>;
 }
