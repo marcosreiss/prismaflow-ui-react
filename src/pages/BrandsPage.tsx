@@ -4,7 +4,7 @@ import PFTable from "@/design-system/crud/PFTable";
 import PFDrawerModal from "@/design-system/crud/PFDrawerModal";
 import PFConfirmDialog from "@/design-system/crud/PFConfirmDialog";
 import { useBrand } from "@/hooks/useBrand";
-import { brandColumns, brandFields } from "./brands.config";
+import { brandColumns, brandFields } from "../design-system/features/brands/brands.config";
 import { Box, Typography } from "@mui/material";
 import type { Brand } from "@/types/brandTypes";
 
