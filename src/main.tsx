@@ -14,7 +14,7 @@ import { AuthProvider } from './context/AuthContext.tsx';
 import { NotificationProvider } from './context/NotificationContext.tsx';
 import { ThemeProvider } from '@emotion/react';
 import { prismaTheme } from './design-system/theme/prismaTheme.ts';
-// import SnackBarComponent from './components/snackBar.tsx';
+import PFToast from './design-system/components/pfnotifications/PFToast.tsx';
 
 const queryClient = new QueryClient();
 
@@ -27,7 +27,7 @@ createRoot(document.getElementById('root')!).render(
             <NotificationProvider>
               <Suspense>
                 <App />
-                {/* <SnackBarComponent /> */}
+                <PFToast />
               </Suspense>
             </NotificationProvider>
           </ThemeProvider>
