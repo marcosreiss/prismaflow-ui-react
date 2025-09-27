@@ -13,6 +13,7 @@ const ServicePage = lazy(() => import('@/pages/servico/index'));
 const BrandPage = lazy(() => import('@/pages/brand/index'));
 const ProductPage = lazy(() => import('@/pages/product/index'));
 const CustomersPage = lazy(() => import('@/pages/customer/index'));
+const PFBrandPage = lazy(() => import('@/design-system/features/brands/BrandsPage'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -44,7 +45,7 @@ export function PrivateRouter() {
                 { path: 'services', element: <ServicePage /> },
                 { path: 'brands', element: <BrandPage /> },
                 { path: 'products', element: <ProductPage /> },
-                { path: 'customers', element: <CustomersPage /> }
+                { path: 'pf-brandpage', element: <PFBrandPage /> }
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },
