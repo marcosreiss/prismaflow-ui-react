@@ -38,7 +38,7 @@ type PFDrawerModalProps<T extends FieldValues> = {
     fields?: FieldDef<T>[];
     onClose: () => void;
     onSubmit?: (values: Partial<T>) => Promise<void> | void;
-    renderView?: (data: T) => ReactNode; // 👉 Página define como renderizar detalhes
+    renderView?: (data: T) => ReactNode;
 };
 
 export default function PFDrawerModal<T extends FieldValues>({
@@ -56,36 +56,48 @@ export default function PFDrawerModal<T extends FieldValues>({
     const isCreate = mode === "create";
 
     const methods = useForm<T>({
-        defaultValues: (data ?? {}) as DefaultValues<T>,
+        defaultValues: {} as DefaultValues<T>,
     });
 
     const [saving, setSaving] = useState(false);
     const [detailLoading, setDetailLoading] = useState(false);
 
+    // 🔒 Fecha limpando sempre
+    const handleClose = () => {
+        methods.reset({} as DefaultValues<T>);
+        onClose();
+    };
+
+    // ♻️ Ciclo de vida do modal
     useEffect(() => {
         if (!open) return;
 
-        if (isView || isEdit) {
-            if (!data) {
-                setDetailLoading(true);
-                methods.reset({} as DefaultValues<T>); // limpa até vir os novos dados
-            } else {
-                setDetailLoading(false);
-                methods.reset(data as DefaultValues<T>);
-            }
-        } else if (isCreate) {
+        if (isCreate) {
+            // Create: sempre vazio e sem skeleton
             setDetailLoading(false);
             methods.reset({} as DefaultValues<T>);
+            return;
         }
-    }, [open, isView, isEdit, isCreate, data, methods]);
 
+        // View/Edit: mostra skeleton até os dados chegarem
+        if (!data) {
+            setDetailLoading(true);
+            methods.reset({} as DefaultValues<T>); // limpa enquanto carrega o novo registro
+        } else {
+            setDetailLoading(false);
+            methods.reset(data as DefaultValues<T>); // popula com os dados do registro atual
+        }
+    }, [open, isCreate, isView, isEdit, data, methods]);
 
     const handleSubmit = methods.handleSubmit(async (values) => {
         try {
             setSaving(true);
             await onSubmit?.(values);
-            methods.reset({} as DefaultValues<T>);
-            onClose(); // ✅ fecha após sucesso
+            if (isCreate) {
+                // após criar, mantém formulário limpo quando reabrir
+                methods.reset({} as DefaultValues<T>);
+            }
+            handleClose(); // fecha sempre limpo
         } catch (err) {
             console.error("Erro no submit:", err);
         } finally {
@@ -97,10 +109,7 @@ export default function PFDrawerModal<T extends FieldValues>({
         <Drawer
             anchor="right"
             open={open}
-            onClose={() => {
-                methods.reset({} as DefaultValues<T>);
-                onClose();
-            }}
+            onClose={handleClose} // ✅ garante limpeza ao fechar por overlay/esc/botão
             ModalProps={{ keepMounted: true }}
             PaperProps={{ sx: { width: { xs: "100%", sm: 480, md: 560 }, p: 3 } }}
         >
@@ -109,7 +118,7 @@ export default function PFDrawerModal<T extends FieldValues>({
                 <Typography variant="h6" fontWeight="bold">
                     {title}
                 </Typography>
-                <IconButton onClick={onClose}>
+                <IconButton onClick={handleClose}>
                     <X size={20} />
                 </IconButton>
             </Box>
@@ -126,7 +135,7 @@ export default function PFDrawerModal<T extends FieldValues>({
                         <Skeleton variant="rectangular" height={72} />
                     </Box>
                 ) : isView && data && renderView ? (
-                    // 👉 View genérica controlada pela página
+                    // View genérica
                     <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }} elevation={0}>
                         {renderView(data)}
                     </Paper>

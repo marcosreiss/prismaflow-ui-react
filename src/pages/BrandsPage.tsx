@@ -1,5 +1,5 @@
 // src/pages/BrandsPage.tsx
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import PFTopToolbar from "@/design-system/crud/PFTopToolbar";
 import PFTable from "@/design-system/crud/PFTable";
 import PFDrawerModal from "@/design-system/crud/PFDrawerModal";
@@ -18,16 +18,23 @@ export default function BrandsPage() {
 
     const {
         list: { data, total, isLoading, page, setPage, size, setSize, setSearch, refetch, error: listError },
-        detail,
+        detail, // presume { data, isLoading, error }
         create,
         update,
         remove,
     } = useBrand(selectedId);
 
-    const selectedBrand: Brand | null = (detail.data as Brand | undefined) ?? null;
     const { addNotification } = useNotification();
 
-    // Handlers
+    // 🔎 Evita flash: se está carregando OU o detail.id não bate com o selectedId → deixa null (força skeleton)
+    const selectedBrand: Brand | null =
+        drawerMode === "create"
+            ? null
+            : (detail.isLoading || ((detail.data as Brand | undefined)?.id !== selectedId))
+                ? null
+                : ((detail.data as Brand | undefined) ?? null);
+
+    // Handlers de abertura
     const handleOpenCreate = () => {
         setDrawerMode("create");
         setSelectedId(null);
@@ -44,6 +51,7 @@ export default function BrandsPage() {
         setDrawerOpen(true);
     };
 
+    // Fecha sempre
     const handleCloseDrawer = () => {
         setDrawerOpen(false);
         setSelectedId(null);
@@ -59,7 +67,7 @@ export default function BrandsPage() {
         try {
             const res = await create(values);
             addNotification(res?.message || "Registro criado com sucesso.", "success");
-            handleCloseDrawer(); // ✅ garante fechar após sucesso
+            handleCloseDrawer();
         } catch (e) {
             console.error(e);
             addNotification("Erro ao criar registro. Tente novamente.", "error");
@@ -70,7 +78,7 @@ export default function BrandsPage() {
         try {
             const res = await update({ id, data: values });
             addNotification(res?.message || "Registro atualizado com sucesso.", "success");
-            handleCloseDrawer(); // ✅ garante fechar após sucesso
+            handleCloseDrawer();
         } catch (e) {
             console.error(e);
             addNotification("Erro ao atualizar registro. Tente novamente.", "error");
@@ -128,10 +136,11 @@ export default function BrandsPage() {
             />
 
             <PFDrawerModal<Brand>
+                key={`${drawerMode}-${selectedId ?? "new"}`} // 🔁 força remontar quando muda id/mode
                 open={drawerOpen}
                 mode={drawerMode}
                 title={drawerMode === "create" ? "Nova Marca" : drawerMode === "edit" ? "Editar Marca" : "Detalhes da Marca"}
-                data={selectedBrand}
+                data={selectedBrand} // 🔥 null enquanto carrega → skeleton no Drawer
                 fields={brandFields}
                 onClose={handleCloseDrawer}
                 onSubmit={handleSubmit}
