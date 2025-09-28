@@ -1,4 +1,4 @@
-import type { NavItem } from "@/design-system/components/pfsidebar/types";
+import type { NavItem } from "@/components/pfsidebar/types";
 
 export const navData: NavItem[] = [
   { title: "Página Inicial", path: "/", icon: "Home" },

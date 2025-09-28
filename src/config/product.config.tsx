@@ -1,6 +1,6 @@
-import type { ColumnDef } from "@/design-system/crud/PFTable";
+import type { ColumnDef } from "@/components/crud/PFTable";
 import { ProductCategoryLabels, type Product, type ProductCategory } from "@/types/productTypes";
-import type { FieldDef } from "@/design-system/crud/PFDrawerModal";
+import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import type { Brand } from "@/types/brandTypes";
 import { TextField, Switch, FormControlLabel, MenuItem } from "@mui/material";
 

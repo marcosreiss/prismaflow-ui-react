@@ -12,7 +12,7 @@ import '@fontsource/inter/500.css';
 import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { NotificationProvider } from './context/NotificationContext.tsx';
-import PFToast from './design-system/components/pfnotifications/PFToast.tsx';
+import PFToast from './components/pfnotifications/PFToast.tsx';
 import ThemeModeProvider from './context/theme/ThemeModeProvider.tsx';
 
 const queryClient = new QueryClient({

@@ -10,7 +10,7 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundary extends React.Component<
+class PFErrorBoundary extends React.Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {
@@ -92,4 +92,4 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-export default ErrorBoundary;
+export default PFErrorBoundary;

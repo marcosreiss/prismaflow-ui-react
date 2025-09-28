@@ -1,6 +1,6 @@
 import { Box, CssBaseline, useTheme } from '@mui/material';
-import PFHeader from '../design-system/components/PFHeader';
-import PFSidebar, { SIDEBAR_WIDTH } from '@/design-system/components/pfsidebar/PFSidebar';
+import PFHeader from '../components/PFHeader';
+import PFSidebar, { SIDEBAR_WIDTH } from '@/components/pfsidebar/PFSidebar';
 import { navData } from '@/routes/nav-config';
 
 type DashboardLayoutProps = {

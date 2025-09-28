@@ -5,6 +5,7 @@ const baseApi = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 20000,
 });
 
 baseApi.interceptors.request.use((config) => {

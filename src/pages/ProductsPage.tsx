@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import PFTopToolbar from "@/design-system/crud/PFTopToolbar";
-import PFTable from "@/design-system/crud/PFTable";
-import PFDrawerModal from "@/design-system/crud/PFDrawerModal";
-import PFConfirmDialog from "@/design-system/crud/PFConfirmDialog";
+import PFTopToolbar from "@/components/crud/PFTopToolbar";
+import PFTable from "@/components/crud/PFTable";
+import PFDrawerModal from "@/components/crud/PFDrawerModal";
+import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import { useProduct } from "@/hooks/useProduct";
 import { useBrand } from "@/hooks/useBrand";
 import {
@@ -17,7 +17,7 @@ import {
 import { ProductCategoryLabels, type Product } from "@/types/productTypes";
 import type { Brand } from "@/types/brandTypes";
 import { useNotification } from "@/context/NotificationContext";
-import { productColumns, productFields } from "@/design-system/features/product/product.config";
+import { productColumns, productFields } from "@/config/product.config";
 
 export default function ProductsPage() {
     const [drawerOpen, setDrawerOpen] = useState(false);

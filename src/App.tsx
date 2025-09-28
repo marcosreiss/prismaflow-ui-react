@@ -1,7 +1,7 @@
 import { LinearProgress } from "@mui/material";
 import { useAuth } from "./context/AuthContext";
 import { PrivateRouter, PublicRouter } from "./routes/section";
-import ErrorBoundary from "./components/ErrorBoundary"; // 👈 importar
+import PFErrorBoundary from "./components/PFErrorBoundary"; // 👈 importar
 import '@/global.css';
 
 function App() {
@@ -13,9 +13,9 @@ function App() {
   }
 
   return (
-    <ErrorBoundary>
+    <PFErrorBoundary>
       {auth ? <PrivateRouter /> : <PublicRouter />}
-    </ErrorBoundary>
+    </PFErrorBoundary>
   );
 }
 

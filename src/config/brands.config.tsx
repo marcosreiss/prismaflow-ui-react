@@ -1,6 +1,6 @@
-import type { ColumnDef } from "@/design-system/crud/PFTable";
+import type { ColumnDef } from "@/components/crud/PFTable";
 import type { Brand } from "@/types/brandTypes";
-import type { FieldDef } from "@/design-system/crud/PFDrawerModal";
+import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import { TextField, Switch, FormControlLabel } from "@mui/material";
 
 export const brandColumns: ColumnDef<Brand>[] = [

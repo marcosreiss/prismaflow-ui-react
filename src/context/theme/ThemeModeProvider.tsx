@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ThemeProvider, CssBaseline, createTheme } from "@mui/material";
 import { ThemeContext, type ThemeMode } from "./theme-mode-context";
-import prismaTheme from "@/design-system/theme/prismaTheme";
+import prismaTheme from "@/theme/prismaTheme";
 
 type Props = { children: React.ReactNode };
 

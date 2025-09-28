@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
-import PFStatCard from "@/design-system/components/pfstatcard/PFStatCard";
-import PFRecentList from "@/design-system/components/pfrecentlist/PFRecentList";
+import PFStatCard from "@/components/pfstatcard/PFStatCard";
+import PFRecentList from "@/components/pfrecentlist/PFRecentList";
 import {
     mockStats,
     mockRecentSales,

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import PFTopToolbar from "@/design-system/crud/PFTopToolbar";
-import PFTable from "@/design-system/crud/PFTable";
-import PFDrawerModal from "@/design-system/crud/PFDrawerModal";
-import PFConfirmDialog from "@/design-system/crud/PFConfirmDialog";
+import PFTopToolbar from "@/components/crud/PFTopToolbar";
+import PFTable from "@/components/crud/PFTable";
+import PFDrawerModal from "@/components/crud/PFDrawerModal";
+import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import { useBrand } from "@/hooks/useBrand";
-import { brandColumns, brandFields } from "../design-system/features/brands/brands.config";
+import { brandColumns, brandFields } from "../config/brands.config";
 import { Box, Typography, Chip, Divider, Paper } from "@mui/material";
 import type { Brand } from "@/types/brandTypes";
 import { useNotification } from "@/context/NotificationContext";
