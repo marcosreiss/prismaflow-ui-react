@@ -1,5 +1,5 @@
 import { Box, CssBaseline, useTheme } from '@mui/material';
-import Header from '../components/Header';
+import PFHeader from '../design-system/components/PFHeader';
 import PFSidebar, { SIDEBAR_WIDTH } from '@/design-system/components/pfsidebar/PFSidebar';
 import { navData } from '@/routes/nav-config';
 
@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           transition: 'padding-left 0.3s ease',
         }}
       >
-        <Header />
+        <PFHeader />
         <Box
           component="main"
           sx={{

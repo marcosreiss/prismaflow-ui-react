@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { User, LogOut } from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
 
-export default function Header() {
+export default function PFHeader() {
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
