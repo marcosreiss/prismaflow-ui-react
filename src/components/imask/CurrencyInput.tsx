@@ -8,14 +8,16 @@ const formatter = new Intl.NumberFormat("pt-BR", {
 });
 
 type Props = Omit<TextFieldProps, "value" | "onChange"> & {
-  value: number; // value em reais (ex: 12.34)
+  value: number; // valor bruto (sem máscara), ex: 12.34
   onChange: (v: number) => void;
 };
 
 export default function CurrencyInput({ value, onChange, ...rest }: Props) {
-  const [display, setDisplay] = React.useState(() => formatter.format(value ?? 0));
+  const [display, setDisplay] = React.useState(() =>
+    formatter.format(value ?? 0)
+  );
 
-  // keep display in sync when parent programmatically changes value
+  // Mantém display sincronizado quando o valor externo muda
   React.useEffect(() => {
     setDisplay(formatter.format(value ?? 0));
   }, [value]);
@@ -23,25 +25,25 @@ export default function CurrencyInput({ value, onChange, ...rest }: Props) {
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     // extrai só dígitos
     const digits = (e.target.value || "").replace(/\D/g, "");
-    // interpretar como centavos ("" => 0)
+    // interpreta como centavos
     const cents = digits === "" ? 0 : parseInt(digits, 10);
     const reais = cents / 100;
-    onChange(Number((reais).toFixed(2))); // propaga valor numérico
+    onChange(Number(reais.toFixed(2))); // propaga como número
     setDisplay(formatter.format(reais));
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // opcional: selecionar tudo ao focar
+    // seleciona tudo ao focar
     e.target.select();
   };
 
   return (
     <TextField
       {...rest}
-      value={display}
+      value={display} // sempre string formatada
       onChange={handleChange}
       onFocus={handleFocus}
-      inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+      inputProps={{ inputMode: "numeric" }} // não usar type="number"
     />
   );
 }
