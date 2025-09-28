@@ -9,6 +9,7 @@ type PFTopToolbarProps = {
     onSearch?: (value: string) => void;
     onRefresh?: () => void;
     onAdd?: () => void;
+    addLabel?: string; // nome customizável do botão de adicionar
     backUrl?: string;
 };
 
@@ -17,6 +18,7 @@ export default function PFTopToolbar({
     onSearch,
     onRefresh,
     onAdd,
+    addLabel = "Adicionar novo",
     backUrl,
 }: PFTopToolbarProps) {
     const router = useRouter();
@@ -65,7 +67,7 @@ export default function PFTopToolbar({
 
                 {onAdd && (
                     <Button variant="contained" startIcon={<Plus size={18} />} onClick={onAdd}>
-                        Adicionar nova
+                        {addLabel}
                     </Button>
                 )}
             </Box>

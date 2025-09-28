@@ -115,6 +115,7 @@ export default function BrandsPage() {
         <Paper sx={{ borderRadius: 3, overflow: "hidden", px: 3, py: 6 }}>
             <PFTopToolbar
                 title="Marcas"
+                addLabel="Adicionar nova marca"
                 onSearch={(val) => setSearch(val)}
                 onRefresh={() => refetch()}
                 onAdd={handleOpenCreate}

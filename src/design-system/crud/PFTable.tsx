@@ -9,7 +9,9 @@ import {
     Box,
     Skeleton,
     TablePagination,
+    Paper,
 } from "@mui/material";
+import { Inbox } from "lucide-react";
 import PFRowActionsMenu from "./PFRowActionsMenu";
 
 export type ColumnDef<T extends object> = {
@@ -48,25 +50,41 @@ export default function PFTable<T extends object>({
     onDelete,
 }: PFTableProps<T>) {
     return (
-        <>
+        <Paper
+            elevation={0}
+            sx={{
+                borderColor: "grey.200",
+                overflow: "hidden",
+            }}
+        >
             <TableContainer>
-                <Table>
+                <Table size="small">
                     <TableHead>
-                        <TableRow>
+                        <TableRow sx={{ backgroundColor: "grey.100" }}>
                             {columns.map((col) => (
                                 <TableCell
                                     key={String(col.key)}
                                     align={col.align || "left"}
-                                    sx={{ width: col.width }}
+                                    sx={{ width: col.width, py: 1 }}
                                 >
-                                    <Typography variant="body2" fontWeight={600}>
+                                    <Typography
+                                        variant="caption"
+                                        fontWeight={600}
+                                        color="text.secondary"
+                                        sx={{ textTransform: "uppercase" }}
+                                    >
                                         {col.label}
                                     </Typography>
                                 </TableCell>
                             ))}
                             {(onView || onEdit || onDelete) && (
-                                <TableCell align="right">
-                                    <Typography variant="body2" fontWeight={600}>
+                                <TableCell align="right" sx={{ py: 1 }}>
+                                    <Typography
+                                        variant="caption"
+                                        fontWeight={600}
+                                        color="text.secondary"
+                                        sx={{ textTransform: "uppercase" }}
+                                    >
                                         Ações
                                     </Typography>
                                 </TableCell>
@@ -96,8 +114,15 @@ export default function PFTable<T extends object>({
                         {!loading && rows.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={columns.length + 1}>
-                                    <Box sx={{ textAlign: "center", py: 4 }}>
-                                        <Typography variant="body2" color="text.secondary">
+                                    <Box
+                                        sx={{
+                                            textAlign: "center",
+                                            py: 6,
+                                            color: "text.secondary",
+                                        }}
+                                    >
+                                        <Inbox size={32} style={{ marginBottom: 8 }} />
+                                        <Typography variant="body2">
                                             Nenhum dado encontrado
                                         </Typography>
                                     </Box>
@@ -108,9 +133,19 @@ export default function PFTable<T extends object>({
                         {/* Linhas de dados */}
                         {!loading &&
                             rows.map((row, rowIndex) => (
-                                <TableRow key={rowIndex}>
+                                <TableRow
+                                    key={rowIndex}
+                                    hover
+                                    sx={{
+                                        "&:last-child td": { borderBottom: 0 },
+                                    }}
+                                >
                                     {columns.map((col) => (
-                                        <TableCell key={String(col.key)} align={col.align || "left"}>
+                                        <TableCell
+                                            key={String(col.key)}
+                                            align={col.align || "left"}
+                                            sx={{ py: 1.5 }}
+                                        >
                                             {col.render
                                                 ? col.render(row)
                                                 : col.key in row
@@ -119,7 +154,7 @@ export default function PFTable<T extends object>({
                                         </TableCell>
                                     ))}
                                     {(onView || onEdit || onDelete) && (
-                                        <TableCell align="right">
+                                        <TableCell align="right" sx={{ py: 1.5 }}>
                                             <PFRowActionsMenu
                                                 onView={onView ? () => onView(row) : undefined}
                                                 onEdit={onEdit ? () => onEdit(row) : undefined}
@@ -140,9 +175,12 @@ export default function PFTable<T extends object>({
                 page={page}
                 onPageChange={(_, newPage) => onPageChange(newPage)}
                 rowsPerPage={pageSize}
-                onRowsPerPageChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
+                onRowsPerPageChange={(e) =>
+                    onPageSizeChange(parseInt(e.target.value, 10))
+                }
                 rowsPerPageOptions={[5, 10, 20, 50]}
+                sx={{ borderTop: "1px solid", borderColor: "grey.200", px: 2 }}
             />
-        </>
+        </Paper>
     );
 }
