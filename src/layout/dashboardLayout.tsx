@@ -1,27 +1,35 @@
+// dashboardLayout.tsx
 import { Box, CssBaseline, useTheme } from '@mui/material';
+import { useState } from 'react';
 import PFHeader from '../components/PFHeader';
 import PFSidebar, { SIDEBAR_WIDTH } from '@/components/pfsidebar/PFSidebar';
 import { navData } from '@/routes/nav-config';
 
-type DashboardLayoutProps = {
-  children: React.ReactNode;
-};
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const theme = useTheme(); // Forçar a aplicação do tema MUI
+  const handleToggleSidebar = () => {
+    setMobileOpen((prev) => !prev);
+  };
+
   return (
     <Box
       id="dashboardlayout"
       sx={{
         display: 'flex',
         minHeight: '100vh',
-        width: '100%', // <- corrige overflow-x causado pelo 100vw
-        overflowX: 'hidden', // <- garante que não apareça barra lateral horizontal
+        width: '100%',
+        overflowX: 'hidden',
         bgcolor: theme.palette.background.default,
       }}
     >
       <CssBaseline />
-      <PFSidebar navData={navData} />
+      <PFSidebar
+        navData={navData}
+        openMobile={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+      />
       <Box
         sx={{
           flexGrow: 1,
@@ -31,14 +39,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           transition: 'padding-left 0.3s ease',
         }}
       >
-        <PFHeader />
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            p: 3,
-          }}
-        >
+        <PFHeader onToggleSidebar={handleToggleSidebar} />
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           {children}
         </Box>
       </Box>

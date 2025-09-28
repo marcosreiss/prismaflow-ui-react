@@ -1,41 +1,23 @@
+// PFHeader.tsx
 import {
-    AppBar,
-    Toolbar,
-    IconButton,
-    Menu,
-    MenuItem,
-    Box,
-    Tooltip,
-    Avatar,
-    Typography,
-    Divider,
+    AppBar, Toolbar, IconButton, Menu, MenuItem, Box, Tooltip, Avatar,
+    Typography, Divider
 } from "@mui/material";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-// import { User, LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
-import { User, LogOut } from "lucide-react";
-// import useThemeMode from "@/context/theme/useThemeMode";
+import { User, LogOut, Menu as MenuIcon } from "lucide-react";
 
-export default function PFHeader() {
+type PFHeaderProps = {
+    onToggleSidebar?: () => void;
+};
+
+export default function PFHeader({ onToggleSidebar }: PFHeaderProps) {
     const theme = useTheme();
-    // const { mode, toggleMode } = useThemeMode();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
     const { username, useLogout, role } = useAuth();
-
-    const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleCloseMenu = () => setAnchorEl(null);
-    const handleLogout = () => {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        useLogout();
-        handleCloseMenu();
-    };
-
-    // Inicial maiúscula caso não tenha foto/avatar real
     const initial = username ? username.charAt(0).toUpperCase() : "?";
 
     return (
@@ -49,29 +31,21 @@ export default function PFHeader() {
                 height: 60,
             }}
         >
-            <Toolbar sx={{ justifyContent: "flex-end", gap: 2 }}>
-                {/* Toggle de tema ao lado do perfil */}
-                {/* <Tooltip
-                    title={mode === "light" ? "Ativar tema escuro" : "Ativar tema claro"}
-                >
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={mode === "dark"}
-                                onChange={toggleMode}
-                                icon={<Moon size={16} />}
-                                checkedIcon={<Sun size={16} />}
-                            />
-                        }
-                        label=""
-                        sx={{ m: 0 }}
-                    />
-                </Tooltip> */}
+            <Toolbar sx={{ justifyContent: "space-between", gap: 2 }}>
+                {/* Botão hamburguer só no mobile/tablet */}
+                <Box sx={{ display: { xs: "block", md: "none" } }}>
+                    <IconButton onClick={onToggleSidebar}>
+                        <MenuIcon />
+                    </IconButton>
+                </Box>
+
+                {/* Espaço flexível para empurrar avatar à direita */}
+                <Box sx={{ flexGrow: 1 }} />
 
                 {/* Usuário */}
                 <Box>
                     <Tooltip title="Perfil">
-                        <IconButton onClick={handleOpenMenu} sx={{ p: 0 }}>
+                        <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0 }}>
                             <Avatar
                                 sx={{
                                     width: 32,
@@ -88,12 +62,10 @@ export default function PFHeader() {
                     <Menu
                         anchorEl={anchorEl}
                         open={open}
-                        onClose={handleCloseMenu}
+                        onClose={() => setAnchorEl(null)}
                         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                         transformOrigin={{ vertical: "top", horizontal: "right" }}
-                        PaperProps={{
-                            sx: { borderRadius: 2, minWidth: 200 },
-                        }}
+                        PaperProps={{ sx: { borderRadius: 2, minWidth: 200 } }}
                     >
                         <Box sx={{ px: 2, py: 1 }}>
                             <Typography variant="body2" fontWeight={600}>
@@ -104,10 +76,10 @@ export default function PFHeader() {
                             </Typography>
                         </Box>
                         <Divider />
-                        <MenuItem onClick={handleCloseMenu}>
+                        <MenuItem onClick={() => setAnchorEl(null)}>
                             <User size={16} style={{ marginRight: 8 }} /> Perfil
                         </MenuItem>
-                        <MenuItem onClick={handleLogout}>
+                        <MenuItem onClick={useLogout}>
                             <LogOut size={16} style={{ marginRight: 8 }} /> Logout
                         </MenuItem>
                     </Menu>
