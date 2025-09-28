@@ -12,13 +12,14 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { User, LogOut, Moon, Sun } from "lucide-react";
+// import { User, LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
-import useThemeMode from "@/context/theme/useThemeMode";
+import { User, LogOut } from "lucide-react";
+// import useThemeMode from "@/context/theme/useThemeMode";
 
 export default function PFHeader() {
     const theme = useTheme();
-    const { mode, toggleMode } = useThemeMode();
+    // const { mode, toggleMode } = useThemeMode();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -49,15 +50,24 @@ export default function PFHeader() {
                 height: 60,
             }}
         >
-            <Toolbar sx={{ justifyContent: "space-between" }}>
-                {/* Botão de alternância de tema */}
-                <Tooltip
+            <Toolbar sx={{ justifyContent: "flex-end", gap: 2 }}>
+                {/* Toggle de tema ao lado do perfil */}
+                {/* <Tooltip
                     title={mode === "light" ? "Ativar tema escuro" : "Ativar tema claro"}
                 >
-                    <IconButton onClick={toggleMode} sx={{ ml: 1 }}>
-                        {mode === "light" ? <Moon size={18} /> : <Sun size={18} />}
-                    </IconButton>
-                </Tooltip>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={mode === "dark"}
+                                onChange={toggleMode}
+                                icon={<Moon size={16} />}
+                                checkedIcon={<Sun size={16} />}
+                            />
+                        }
+                        label=""
+                        sx={{ m: 0 }}
+                    />
+                </Tooltip> */}
 
                 {/* Usuário */}
                 <Box>
