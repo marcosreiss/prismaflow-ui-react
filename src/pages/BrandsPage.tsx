@@ -87,6 +87,7 @@ export default function BrandsPage() {
         try {
             const res = await remove(selectedId);
             addNotification(res?.message || "Registro excluído com sucesso.", "success");
+            setSelectedId(null); // 👈 limpa o id depois do sucesso
         } catch (e) {
             console.error(e);
             addNotification("Erro ao excluir registro. Tente novamente.", "error");
@@ -105,8 +106,10 @@ export default function BrandsPage() {
     }, [listError, addNotification]);
 
     useEffect(() => {
-        if (detail.error) addNotification("Erro ao carregar detalhes da marca.", "error");
-    }, [detail.error, addNotification]);
+        if (selectedId && detail.error) {
+            addNotification("Erro ao carregar detalhes da marca.", "error");
+        }
+    }, [selectedId, detail.error, addNotification]);
 
     return (
         <Box>
