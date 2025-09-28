@@ -175,11 +175,28 @@ export default function PFTable<T extends object>({
                 page={page}
                 onPageChange={(_, newPage) => onPageChange(newPage)}
                 rowsPerPage={pageSize}
-                onRowsPerPageChange={(e) =>
-                    onPageSizeChange(parseInt(e.target.value, 10))
-                }
+                onRowsPerPageChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
                 rowsPerPageOptions={[5, 10, 20, 50]}
                 sx={{ borderTop: "1px solid", borderColor: "grey.200", px: 2 }}
+                slotProps={{
+                    select: {
+                        MenuProps: {
+                            anchorOrigin: {
+                                vertical: "top",
+                                horizontal: "left",
+                            },
+                            transformOrigin: {
+                                vertical: "bottom",
+                                horizontal: "left",
+                            },
+                            PaperProps: {
+                                sx: {
+                                    maxHeight: 200, // garante que não estoure a tela
+                                },
+                            },
+                        },
+                    },
+                }}
             />
         </Paper>
     );
