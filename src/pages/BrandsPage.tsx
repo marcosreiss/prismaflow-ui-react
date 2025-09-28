@@ -8,6 +8,8 @@ import { brandColumns, brandFields } from "../config/brands.config";
 import { Box, Typography, Chip, Divider, Paper } from "@mui/material";
 import type { Brand } from "@/types/brandTypes";
 import { useNotification } from "@/context/NotificationContext";
+import type { AxiosError } from "axios";
+import type { ApiResponse } from "@/types/apiResponse";
 
 export default function BrandsPage() {
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -65,9 +67,10 @@ export default function BrandsPage() {
             const res = await create(values);
             addNotification(res?.message || "Registro criado com sucesso.", "success");
             handleCloseDrawer();
-        } catch (e) {
-            console.error(e);
-            addNotification("Erro ao criar registro. Tente novamente.", "error");
+        } catch (e: unknown) {
+            const error = e as AxiosError<ApiResponse<Brand>>;
+            console.error(error);
+            addNotification(error?.response?.data?.message || "Erro ao criar registro. Tente novamente.", "error");
         }
     };
 

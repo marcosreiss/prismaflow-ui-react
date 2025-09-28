@@ -1,3 +1,4 @@
+// PercentInput.tsx
 import React from "react";
 import TextField, { type TextFieldProps } from "@mui/material/TextField";
 
@@ -14,9 +15,10 @@ export default function PercentInput({ value, onChange, ...rest }: Props) {
     }, [value]);
 
     const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        // extrai apenas dígitos
         const digits = (e.target.value || "").replace(/\D/g, "");
         const num = digits === "" ? 0 : parseInt(digits, 10);
-        onChange(num);
+        onChange(num); // propaga como número cru
         setDisplay(formatDisplay(num));
     };
 
@@ -27,10 +29,10 @@ export default function PercentInput({ value, onChange, ...rest }: Props) {
     return (
         <TextField
             {...rest}
-            value={display}
+            value={display} // sempre string formatada (ex: "50%")
             onChange={handleChange}
             onFocus={handleFocus}
-            inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+            inputProps={{ inputMode: "numeric" }} // não usar type="number"
         />
     );
 }

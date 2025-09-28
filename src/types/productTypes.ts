@@ -11,7 +11,7 @@ export type Product = {
   salePrice: number;
   stockQuantity: number;
   minimumStock: number;
-  category: ProductCategory; // agora tipado
+  category: ProductCategory;
   brand: Brand | null;
   isActive: boolean;
   createdAt: string;
