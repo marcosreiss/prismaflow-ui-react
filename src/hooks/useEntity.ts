@@ -1,30 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import type { EntityService } from "@/interfaces/entityService";
+import type { EntityService } from "@/services/entityService";
 import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
 
 export type UseEntityOptions<T> = {
   service: EntityService<T>;
   queryKey: string;
-  take?: number;
+  size?: number;
   detailId?: number | string | null;
 };
 
 export function useEntity<T>({
   service,
   queryKey,
-  take: initialTake = 10,
+  size: initialSize = 10,
   detailId,
 }: UseEntityOptions<T>) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [take, setTake] = useState(initialTake);
+  const [size, setSize] = useState(initialSize);
 
   // 📌 Listagem
   const listQuery = useQuery<ApiResponse<PaginatedResponse<T>>>({
-    queryKey: [queryKey, { page, take, search }],
-    queryFn: () => service.getAll({ skip: page * take, take, search }),
+    queryKey: [queryKey, { page, size, search }],
+    queryFn: () => service.getAll({ page, size, search }),
     placeholderData: (prev) => prev,
   });
 
@@ -47,7 +47,9 @@ export function useEntity<T>({
       service.update(id, data),
     onSuccess: (_data, vars) => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: [queryKey, "detail", vars.id] });
+      queryClient.invalidateQueries({
+        queryKey: [queryKey, "detail", vars.id],
+      });
     },
   });
 
@@ -68,8 +70,8 @@ export function useEntity<T>({
       error: listQuery.error,
       page,
       setPage,
-      take,
-      setTake,
+      size,
+      setSize,
       search,
       setSearch,
       refetch: listQuery.refetch,

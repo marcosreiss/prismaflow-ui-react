@@ -1,12 +1,12 @@
 // src/services/brandService.ts
-import type { EntityService } from "@/interfaces/entityService";
+import type { EntityService } from "@/services/entityService";
 import type { Brand } from "@/types/brandTypes";
 import api from "./config/api";
 
 export const brandService: EntityService<Brand> = {
-  getAll: async ({ skip, take, search }) => {
+  getAll: async ({ page, size, search }) => {
     const res = await api.get("/api/brands", {
-      params: { skip, take, search },
+      params: { page, size, search },
     });
     return res.data; // ApiResponse<PaginatedResponse<Brand>>
   },

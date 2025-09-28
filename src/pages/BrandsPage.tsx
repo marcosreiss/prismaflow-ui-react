@@ -50,7 +50,6 @@ export default function BrandsPage() {
     };
 
     const handleCloseDrawer = () => {
-        setDrawerOpen(false);
         setSelectedId(null);
     };
 

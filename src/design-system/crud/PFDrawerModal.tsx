@@ -1,4 +1,3 @@
-// src/design-system/crud/PFDrawerModal.tsx
 import {
     Drawer,
     Box,
@@ -6,6 +5,7 @@ import {
     IconButton,
     Button,
     Divider,
+    CircularProgress,
 } from "@mui/material";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
@@ -18,7 +18,7 @@ import {
     FormProvider,
     Controller,
 } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type DrawerMode = "create" | "edit" | "view";
 
@@ -57,6 +57,8 @@ export default function PFDrawerModal<T extends FieldValues>({
         defaultValues: (data ?? {}) as DefaultValues<T>,
     });
 
+    const [loading, setLoading] = useState(false);
+
     // 🔄 Recarrega dados quando "data" muda (ex.: editar ou visualizar)
     useEffect(() => {
         if (data) {
@@ -66,11 +68,13 @@ export default function PFDrawerModal<T extends FieldValues>({
 
     const handleSubmit = methods.handleSubmit(async (values) => {
         try {
+            setLoading(true);
             await onSubmit?.(values); // aguarda mutation
-            onClose(); // só fecha após sucesso
+            onClose(); // fecha só após sucesso
         } catch (err) {
-            // Se a mutation disparar erro, Drawer não fecha → notificação aparece
             console.error("Erro no submit:", err);
+        } finally {
+            setLoading(false);
         }
     });
 
@@ -95,7 +99,7 @@ export default function PFDrawerModal<T extends FieldValues>({
                 <Typography variant="h6" fontWeight="bold">
                     {title}
                 </Typography>
-                <IconButton onClick={onClose}>
+                <IconButton onClick={onClose} disabled={loading}>
                     <X size={20} />
                 </IconButton>
             </Box>
@@ -136,12 +140,23 @@ export default function PFDrawerModal<T extends FieldValues>({
                                     gap: 1,
                                 }}
                             >
-                                <Button onClick={onClose} color="inherit">
+                                <Button onClick={onClose} color="inherit" disabled={loading}>
                                     Cancelar
                                 </Button>
                                 {(isCreate || isEdit) && (
-                                    <Button type="submit" variant="contained">
-                                        {isCreate ? "Criar" : "Salvar"}
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        disabled={loading}
+                                        startIcon={loading ? <CircularProgress size={18} /> : undefined}
+                                    >
+                                        {loading
+                                            ? isCreate
+                                                ? "Criando..."
+                                                : "Salvando..."
+                                            : isCreate
+                                                ? "Criar"
+                                                : "Salvar"}
                                     </Button>
                                 )}
                             </Box>
