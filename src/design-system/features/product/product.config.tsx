@@ -1,8 +1,8 @@
 import type { ColumnDef } from "@/design-system/crud/PFTable";
-import type { Product } from "@/types/productTypes";
+import { ProductCategoryLabels, type Product, type ProductCategory } from "@/types/productTypes";
 import type { FieldDef } from "@/design-system/crud/PFDrawerModal";
 import type { Brand } from "@/types/brandTypes";
-import { TextField, Switch, FormControlLabel } from "@mui/material";
+import { TextField, Switch, FormControlLabel, MenuItem } from "@mui/material";
 
 // ----------------------
 // Tabela
@@ -10,7 +10,11 @@ import { TextField, Switch, FormControlLabel } from "@mui/material";
 export const productColumns: ColumnDef<Product>[] = [
     { key: "id", label: "ID", width: 80 },
     { key: "name", label: "Nome" },
-    { key: "category", label: "Categoria" },
+    {
+        key: "category",
+        label: "Categoria",
+        render: (row) => ProductCategoryLabels[row.category],
+    },
     { key: "salePrice", label: "Preço Venda" },
     { key: "stockQuantity", label: "Estoque" },
     {
@@ -19,6 +23,7 @@ export const productColumns: ColumnDef<Product>[] = [
         render: (row) => (row.isActive ? "Sim" : "Não"),
     },
 ];
+
 
 // ----------------------
 // Formulário
@@ -120,11 +125,18 @@ export const productFields: FieldDef<Product>[] = [
         label: "Categoria",
         component: ({ value, onChange }) => (
             <TextField
+                select
                 fullWidth
                 size="small"
                 value={value ?? ""}
-                onChange={(e) => onChange(e.target.value)}
-            />
+                onChange={(e) => onChange(e.target.value as ProductCategory)}
+            >
+                {Object.entries(ProductCategoryLabels).map(([key, label]) => (
+                    <MenuItem key={key} value={key}>
+                        {label}
+                    </MenuItem>
+                ))}
+            </TextField>
         ),
     },
     {

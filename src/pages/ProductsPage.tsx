@@ -14,7 +14,7 @@ import {
     Autocomplete,
     TextField,
 } from "@mui/material";
-import type { Product } from "@/types/productTypes";
+import { ProductCategoryLabels, type Product } from "@/types/productTypes";
 import type { Brand } from "@/types/brandTypes";
 import { useNotification } from "@/context/NotificationContext";
 import { productColumns, productFields } from "@/design-system/features/product/product.config";
@@ -229,7 +229,9 @@ export default function ProductsPage() {
                             <Typography variant="body2" color="text.secondary">
                                 Categoria
                             </Typography>
-                            <Typography variant="body1">{product.category}</Typography>
+                            <Typography variant="body1">
+                                {ProductCategoryLabels[product.category]}
+                            </Typography>
 
                             <Typography variant="body2" color="text.secondary">
                                 Marca
@@ -248,6 +250,7 @@ export default function ProductsPage() {
                         </Box>
                     </Box>
                 )}
+
                 ModalPropsOverride={{
                     onExited: () => setSelectedId(null),
                 }}
