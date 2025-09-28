@@ -5,7 +5,7 @@ import PFDrawerModal from "@/design-system/crud/PFDrawerModal";
 import PFConfirmDialog from "@/design-system/crud/PFConfirmDialog";
 import { useBrand } from "@/hooks/useBrand";
 import { brandColumns, brandFields } from "../design-system/features/brands/brands.config";
-import { Box, Typography, Chip, Divider } from "@mui/material";
+import { Box, Typography, Chip, Divider, Paper } from "@mui/material";
 import type { Brand } from "@/types/brandTypes";
 import { useNotification } from "@/context/NotificationContext";
 
@@ -112,7 +112,7 @@ export default function BrandsPage() {
     }, [selectedId, detail.error, addNotification]);
 
     return (
-        <Box>
+        <Paper sx={{ borderRadius: 3, overflow: "hidden", px: 3, py: 6 }}>
             <PFTopToolbar
                 title="Marcas"
                 onSearch={(val) => setSearch(val)}
@@ -123,7 +123,7 @@ export default function BrandsPage() {
             <PFTable<Brand>
                 columns={brandColumns}
                 rows={data}
-                loading={isLoading || isFetching} // 👈 cobre inicial + paginação/pesquisa
+                loading={isLoading || isFetching}
                 total={total}
                 page={page}
                 pageSize={size}
@@ -185,6 +185,6 @@ export default function BrandsPage() {
                 onConfirm={handleDeleteConfirm}
                 loading={removing} // 👈 agora usa estado do hook
             />
-        </Box>
+        </Paper>
     );
 }

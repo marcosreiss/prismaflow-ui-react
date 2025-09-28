@@ -1,23 +1,25 @@
-import { Box, Button, IconButton, TextField, Tooltip } from "@mui/material";
+import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
 import { ArrowLeft, RefreshCw, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedSearch";
+import { useRouter } from "@/routes/hooks";
 
 type PFTopToolbarProps = {
-    title?: string;
-    onBack?: () => void;
+    title: string;
     onSearch?: (value: string) => void;
     onRefresh?: () => void;
     onAdd?: () => void;
+    backUrl?: string;
 };
 
 export default function PFTopToolbar({
     title,
-    onBack,
     onSearch,
     onRefresh,
     onAdd,
+    backUrl,
 }: PFTopToolbarProps) {
+    const router = useRouter();
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebouncedValue(search, 400);
 
@@ -33,18 +35,18 @@ export default function PFTopToolbar({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                mb: 2,
+                mb: 3,
             }}
         >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                {onBack && (
-                    <IconButton onClick={onBack}>
-                        <ArrowLeft size={18} />
-                    </IconButton>
-                )}
-                {title && <strong>{title}</strong>}
+            {/* Esquerda: voltar + título */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <IconButton onClick={() => (backUrl ? router.push(backUrl) : router.back())}>
+                    <ArrowLeft size={20} />
+                </IconButton>
+                <Typography variant="h6">{title}</Typography>
             </Box>
 
+            {/* Direita: search + refresh + add */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 {onSearch && (
                     <TextField
@@ -54,20 +56,16 @@ export default function PFTopToolbar({
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 )}
+
                 {onRefresh && (
-                    <Tooltip title="Atualizar">
-                        <IconButton onClick={onRefresh}>
-                            <RefreshCw size={18} />
-                        </IconButton>
-                    </Tooltip>
+                    <Button variant="outlined" startIcon={<RefreshCw size={18} />} onClick={onRefresh}>
+                        Atualizar
+                    </Button>
                 )}
+
                 {onAdd && (
-                    <Button
-                        variant="contained"
-                        startIcon={<Plus size={16} />}
-                        onClick={onAdd}
-                    >
-                        Adicionar
+                    <Button variant="contained" startIcon={<Plus size={18} />} onClick={onAdd}>
+                        Adicionar nova
                     </Button>
                 )}
             </Box>

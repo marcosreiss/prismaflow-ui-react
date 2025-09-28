@@ -13,8 +13,8 @@ import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { NotificationProvider } from './context/NotificationContext.tsx';
 import { ThemeProvider } from '@emotion/react';
-import { prismaTheme } from './design-system/theme/prismaTheme.ts';
 import PFToast from './design-system/components/pfnotifications/PFToast.tsx';
+import prismaTheme from './design-system/theme/prismaTheme.ts';
 
 const queryClient = new QueryClient({
   defaultOptions: {

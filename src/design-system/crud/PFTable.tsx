@@ -5,7 +5,6 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Paper,
     Typography,
     Box,
     Skeleton,
@@ -49,7 +48,7 @@ export default function PFTable<T extends object>({
     onDelete,
 }: PFTableProps<T>) {
     return (
-        <Paper sx={{ borderRadius: 3, overflow: "hidden" }}>
+        <>
             <TableContainer>
                 <Table>
                     <TableHead>
@@ -144,6 +143,6 @@ export default function PFTable<T extends object>({
                 onRowsPerPageChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
                 rowsPerPageOptions={[5, 10, 20, 50]}
             />
-        </Paper>
+        </>
     );
 }
