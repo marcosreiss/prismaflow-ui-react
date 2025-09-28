@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Box, Drawer, List, Toolbar, useTheme } from "@mui/material";
-import { useRouter } from "@/routes/hooks";
+import { usePathname } from "@/routes/hooks/use-pathname"; // hook para rota atual
+import { useRouter } from "@/routes/hooks"; // hook para navegação
 import PFSidebarLogo from "./components/PFSidebarLogo";
 import PFSidebarItem from "./components/PFSidebarItem";
 import type { NavItem } from "./types";
@@ -19,30 +20,30 @@ export default function PFSidebar({
     onCloseMobile,
 }: PFSidebarProps) {
     const theme = useTheme();
+    const pathname = usePathname();
     const router = useRouter();
     const [active, setActive] = React.useState<string | null>(null);
 
+    // 🔥 Sincroniza item ativo com pathname
+    React.useEffect(() => {
+        const current = findActiveByPath(navData, pathname);
+        if (current) setActive(current);
+    }, [pathname, navData]);
+
     const content = (
-        <Box
-            sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-            }}
-        >
-            {/* Logo */}
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
             <Toolbar
                 sx={{
                     justifyContent: "center",
                     py: 2,
                     minHeight: 64,
+                    borderBottom: "1px solid",
                     borderColor: theme.palette.divider,
                 }}
             >
                 <PFSidebarLogo />
             </Toolbar>
 
-            {/* Itens */}
             <Box sx={{ flexGrow: 1, px: 1.5, pt: 2 }}>
                 <List disablePadding>
                     {navData.map((item) => (
@@ -51,7 +52,10 @@ export default function PFSidebar({
                             item={item}
                             active={active}
                             setActive={setActive}
-                            onNavigate={(path) => router.push(path)}
+                            onNavigate={(path) => {
+                                setActive(item.title); // seta ativo imediatamente
+                                router.push(path); // 🔥 navega de verdade
+                            }}
                         />
                     ))}
                 </List>
@@ -72,6 +76,7 @@ export default function PFSidebar({
                     "& .MuiDrawer-paper": {
                         width: SIDEBAR_WIDTH,
                         boxSizing: "border-box",
+                        borderRight: "1px solid",
                         borderColor: theme.palette.divider,
                         backgroundColor: theme.palette.background.paper,
                         boxShadow: "none",
@@ -89,7 +94,7 @@ export default function PFSidebar({
                     "& .MuiDrawer-paper": {
                         width: SIDEBAR_WIDTH,
                         boxSizing: "border-box",
-                        borderRight: "none",
+                        borderRight: "1px solid",
                         borderColor: theme.palette.divider,
                         backgroundColor: theme.palette.background.paper,
                         boxShadow: "none",
@@ -101,4 +106,17 @@ export default function PFSidebar({
             </Drawer>
         </>
     );
+}
+
+// Função auxiliar para mapear path -> título
+function findActiveByPath(navData: NavItem[], path: string): string | null {
+    for (const item of navData) {
+        if (item.path === path) return item.title;
+        if (item.children) {
+            for (const child of item.children) {
+                if (child.path === path) return child.title;
+            }
+        }
+    }
+    return null;
 }
