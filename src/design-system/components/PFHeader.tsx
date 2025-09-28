@@ -44,7 +44,6 @@ export default function PFHeader() {
             elevation={0}
             sx={{
                 bgcolor: theme.palette.background.default,
-                borderBottom: "1px solid",
                 borderColor: theme.palette.divider,
                 borderRadius: 0,
                 height: 60,
