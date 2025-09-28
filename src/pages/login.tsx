@@ -30,18 +30,15 @@ export default function Login() {
     const onSubmit = (data: UserLoginRequest) => {
         login(data, {
             onSuccess: (res) => {
-                if (res.data?.token && res.data) {
-                    // Primeiro seta o token e usuário no contexto
-                    setToken(res.data?.token, {
-                        username: res.data.username,
-                        role: res.data.role,
-                    });
+                const user = res.data; // UserLoginData
+                const token = res.token; // token vem no nível raiz
 
-                    // Depois do setToken, garante que o contexto já marcou como autenticado
-                    // Fazendo o redirect logo em seguida com replace (evita voltar pro login no histórico)
-                    setTimeout(() => {
-                        addNotification("Login realizado com sucesso!", "success");
-                    }, 0);
+                if (token && user) {
+                    setToken(token, {
+                        username: user.username,
+                        role: user.role,
+                    });
+                    addNotification("Login realizado com sucesso!", "success");
                 } else {
                     addNotification("Erro: resposta inválida do servidor.", "error");
                 }
@@ -98,7 +95,7 @@ export default function Login() {
                         Olá, bem-vindo ao PrismaFlow!
                     </Typography>
                     <Typography sx={{ mt: 2, fontSize: 15, lineHeight: 1.4, color: "white" }}>
-                        Organize sua ótica com clareza e fluidez. <br/> Faça login para acessar sua gestão integrada.
+                        Organize sua ótica com clareza e fluidez. <br /> Faça login para acessar sua gestão integrada.
                     </Typography>
                 </Box>
 

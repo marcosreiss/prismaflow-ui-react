@@ -9,11 +9,11 @@ export type UserRegisterRequest = {
 };
 
 export type UserRegisterData = {
-  id: string;
+  id: string | number;
   username: string;
   email: string;
   role: string;
-  createdAt: string;
+  createdAt?: string;
   updatedAt?: string;
 };
 
@@ -26,11 +26,14 @@ export type UserLoginRequest = {
 };
 
 export type UserLoginData = {
-  id: string;
+  id: string | number;
   username: string;
-  token: string;
   email: string;
   role: string;
+  password?: string | null;
 };
 
-export type UserLoginResponse = ApiResponse<UserLoginData>;
+// 👇 Novo tipo de resposta que inclui token fora de data
+export type UserLoginResponse = ApiResponse<UserLoginData> & {
+  token: string;
+};
