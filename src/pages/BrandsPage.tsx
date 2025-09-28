@@ -1,3 +1,4 @@
+// src/pages/BrandsPage.tsx
 import { useEffect, useState } from "react";
 import PFTopToolbar from "@/design-system/crud/PFTopToolbar";
 import PFTable from "@/design-system/crud/PFTable";
@@ -5,7 +6,7 @@ import PFDrawerModal from "@/design-system/crud/PFDrawerModal";
 import PFConfirmDialog from "@/design-system/crud/PFConfirmDialog";
 import { useBrand } from "@/hooks/useBrand";
 import { brandColumns, brandFields } from "../design-system/features/brands/brands.config";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Chip, Divider } from "@mui/material";
 import type { Brand } from "@/types/brandTypes";
 import { useNotification } from "@/context/NotificationContext";
 
@@ -15,7 +16,6 @@ export default function BrandsPage() {
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [confirmOpen, setConfirmOpen] = useState(false);
 
-    // 🔗 conecta o ID selecionado ao hook para buscar detalhes
     const {
         list: { data, total, isLoading, page, setPage, size, setSize, setSearch, refetch, error: listError },
         detail,
@@ -25,24 +25,19 @@ export default function BrandsPage() {
     } = useBrand(selectedId);
 
     const selectedBrand: Brand | null = (detail.data as Brand | undefined) ?? null;
-
     const { addNotification } = useNotification();
 
-    // ─────────────────────────────────────────────────────────────
-    // Handlers de abertura/fechamento
-    // ─────────────────────────────────────────────────────────────
+    // Handlers
     const handleOpenCreate = () => {
         setDrawerMode("create");
         setSelectedId(null);
         setDrawerOpen(true);
     };
-
     const handleOpenView = (row: Brand) => {
         setDrawerMode("view");
         setSelectedId(row.id);
         setDrawerOpen(true);
     };
-
     const handleOpenEdit = (row: Brand) => {
         setDrawerMode("edit");
         setSelectedId(row.id);
@@ -50,6 +45,7 @@ export default function BrandsPage() {
     };
 
     const handleCloseDrawer = () => {
+        setDrawerOpen(false);
         setSelectedId(null);
     };
 
@@ -58,14 +54,12 @@ export default function BrandsPage() {
         setConfirmOpen(true);
     };
 
-    // ─────────────────────────────────────────────────────────────
-    // Handlers de mutações (com notifications)
-    // ─────────────────────────────────────────────────────────────
+    // Mutations
     const handleCreate = async (values: Partial<Brand>) => {
         try {
-            const res = await create(values); // ApiResponse<Brand>
+            const res = await create(values);
             addNotification(res?.message || "Registro criado com sucesso.", "success");
-            handleCloseDrawer();
+            handleCloseDrawer(); // ✅ garante fechar após sucesso
         } catch (e) {
             console.error(e);
             addNotification("Erro ao criar registro. Tente novamente.", "error");
@@ -74,9 +68,9 @@ export default function BrandsPage() {
 
     const handleUpdate = async (id: number, values: Partial<Brand>) => {
         try {
-            const res = await update({ id, data: values }); // ApiResponse<Brand>
+            const res = await update({ id, data: values });
             addNotification(res?.message || "Registro atualizado com sucesso.", "success");
-            handleCloseDrawer();
+            handleCloseDrawer(); // ✅ garante fechar após sucesso
         } catch (e) {
             console.error(e);
             addNotification("Erro ao atualizar registro. Tente novamente.", "error");
@@ -86,7 +80,7 @@ export default function BrandsPage() {
     const handleDeleteConfirm = async () => {
         if (!selectedId) return;
         try {
-            const res = await remove(selectedId); // ApiResponse<null>
+            const res = await remove(selectedId);
             addNotification(res?.message || "Registro excluído com sucesso.", "success");
         } catch (e) {
             console.error(e);
@@ -101,24 +95,17 @@ export default function BrandsPage() {
         if (drawerMode === "edit" && selectedId) return handleUpdate(selectedId, values);
     };
 
-    // ─────────────────────────────────────────────────────────────
-    // Feedbacks de erro de listagem/detalhe (fetch)
-    // ─────────────────────────────────────────────────────────────
+    // Feedbacks
     useEffect(() => {
-        if (listError) {
-            addNotification("Erro ao carregar a lista de marcas.", "error");
-        }
+        if (listError) addNotification("Erro ao carregar a lista de marcas.", "error");
     }, [listError, addNotification]);
 
     useEffect(() => {
-        if (detail.error) {
-            addNotification("Erro ao carregar detalhes da marca.", "error");
-        }
+        if (detail.error) addNotification("Erro ao carregar detalhes da marca.", "error");
     }, [detail.error, addNotification]);
 
     return (
         <Box>
-            {/* Toolbar */}
             <PFTopToolbar
                 title="Marcas"
                 onSearch={(val) => setSearch(val)}
@@ -126,7 +113,6 @@ export default function BrandsPage() {
                 onAdd={handleOpenCreate}
             />
 
-            {/* Tabela */}
             <PFTable<Brand>
                 columns={brandColumns}
                 rows={data}
@@ -141,31 +127,42 @@ export default function BrandsPage() {
                 onDelete={handleAskDelete}
             />
 
-            {/* Drawer Modal */}
             <PFDrawerModal<Brand>
                 open={drawerOpen}
                 mode={drawerMode}
-                title={
-                    drawerMode === "create"
-                        ? "Nova Marca"
-                        : drawerMode === "edit"
-                            ? "Editar Marca"
-                            : "Detalhes da Marca"
-                }
+                title={drawerMode === "create" ? "Nova Marca" : drawerMode === "edit" ? "Editar Marca" : "Detalhes da Marca"}
                 data={selectedBrand}
                 fields={brandFields}
                 onClose={handleCloseDrawer}
                 onSubmit={handleSubmit}
                 renderView={(brand) => (
                     <Box>
-                        <Typography variant="body2"><b>ID:</b> {brand.id}</Typography>
-                        <Typography variant="body2"><b>Nome:</b> {brand.name}</Typography>
-                        <Typography variant="body2"><b>Ativo:</b> {brand.isActive ? "Sim" : "Não"}</Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                            <Typography variant="subtitle1" fontWeight={600}>
+                                {brand.name}
+                            </Typography>
+                            <Chip
+                                size="small"
+                                label={brand.isActive ? "Ativa" : "Inativa"}
+                                color={brand.isActive ? "success" : "default"}
+                                variant={brand.isActive ? "filled" : "outlined"}
+                            />
+                        </Box>
+                        <Divider sx={{ my: 1.5 }} />
+                        <Box sx={{ display: "grid", gridTemplateColumns: "120px 1fr", rowGap: 1.25 }}>
+                            <Typography color="text.secondary">ID</Typography>
+                            <Typography>{brand.id}</Typography>
+
+                            <Typography color="text.secondary">Nome</Typography>
+                            <Typography>{brand.name}</Typography>
+
+                            <Typography color="text.secondary">Status</Typography>
+                            <Typography>{brand.isActive ? "Sim" : "Não"}</Typography>
+                        </Box>
                     </Box>
                 )}
             />
 
-            {/* Confirm Dialog */}
             <PFConfirmDialog
                 open={confirmOpen}
                 title="Excluir Marca"

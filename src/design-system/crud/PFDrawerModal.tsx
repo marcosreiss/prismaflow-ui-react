@@ -6,6 +6,8 @@ import {
     Button,
     Divider,
     CircularProgress,
+    Skeleton,
+    Paper,
 } from "@mui/material";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
@@ -35,8 +37,8 @@ type PFDrawerModalProps<T extends FieldValues> = {
     data?: T | null;
     fields?: FieldDef<T>[];
     onClose: () => void;
-    onSubmit?: (values: Partial<T>) => Promise<void> | void; // permite async
-    renderView?: (data: T) => ReactNode;
+    onSubmit?: (values: Partial<T>) => Promise<void> | void;
+    renderView?: (data: T) => ReactNode; // 👉 Página define como renderizar detalhes
 };
 
 export default function PFDrawerModal<T extends FieldValues>({
@@ -57,24 +59,37 @@ export default function PFDrawerModal<T extends FieldValues>({
         defaultValues: (data ?? {}) as DefaultValues<T>,
     });
 
-    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
 
-    // 🔄 Recarrega dados quando "data" muda (ex.: editar ou visualizar)
     useEffect(() => {
-        if (data) {
-            methods.reset(data as DefaultValues<T>);
+        if (!open) return;
+
+        if (isView || isEdit) {
+            if (!data) {
+                setDetailLoading(true);
+                methods.reset({} as DefaultValues<T>); // limpa até vir os novos dados
+            } else {
+                setDetailLoading(false);
+                methods.reset(data as DefaultValues<T>);
+            }
+        } else if (isCreate) {
+            setDetailLoading(false);
+            methods.reset({} as DefaultValues<T>);
         }
-    }, [data, methods]);
+    }, [open, isView, isEdit, isCreate, data, methods]);
+
 
     const handleSubmit = methods.handleSubmit(async (values) => {
         try {
-            setLoading(true);
-            await onSubmit?.(values); // aguarda mutation
-            onClose(); // fecha só após sucesso
+            setSaving(true);
+            await onSubmit?.(values);
+            methods.reset({} as DefaultValues<T>);
+            onClose(); // ✅ fecha após sucesso
         } catch (err) {
             console.error("Erro no submit:", err);
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     });
 
@@ -82,24 +97,19 @@ export default function PFDrawerModal<T extends FieldValues>({
         <Drawer
             anchor="right"
             open={open}
-            onClose={onClose}
-            PaperProps={{
-                sx: { width: { xs: "100%", sm: 480, md: 560 }, p: 3 },
+            onClose={() => {
+                methods.reset({} as DefaultValues<T>);
+                onClose();
             }}
+            ModalProps={{ keepMounted: true }}
+            PaperProps={{ sx: { width: { xs: "100%", sm: 480, md: 560 }, p: 3 } }}
         >
             {/* Header */}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mb: 2,
-                }}
-            >
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
                 <Typography variant="h6" fontWeight="bold">
                     {title}
                 </Typography>
-                <IconButton onClick={onClose} disabled={loading}>
+                <IconButton onClick={onClose}>
                     <X size={20} />
                 </IconButton>
             </Box>
@@ -108,9 +118,20 @@ export default function PFDrawerModal<T extends FieldValues>({
 
             {/* Conteúdo */}
             <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-                {isView && data && renderView ? (
-                    renderView(data)
+                {detailLoading ? (
+                    // Skeleton genérico
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <Skeleton variant="text" width="50%" height={32} />
+                        <Skeleton variant="rectangular" height={72} />
+                        <Skeleton variant="rectangular" height={72} />
+                    </Box>
+                ) : isView && data && renderView ? (
+                    // 👉 View genérica controlada pela página
+                    <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }} elevation={0}>
+                        {renderView(data)}
+                    </Paper>
                 ) : (
+                    // Formulário create/edit
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit}>
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -132,31 +153,15 @@ export default function PFDrawerModal<T extends FieldValues>({
                             </Box>
 
                             {/* Footer */}
-                            <Box
-                                sx={{
-                                    mt: 3,
-                                    display: "flex",
-                                    justifyContent: "flex-end",
-                                    gap: 1,
-                                }}
-                            >
-                                <Button onClick={onClose} color="inherit" disabled={loading}>
-                                    Cancelar
-                                </Button>
+                            <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
                                 {(isCreate || isEdit) && (
                                     <Button
                                         type="submit"
                                         variant="contained"
-                                        disabled={loading}
-                                        startIcon={loading ? <CircularProgress size={18} /> : undefined}
+                                        disabled={saving}
+                                        startIcon={saving ? <CircularProgress size={18} /> : undefined}
                                     >
-                                        {loading
-                                            ? isCreate
-                                                ? "Criando..."
-                                                : "Salvando..."
-                                            : isCreate
-                                                ? "Criar"
-                                                : "Salvar"}
+                                        {saving ? (isCreate ? "Criando..." : "Salvando...") : isCreate ? "Criar" : "Salvar"}
                                     </Button>
                                 )}
                             </Box>
