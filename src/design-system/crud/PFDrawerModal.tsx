@@ -24,10 +24,13 @@ import { useEffect, useState } from "react";
 
 type DrawerMode = "create" | "edit" | "view";
 
+// Tipagem alinhada ao react-hook-form
 export type FieldDef<T extends FieldValues> = {
     name: FieldPath<T>;
     label: string;
-    component: (controlProps: ControllerRenderProps<T, FieldPath<T>>) => ReactNode;
+    component: (
+        props: ControllerRenderProps<T, FieldPath<T>>
+    ) => React.ReactNode;
 };
 
 type PFDrawerModalProps<T extends FieldValues> = {
@@ -42,7 +45,6 @@ type PFDrawerModalProps<T extends FieldValues> = {
     ModalPropsOverride?: {
         onExited?: () => void;
     };
-    // 👇 novas props para integrar com o hook
     creating?: boolean;
     updating?: boolean;
 };
@@ -68,47 +70,50 @@ export default function PFDrawerModal<T extends FieldValues>({
         defaultValues: {} as DefaultValues<T>,
     });
 
-    // Estado interno de saving (fallback)
+    // estado de saving (fallback local)
     const [savingInternal, setSavingInternal] = useState(false);
+    const saving =
+        creating !== undefined || updating !== undefined
+            ? creating || updating
+            : savingInternal;
 
-    // Usa flags externas se passadas, senão usa o estado interno
-    const saving = creating ?? updating ?? savingInternal;
+    // ✅ Deriva o loading a partir de props (sem estado interno desnecessário)
+    const showLoading = open && !isCreate && !data;
 
-    const [detailLoading, setDetailLoading] = useState(false);
-
-    // ♻️ Ciclo de vida do modal
+    // ♻️ Reset de valores ao abrir/atualizar dados
     useEffect(() => {
         if (!open) return;
 
         if (isCreate) {
-            setDetailLoading(false);
             methods.reset({} as DefaultValues<T>);
             return;
         }
 
-        if (!data) {
-            setDetailLoading(true);
-            methods.reset({} as DefaultValues<T>);
-        } else {
-            setDetailLoading(false);
+        if (data) {
             methods.reset(data as DefaultValues<T>);
+        } else {
+            // enquanto não há dados (edição/visualização), mantém form vazio
+            methods.reset({} as DefaultValues<T>);
         }
-    }, [open, isCreate, isView, isEdit, data, methods]);
+    }, [open, isCreate, data, methods]);
 
     const handleSubmit = methods.handleSubmit(async (values) => {
         try {
-            if (creating === undefined && updating === undefined) {
-                // só controla local se não vier flag externa
-                setSavingInternal(true);
-            }
+            // sempre ativa saving interno
+            setSavingInternal(true);
+
             await onSubmit?.(values);
+
             if (isCreate) {
                 methods.reset({} as DefaultValues<T>);
             }
+
+            // fecha só depois do sucesso
             onClose();
         } catch (err) {
             console.error("Erro no submit:", err);
         } finally {
+            // se não houver flags externas, libera saving pelo estado interno
             if (creating === undefined && updating === undefined) {
                 setSavingInternal(false);
             }
@@ -120,9 +125,7 @@ export default function PFDrawerModal<T extends FieldValues>({
             anchor="right"
             open={open}
             onClose={onClose}
-            ModalProps={{
-                keepMounted: true,
-            }}
+            ModalProps={{ keepMounted: true }}
             SlideProps={{
                 onExited: () => {
                     methods.reset({} as DefaultValues<T>);
@@ -145,7 +148,8 @@ export default function PFDrawerModal<T extends FieldValues>({
 
             {/* Conteúdo */}
             <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-                {detailLoading ? (
+                {showLoading ? (
+                    // ✅ Skeleton aparece corretamente enquanto carrega detalhe
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <Skeleton variant="text" width="50%" height={32} />
                         <Skeleton variant="rectangular" height={72} />
@@ -161,7 +165,7 @@ export default function PFDrawerModal<T extends FieldValues>({
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                 {fields.map((field) => (
                                     <Controller
-                                        key={field.name}
+                                        key={String(field.name)}
                                         name={field.name}
                                         control={methods.control}
                                         render={({ field: controlProps }) => (
