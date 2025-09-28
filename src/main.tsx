@@ -12,9 +12,8 @@ import '@fontsource/inter/500.css';
 import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { NotificationProvider } from './context/NotificationContext.tsx';
-import { ThemeProvider } from '@emotion/react';
 import PFToast from './design-system/components/pfnotifications/PFToast.tsx';
-import prismaTheme from './design-system/theme/prismaTheme.ts';
+import ThemeModeProvider from './context/theme/ThemeModeProvider.tsx';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,14 +32,14 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <ThemeProvider theme={prismaTheme}>
+          <ThemeModeProvider>
             <NotificationProvider>
               <Suspense>
                 <App />
                 <PFToast />
               </Suspense>
             </NotificationProvider>
-          </ThemeProvider>
+          </ThemeModeProvider>
         </AuthProvider>
       </BrowserRouter>
       <ReactQueryDevtools initialIsOpen={false} />

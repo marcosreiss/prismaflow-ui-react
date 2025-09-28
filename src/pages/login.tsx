@@ -94,10 +94,10 @@ export default function Login() {
 
                 {/* Texto de boas-vindas no centro */}
                 <Box>
-                    <Typography variant="h3" fontSize={40} fontWeight="bold">
+                    <Typography variant="h3" fontSize={40} fontWeight="bold" color="white">
                         Olá, bem-vindo ao PrismaFlow!
                     </Typography>
-                    <Typography sx={{ mt: 2, fontSize: 15, lineHeight: 1.4 }}>
+                    <Typography sx={{ mt: 2, fontSize: 15, lineHeight: 1.4, color: "white" }}>
                         Organize sua ótica com clareza e fluidez. <br/> Faça login para acessar sua gestão integrada.
                     </Typography>
                 </Box>
