@@ -1,3 +1,4 @@
+// src/design-system/crud/PFDrawerModal.tsx
 import {
     Drawer,
     Box,
@@ -15,9 +16,9 @@ import {
     useForm,
     type DefaultValues,
     FormProvider,
-    Controller
+    Controller,
 } from "react-hook-form";
-
+import { useEffect } from "react";
 
 type DrawerMode = "create" | "edit" | "view";
 
@@ -34,7 +35,7 @@ type PFDrawerModalProps<T extends FieldValues> = {
     data?: T | null;
     fields?: FieldDef<T>[];
     onClose: () => void;
-    onSubmit?: (values: Partial<T>) => void;
+    onSubmit?: (values: Partial<T>) => Promise<void> | void; // permite async
     renderView?: (data: T) => ReactNode;
 };
 
@@ -56,9 +57,21 @@ export default function PFDrawerModal<T extends FieldValues>({
         defaultValues: (data ?? {}) as DefaultValues<T>,
     });
 
-    const handleSubmit = methods.handleSubmit((values) => {
-        onSubmit?.(values);
-        onClose();
+    // 🔄 Recarrega dados quando "data" muda (ex.: editar ou visualizar)
+    useEffect(() => {
+        if (data) {
+            methods.reset(data as DefaultValues<T>);
+        }
+    }, [data, methods]);
+
+    const handleSubmit = methods.handleSubmit(async (values) => {
+        try {
+            await onSubmit?.(values); // aguarda mutation
+            onClose(); // só fecha após sucesso
+        } catch (err) {
+            // Se a mutation disparar erro, Drawer não fecha → notificação aparece
+            console.error("Erro no submit:", err);
+        }
     });
 
     return (
