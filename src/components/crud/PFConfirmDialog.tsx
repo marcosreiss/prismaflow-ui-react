@@ -39,7 +39,16 @@ export default function PFConfirmDialog({
                 )}
             </DialogContent>
 
-            <DialogActions sx={{ p: 2.5, gap: 1.5 }}>
+            <DialogActions
+                sx={{
+                    p: 2.5,
+                    gap: 1.5,
+                    flexDirection: { xs: "column", sm: "row" },
+                    "& > .MuiButton-root": {
+                        width: { xs: "100%", sm: "auto" },
+                    },
+                }}
+            >
                 <Button
                     onClick={onCancel}
                     variant="outlined"

@@ -92,14 +92,12 @@ export default function PFDrawerModal<T extends FieldValues>({
         if (data) {
             methods.reset(data as DefaultValues<T>);
         } else {
-            // enquanto não há dados (edição/visualização), mantém form vazio
             methods.reset({} as DefaultValues<T>);
         }
     }, [open, isCreate, data, methods]);
 
     const handleSubmit = methods.handleSubmit(async (values) => {
         try {
-            // sempre ativa saving interno
             setSavingInternal(true);
 
             await onSubmit?.(values);
@@ -108,12 +106,10 @@ export default function PFDrawerModal<T extends FieldValues>({
                 methods.reset({} as DefaultValues<T>);
             }
 
-            // fecha só depois do sucesso
             onClose();
         } catch (err) {
             console.error("Erro no submit:", err);
         } finally {
-            // se não houver flags externas, libera saving pelo estado interno
             if (creating === undefined && updating === undefined) {
                 setSavingInternal(false);
             }
@@ -132,14 +128,33 @@ export default function PFDrawerModal<T extends FieldValues>({
                     ModalPropsOverride?.onExited?.();
                 },
             }}
-            PaperProps={{ sx: { width: { xs: "100%", sm: 480, md: 560 }, p: 3 } }}
+            PaperProps={{
+                sx: {
+                    width: { xs: "100%", sm: 480, md: 560 },
+                    maxWidth: "100vw",
+                    p: { xs: 2, sm: 3 },
+                },
+            }}
         >
             {/* Header */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    mb: 2,
+                }}
+            >
                 <Typography variant="h6" fontWeight="bold">
                     {title}
                 </Typography>
-                <IconButton onClick={onClose}>
+                <IconButton
+                    onClick={onClose}
+                    sx={{
+                        width: { xs: 40, sm: 36 },
+                        height: { xs: 40, sm: 36 },
+                    }}
+                >
                     <X size={20} />
                 </IconButton>
             </Box>
@@ -147,16 +162,25 @@ export default function PFDrawerModal<T extends FieldValues>({
             <Divider sx={{ mb: 2 }} />
 
             {/* Conteúdo */}
-            <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    overflowY: "auto",
+                    maxHeight: { xs: "calc(100vh - 120px)", sm: "none" },
+                    pb: { xs: 6, sm: 3 },
+                }}
+            >
                 {showLoading ? (
-                    // ✅ Skeleton aparece corretamente enquanto carrega detalhe
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <Skeleton variant="text" width="50%" height={32} />
                         <Skeleton variant="rectangular" height={72} />
                         <Skeleton variant="rectangular" height={72} />
                     </Box>
                 ) : isView && data && renderView ? (
-                    <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }} elevation={0}>
+                    <Paper
+                        sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}
+                        elevation={0}
+                    >
                         {renderView(data)}
                     </Paper>
                 ) : (
@@ -170,7 +194,11 @@ export default function PFDrawerModal<T extends FieldValues>({
                                         control={methods.control}
                                         render={({ field: controlProps }) => (
                                             <Box>
-                                                <Typography variant="body2" fontWeight={500} mb={0.5}>
+                                                <Typography
+                                                    variant="body2"
+                                                    fontWeight={500}
+                                                    mb={0.5}
+                                                >
                                                     {field.label}
                                                 </Typography>
                                                 {field.component(controlProps)}
@@ -180,15 +208,34 @@ export default function PFDrawerModal<T extends FieldValues>({
                                 ))}
                             </Box>
 
-                            <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+                            {/* Footer responsivo */}
+                            <Box
+                                sx={{
+                                    mt: 3,
+                                    display: "flex",
+                                    justifyContent: { xs: "stretch", sm: "flex-end" },
+                                }}
+                            >
                                 {(isCreate || isEdit) && (
                                     <Button
                                         type="submit"
                                         variant="contained"
                                         disabled={saving}
-                                        startIcon={saving ? <CircularProgress size={18} /> : undefined}
+                                        startIcon={
+                                            saving ? <CircularProgress size={18} /> : undefined
+                                        }
+                                        fullWidth={isView ? false : true} // no mobile ocupa largura total
+                                        sx={{
+                                            width: { xs: "100%", sm: "auto" },
+                                        }}
                                     >
-                                        {saving ? (isCreate ? "Criando..." : "Salvando...") : isCreate ? "Criar" : "Salvar"}
+                                        {saving
+                                            ? isCreate
+                                                ? "Criando..."
+                                                : "Salvando..."
+                                            : isCreate
+                                                ? "Criar"
+                                                : "Salvar"}
                                     </Button>
                                 )}
                             </Box>

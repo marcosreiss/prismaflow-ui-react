@@ -10,6 +10,9 @@ import {
     Skeleton,
     TablePagination,
     Paper,
+    Card,
+    CardContent,
+    Divider,
 } from "@mui/material";
 import { Inbox } from "lucide-react";
 import PFRowActionsMenu from "./PFRowActionsMenu";
@@ -55,10 +58,27 @@ export default function PFTable<T extends object>({
             sx={{
                 borderColor: "grey.200",
                 overflow: "hidden",
+                p: { xs: 1, sm: 0 },
             }}
         >
-            <TableContainer>
-                <Table size="small">
+            {/* === Tabela (desktop/tablet) === */}
+            <TableContainer
+                sx={{
+                    width: "100%",
+                    overflowX: "auto",
+                    display: { xs: "none", sm: "block" }, // esconde no mobile
+                }}
+            >
+                <Table
+                    size="small"
+                    sx={{
+                        minWidth: 600,
+                        "& th, & td": {
+                            whiteSpace: "nowrap",
+                            px: { xs: 1, sm: 2 },
+                        },
+                    }}
+                >
                     <TableHead>
                         <TableRow sx={{ backgroundColor: "grey.100" }}>
                             {columns.map((col) => (
@@ -122,9 +142,7 @@ export default function PFTable<T extends object>({
                                         }}
                                     >
                                         <Inbox size={32} style={{ marginBottom: 8 }} />
-                                        <Typography variant="body2">
-                                            Nenhum dado encontrado
-                                        </Typography>
+                                        <Typography variant="body2">Nenhum dado encontrado</Typography>
                                     </Box>
                                 </TableCell>
                             </TableRow>
@@ -168,6 +186,73 @@ export default function PFTable<T extends object>({
                 </Table>
             </TableContainer>
 
+            {/* === Cards (mobile) === */}
+            <Box
+                sx={{
+                    display: { xs: "flex", sm: "none" },
+                    flexDirection: "column",
+                    gap: 1,
+                }}
+            >
+                {loading &&
+                    Array.from({ length: pageSize }).map((_, i) => (
+                        <Card key={`skeleton-card-${i}`} variant="outlined">
+                            <CardContent>
+                                {columns.map((col) => (
+                                    <Skeleton key={String(col.key)} variant="text" width="80%" />
+                                ))}
+                            </CardContent>
+                        </Card>
+                    ))}
+
+                {!loading && rows.length === 0 && (
+                    <Card variant="outlined">
+                        <CardContent sx={{ textAlign: "center", color: "text.secondary" }}>
+                            <Inbox size={32} style={{ marginBottom: 8 }} />
+                            <Typography variant="body2">Nenhum dado encontrado</Typography>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {!loading &&
+                    rows.map((row, rowIndex) => (
+                        <Card key={`card-${rowIndex}`} variant="outlined">
+                            <CardContent>
+                                {columns.map((col, j) => (
+                                    <Box key={j} sx={{ mb: 1 }}>
+                                        <Typography
+                                            variant="caption"
+                                            fontWeight={600}
+                                            color="text.secondary"
+                                        >
+                                            {col.label}
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            {col.render
+                                                ? col.render(row)
+                                                : col.key in row
+                                                    ? String(row[col.key as keyof T])
+                                                    : ""}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                                {(onView || onEdit || onDelete) && (
+                                    <>
+                                        <Divider sx={{ my: 1 }} />
+                                        <Box textAlign="right">
+                                            <PFRowActionsMenu
+                                                onView={onView ? () => onView(row) : undefined}
+                                                onEdit={onEdit ? () => onEdit(row) : undefined}
+                                                onDelete={onDelete ? () => onDelete(row) : undefined}
+                                            />
+                                        </Box>
+                                    </>
+                                )}
+                            </CardContent>
+                        </Card>
+                    ))}
+            </Box>
+
             {/* Paginação */}
             <TablePagination
                 component="div"
@@ -175,26 +260,18 @@ export default function PFTable<T extends object>({
                 page={page}
                 onPageChange={(_, newPage) => onPageChange(newPage)}
                 rowsPerPage={pageSize}
-                onRowsPerPageChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
+                onRowsPerPageChange={(e) =>
+                    onPageSizeChange(parseInt(e.target.value, 10))
+                }
                 rowsPerPageOptions={[5, 10, 20, 50]}
-                sx={{ borderTop: "1px solid", borderColor: "grey.200", px: 2 }}
-                slotProps={{
-                    select: {
-                        MenuProps: {
-                            anchorOrigin: {
-                                vertical: "top",
-                                horizontal: "left",
-                            },
-                            transformOrigin: {
-                                vertical: "bottom",
-                                horizontal: "left",
-                            },
-                            PaperProps: {
-                                sx: {
-                                    maxHeight: 200, // garante que não estoure a tela
-                                },
-                            },
-                        },
+                sx={{
+                    borderTop: "1px solid",
+                    borderColor: "grey.200",
+                    px: { xs: 1, sm: 2 },
+                    ".MuiTablePagination-toolbar": {
+                        flexDirection: { xs: "column", sm: "row" },
+                        alignItems: { xs: "flex-start", sm: "center" },
+                        gap: { xs: 1, sm: 0 },
                     },
                 }}
             />

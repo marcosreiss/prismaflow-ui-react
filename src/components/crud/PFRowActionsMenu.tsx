@@ -8,14 +8,25 @@ type PFRowActionsMenuProps = {
     onDelete?: () => void;
 };
 
-export default function PFRowActionsMenu({ onView, onEdit, onDelete }: PFRowActionsMenuProps) {
+export default function PFRowActionsMenu({
+    onView,
+    onEdit,
+    onDelete,
+}: PFRowActionsMenuProps) {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
     return (
         <>
-            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                <MoreHorizontal size={18} />
+            <IconButton
+                onClick={(e) => setAnchorEl(e.currentTarget)}
+                sx={{
+                    // aumenta a área de clique em tablets/mobiles
+                    width: { xs: 40, sm: 36 },
+                    height: { xs: 40, sm: 36 },
+                }}
+            >
+                <MoreHorizontal size={20} />
             </IconButton>
             <Menu
                 anchorEl={anchorEl}
@@ -23,6 +34,15 @@ export default function PFRowActionsMenu({ onView, onEdit, onDelete }: PFRowActi
                 onClose={() => setAnchorEl(null)}
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
+                PaperProps={{
+                    sx: {
+                        minWidth: { xs: 140, sm: 160 }, // ajusta largura mínima em mobile/tablet
+                        "& .MuiMenuItem-root": {
+                            fontSize: { xs: "0.85rem", sm: "0.9rem" }, // fonte menor no mobile
+                            py: { xs: 1, sm: 1.2 }, // padding ajustado
+                        },
+                    },
+                }}
             >
                 {onView && (
                     <MenuItem
