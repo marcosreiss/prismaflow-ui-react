@@ -112,7 +112,14 @@ export default function BrandsPage() {
     }, [selectedId, detail.error, addNotification]);
 
     return (
-        <Paper sx={{ borderRadius: 3, overflow: "hidden", px: 3, py: 6 }}>
+        <Paper
+            sx={{
+                borderRadius: 2,
+                borderColor: "grey.200",
+                backgroundColor: "background.paper",
+                p: 3,
+            }}
+        >
             <PFTopToolbar
                 title="Marcas"
                 addLabel="Adicionar nova marca"
@@ -139,7 +146,13 @@ export default function BrandsPage() {
                 key={`${drawerMode}-${selectedId ?? "new"}`}
                 open={drawerOpen}
                 mode={drawerMode}
-                title={drawerMode === "create" ? "Nova Marca" : drawerMode === "edit" ? "Editar Marca" : "Detalhes da Marca"}
+                title={
+                    drawerMode === "create"
+                        ? "Nova Marca"
+                        : drawerMode === "edit"
+                            ? "Editar Marca"
+                            : "Detalhes da Marca"
+                }
                 data={selectedBrand}
                 fields={brandFields}
                 onClose={handleCloseDrawer}
@@ -148,10 +161,10 @@ export default function BrandsPage() {
                 updating={updating}
                 renderView={(brand) => (
                     <Box>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-                            <Typography variant="subtitle1" fontWeight={600}>
-                                {brand.name}
-                            </Typography>
+                        <Box
+                            sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+                        >
+                            <Typography variant="h6">{brand.name}</Typography>
                             <Chip
                                 size="small"
                                 label={brand.isActive ? "Ativa" : "Inativa"}
@@ -159,16 +172,30 @@ export default function BrandsPage() {
                                 variant={brand.isActive ? "filled" : "outlined"}
                             />
                         </Box>
-                        <Divider sx={{ my: 1.5 }} />
-                        <Box sx={{ display: "grid", gridTemplateColumns: "120px 1fr", rowGap: 1.25 }}>
-                            <Typography color="text.secondary">ID</Typography>
-                            <Typography>{brand.id}</Typography>
+                        <Divider sx={{ my: 2 }} />
+                        <Box
+                            sx={{
+                                display: "grid",
+                                gridTemplateColumns: "140px 1fr",
+                                rowGap: 1.5,
+                            }}
+                        >
+                            <Typography variant="body2" color="text.secondary">
+                                ID
+                            </Typography>
+                            <Typography variant="body1">{brand.id}</Typography>
 
-                            <Typography color="text.secondary">Nome</Typography>
-                            <Typography>{brand.name}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Nome
+                            </Typography>
+                            <Typography variant="body1">{brand.name}</Typography>
 
-                            <Typography color="text.secondary">Status</Typography>
-                            <Typography>{brand.isActive ? "Sim" : "Não"}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Status
+                            </Typography>
+                            <Typography variant="body1">
+                                {brand.isActive ? "Sim" : "Não"}
+                            </Typography>
                         </Box>
                     </Box>
                 )}
@@ -177,15 +204,15 @@ export default function BrandsPage() {
                 }}
             />
 
-
             <PFConfirmDialog
                 open={confirmOpen}
                 title="Excluir Marca"
                 description="Tem certeza que deseja excluir esta marca?"
                 onCancel={() => setConfirmOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                loading={removing} // 👈 agora usa estado do hook
+                loading={removing}
             />
         </Paper>
     );
+
 }
