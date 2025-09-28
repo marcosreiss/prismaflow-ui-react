@@ -28,6 +28,7 @@ export type UserLoginRequest = {
 export type UserLoginData = {
   id: string;
   username: string;
+  token: string;
   email: string;
   role: string;
 };

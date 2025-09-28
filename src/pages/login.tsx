@@ -30,9 +30,9 @@ export default function Login() {
     const onSubmit = (data: UserLoginRequest) => {
         login(data, {
             onSuccess: (res) => {
-                if (res.token && res.data) {
+                if (res.data?.token && res.data) {
                     // Primeiro seta o token e usuário no contexto
-                    setToken(res.token, {
+                    setToken(res.data?.token, {
                         username: res.data.username,
                         role: res.data.role,
                     });
