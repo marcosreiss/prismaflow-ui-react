@@ -17,7 +17,7 @@ export default function BrandsPage() {
 
     // 🔗 conecta o ID selecionado ao hook para buscar detalhes
     const {
-        list: { data, total, isLoading, page, setPage, take, setTake, setSearch, refetch, error: listError },
+        list: { data, total, isLoading, page, setPage, size, setSize, setSearch, refetch, error: listError },
         detail,
         create,
         update,
@@ -133,9 +133,9 @@ export default function BrandsPage() {
                 loading={isLoading}
                 total={total}
                 page={page}
-                pageSize={take}
+                pageSize={size}
                 onPageChange={setPage}
-                onPageSizeChange={setTake}
+                onPageSizeChange={setSize}
                 onView={handleOpenView}
                 onEdit={handleOpenEdit}
                 onDelete={handleAskDelete}
