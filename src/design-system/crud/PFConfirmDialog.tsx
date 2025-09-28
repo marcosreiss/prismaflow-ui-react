@@ -5,6 +5,7 @@ import {
     DialogActions,
     Button,
     Typography,
+    CircularProgress,
 } from "@mui/material";
 
 type PFConfirmDialogProps = {
@@ -12,7 +13,8 @@ type PFConfirmDialogProps = {
     title: string;
     description?: string;
     onCancel: () => void;
-    onConfirm: () => void;
+    onConfirm: () => void | Promise<void>;
+    loading?: boolean;
 };
 
 export default function PFConfirmDialog({
@@ -21,6 +23,7 @@ export default function PFConfirmDialog({
     description,
     onCancel,
     onConfirm,
+    loading = false,
 }: PFConfirmDialogProps) {
     return (
         <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
@@ -29,11 +32,17 @@ export default function PFConfirmDialog({
                 {description && <Typography variant="body2">{description}</Typography>}
             </DialogContent>
             <DialogActions>
-                <Button onClick={onCancel} color="inherit">
+                <Button onClick={onCancel} color="inherit" disabled={loading}>
                     Cancelar
                 </Button>
-                <Button onClick={onConfirm} color="error" variant="contained">
-                    Confirmar
+                <Button
+                    onClick={onConfirm}
+                    color="error"
+                    variant="contained"
+                    disabled={loading}
+                    startIcon={loading ? <CircularProgress size={18} /> : undefined}
+                >
+                    {loading ? "Excluindo..." : "Confirmar"}
                 </Button>
             </DialogActions>
         </Dialog>

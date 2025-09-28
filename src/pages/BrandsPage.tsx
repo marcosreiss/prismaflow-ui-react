@@ -16,11 +16,14 @@ export default function BrandsPage() {
     const [confirmOpen, setConfirmOpen] = useState(false);
 
     const {
-        list: { data, total, isLoading, page, setPage, size, setSize, setSearch, refetch, error: listError },
+        list: { data, total, isLoading, isFetching, page, setPage, size, setSize, setSearch, refetch, error: listError },
         detail,
         create,
         update,
         remove,
+        creating,
+        updating,
+        removing,
     } = useBrand(selectedId);
 
     const { addNotification } = useNotification();
@@ -48,7 +51,6 @@ export default function BrandsPage() {
         setDrawerOpen(true);
     };
 
-    // agora só fecha o drawer
     const handleCloseDrawer = () => {
         setDrawerOpen(false);
     };
@@ -118,7 +120,7 @@ export default function BrandsPage() {
             <PFTable<Brand>
                 columns={brandColumns}
                 rows={data}
-                loading={isLoading}
+                loading={isLoading || isFetching} // 👈 cobre inicial + paginação/pesquisa
                 total={total}
                 page={page}
                 pageSize={size}
@@ -138,6 +140,8 @@ export default function BrandsPage() {
                 fields={brandFields}
                 onClose={handleCloseDrawer}
                 onSubmit={handleSubmit}
+                creating={creating}
+                updating={updating}
                 renderView={(brand) => (
                     <Box>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -165,9 +169,10 @@ export default function BrandsPage() {
                     </Box>
                 )}
                 ModalPropsOverride={{
-                    onExited: () => setSelectedId(null), // limpa id só após animação
+                    onExited: () => setSelectedId(null),
                 }}
             />
+
 
             <PFConfirmDialog
                 open={confirmOpen}
@@ -175,6 +180,7 @@ export default function BrandsPage() {
                 description="Tem certeza que deseja excluir esta marca?"
                 onCancel={() => setConfirmOpen(false)}
                 onConfirm={handleDeleteConfirm}
+                loading={removing} // 👈 agora usa estado do hook
             />
         </Box>
     );

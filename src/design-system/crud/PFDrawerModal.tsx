@@ -42,6 +42,9 @@ type PFDrawerModalProps<T extends FieldValues> = {
     ModalPropsOverride?: {
         onExited?: () => void;
     };
+    // 👇 novas props para integrar com o hook
+    creating?: boolean;
+    updating?: boolean;
 };
 
 export default function PFDrawerModal<T extends FieldValues>({
@@ -54,6 +57,8 @@ export default function PFDrawerModal<T extends FieldValues>({
     onSubmit,
     renderView,
     ModalPropsOverride,
+    creating,
+    updating,
 }: PFDrawerModalProps<T>) {
     const isView = mode === "view";
     const isEdit = mode === "edit";
@@ -63,7 +68,12 @@ export default function PFDrawerModal<T extends FieldValues>({
         defaultValues: {} as DefaultValues<T>,
     });
 
-    const [saving, setSaving] = useState(false);
+    // Estado interno de saving (fallback)
+    const [savingInternal, setSavingInternal] = useState(false);
+
+    // Usa flags externas se passadas, senão usa o estado interno
+    const saving = creating ?? updating ?? savingInternal;
+
     const [detailLoading, setDetailLoading] = useState(false);
 
     // ♻️ Ciclo de vida do modal
@@ -87,7 +97,10 @@ export default function PFDrawerModal<T extends FieldValues>({
 
     const handleSubmit = methods.handleSubmit(async (values) => {
         try {
-            setSaving(true);
+            if (creating === undefined && updating === undefined) {
+                // só controla local se não vier flag externa
+                setSavingInternal(true);
+            }
             await onSubmit?.(values);
             if (isCreate) {
                 methods.reset({} as DefaultValues<T>);
@@ -96,7 +109,9 @@ export default function PFDrawerModal<T extends FieldValues>({
         } catch (err) {
             console.error("Erro no submit:", err);
         } finally {
-            setSaving(false);
+            if (creating === undefined && updating === undefined) {
+                setSavingInternal(false);
+            }
         }
     });
 

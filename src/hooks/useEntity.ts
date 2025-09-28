@@ -22,14 +22,14 @@ export function useEntity<T>({
   const [size, setSize] = useState(initialSize);
 
   // 📌 Listagem
-  const listQuery = useQuery<ApiResponse<PaginatedResponse<T>>>({
+  const getAll = useQuery<ApiResponse<PaginatedResponse<T>>>({
     queryKey: [queryKey, { page, size, search }],
     queryFn: () => service.getAll({ page, size, search }),
     placeholderData: (prev) => prev,
   });
 
-  // 📌 Detalhe (desativado se não houver id)
-  const detailQuery = useQuery<ApiResponse<T>>({
+  // 📌 Detalhe
+  const getById = useQuery<ApiResponse<T>>({
     queryKey: [queryKey, "detail", detailId],
     queryFn: () => service.getById(detailId as number | string),
     enabled: !!detailId,
@@ -62,32 +62,39 @@ export function useEntity<T>({
   });
 
   return {
-    // lista
+    // 📌 Lista
     list: {
-      data: listQuery.data?.data?.content ?? [],
-      total: listQuery.data?.data?.totalElements ?? 0,
-      isLoading: listQuery.isLoading,
-      error: listQuery.error,
+      data: getAll.data?.data?.content ?? [],
+      total: getAll.data?.data?.totalElements ?? 0,
+      isLoading: getAll.isLoading, // primeiro carregamento
+      isFetching: getAll.isFetching, // paginação, pesquisa, refetch
+      error: getAll.error,
       page,
       setPage,
       size,
       setSize,
       search,
       setSearch,
-      refetch: listQuery.refetch,
+      refetch: getAll.refetch,
     },
 
-    // detalhe
+    // 📌 Detalhe
     detail: {
-      data: detailQuery.data?.data,
-      isLoading: detailQuery.isLoading,
-      error: detailQuery.error,
-      refetch: detailQuery.refetch,
+      data: getById.data?.data,
+      isLoading: getById.isLoading,
+      isFetching: getById.isFetching,
+      error: getById.error,
+      refetch: getById.refetch,
     },
 
-    // mutations (retornam ApiResponse<T>)
+    // 📌 Mutations (ApiResponse<T>)
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
     remove: deleteMutation.mutateAsync,
+
+    // Estados de carregamento das mutações
+    creating: createMutation.isPending,
+    updating: updateMutation.isPending,
+    removing: deleteMutation.isPending,
   };
 }
