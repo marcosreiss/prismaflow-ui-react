@@ -27,12 +27,24 @@ export default function PFConfirmDialog({
 }: PFConfirmDialogProps) {
     return (
         <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>
+                <Typography variant="h6">{title}</Typography>
+            </DialogTitle>
+
             <DialogContent>
-                {description && <Typography variant="body2">{description}</Typography>}
+                {description && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {description}
+                    </Typography>
+                )}
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onCancel} color="inherit" disabled={loading}>
+
+            <DialogActions sx={{ p: 2.5, gap: 1.5 }}>
+                <Button
+                    onClick={onCancel}
+                    variant="outlined"
+                    disabled={loading}
+                >
                     Cancelar
                 </Button>
                 <Button
@@ -40,7 +52,7 @@ export default function PFConfirmDialog({
                     color="error"
                     variant="contained"
                     disabled={loading}
-                    startIcon={loading ? <CircularProgress size={18} /> : undefined}
+                    endIcon={loading ? <CircularProgress size={16} /> : undefined}
                 >
                     {loading ? "Excluindo..." : "Confirmar"}
                 </Button>
