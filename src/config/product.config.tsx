@@ -1,8 +1,10 @@
-import type { ColumnDef } from "@/components/crud/PFTable";
-import { ProductCategoryLabels, type Product, type ProductCategory } from "@/types/productTypes";
 import type { FieldDef } from "@/components/crud/PFDrawerModal";
+import type { ColumnDef } from "@/components/crud/PFTable";
+import CurrencyInput from "@/components/imask/CurrencyInput";
+import PercentInput from "@/components/imask/PercentInput";
 import type { Brand } from "@/types/brandTypes";
-import { TextField, Switch, FormControlLabel, MenuItem } from "@mui/material";
+import { type Product, type ProductCategory, ProductCategoryLabels } from "@/types/productTypes";
+import { FormControlLabel, MenuItem, Switch, TextField } from "@mui/material";
 
 // ----------------------
 // Tabela
@@ -59,25 +61,25 @@ export const productFields: FieldDef<Product>[] = [
         name: "costPrice",
         label: "Preço de Custo",
         component: ({ value, onChange }) => (
-            <TextField
-                type="number"
+            <CurrencyInput
                 fullWidth
                 size="small"
-                value={value ?? ""}
-                onChange={(e) => onChange(parseFloat(e.target.value))}
+                label=""
+                value={typeof value === "number" ? value : 0}
+                onChange={(val) => onChange(val)}
             />
         ),
     },
     {
         name: "markup",
-        label: "Markup (%)",
+        label: "Acréscimo (%)",
         component: ({ value, onChange }) => (
-            <TextField
-                type="number"
+            <PercentInput
                 fullWidth
                 size="small"
-                value={value ?? ""}
-                onChange={(e) => onChange(parseFloat(e.target.value))}
+                label=""
+                value={typeof value === "number" ? value : 0}
+                onChange={(val) => onChange(val)}
             />
         ),
     },
@@ -85,12 +87,12 @@ export const productFields: FieldDef<Product>[] = [
         name: "salePrice",
         label: "Preço de Venda",
         component: ({ value, onChange }) => (
-            <TextField
-                type="number"
+            <CurrencyInput
                 fullWidth
                 size="small"
-                value={value ?? ""}
-                onChange={(e) => onChange(parseFloat(e.target.value))}
+                label=""
+                value={typeof value === "number" ? value : 0}
+                onChange={(val) => onChange(val)}
             />
         ),
     },
