@@ -1,4 +1,3 @@
-// src/pages/BrandsPage.tsx
 import { useState, useEffect } from "react";
 import PFTopToolbar from "@/design-system/crud/PFTopToolbar";
 import PFTable from "@/design-system/crud/PFTable";
@@ -18,7 +17,7 @@ export default function BrandsPage() {
 
     const {
         list: { data, total, isLoading, page, setPage, size, setSize, setSearch, refetch, error: listError },
-        detail, // presume { data, isLoading, error }
+        detail,
         create,
         update,
         remove,
@@ -26,7 +25,6 @@ export default function BrandsPage() {
 
     const { addNotification } = useNotification();
 
-    // 🔎 Evita flash: se está carregando OU o detail.id não bate com o selectedId → deixa null (força skeleton)
     const selectedBrand: Brand | null =
         drawerMode === "create"
             ? null
@@ -34,7 +32,6 @@ export default function BrandsPage() {
                 ? null
                 : ((detail.data as Brand | undefined) ?? null);
 
-    // Handlers de abertura
     const handleOpenCreate = () => {
         setDrawerMode("create");
         setSelectedId(null);
@@ -51,10 +48,9 @@ export default function BrandsPage() {
         setDrawerOpen(true);
     };
 
-    // Fecha sempre
+    // agora só fecha o drawer
     const handleCloseDrawer = () => {
         setDrawerOpen(false);
-        setSelectedId(null);
     };
 
     const handleAskDelete = (row: Brand) => {
@@ -62,7 +58,6 @@ export default function BrandsPage() {
         setConfirmOpen(true);
     };
 
-    // Mutations
     const handleCreate = async (values: Partial<Brand>) => {
         try {
             const res = await create(values);
@@ -103,7 +98,6 @@ export default function BrandsPage() {
         if (drawerMode === "edit" && selectedId) return handleUpdate(selectedId, values);
     };
 
-    // Feedbacks
     useEffect(() => {
         if (listError) addNotification("Erro ao carregar a lista de marcas.", "error");
     }, [listError, addNotification]);
@@ -136,11 +130,11 @@ export default function BrandsPage() {
             />
 
             <PFDrawerModal<Brand>
-                key={`${drawerMode}-${selectedId ?? "new"}`} // 🔁 força remontar quando muda id/mode
+                key={`${drawerMode}-${selectedId ?? "new"}`}
                 open={drawerOpen}
                 mode={drawerMode}
                 title={drawerMode === "create" ? "Nova Marca" : drawerMode === "edit" ? "Editar Marca" : "Detalhes da Marca"}
-                data={selectedBrand} // 🔥 null enquanto carrega → skeleton no Drawer
+                data={selectedBrand}
                 fields={brandFields}
                 onClose={handleCloseDrawer}
                 onSubmit={handleSubmit}
@@ -170,6 +164,9 @@ export default function BrandsPage() {
                         </Box>
                     </Box>
                 )}
+                ModalPropsOverride={{
+                    onExited: () => setSelectedId(null), // limpa id só após animação
+                }}
             />
 
             <PFConfirmDialog
