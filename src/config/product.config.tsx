@@ -4,7 +4,7 @@ import CurrencyInput from "@/components/imask/CurrencyInput";
 import PercentInput from "@/components/imask/PercentInput";
 import type { Brand } from "@/types/brandTypes";
 import { type Product, type ProductCategory, ProductCategoryLabels } from "@/types/productTypes";
-import { FormControlLabel, MenuItem, Switch, TextField } from "@mui/material";
+import { MenuItem, TextField } from "@mui/material";
 
 // ----------------------
 // Tabela
@@ -161,19 +161,19 @@ export const productFields: FieldDef<Product>[] = [
             );
         },
     },
-    {
-        name: "isActive",
-        label: "Ativo",
-        component: ({ value, onChange }) => (
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={Boolean(value)}
-                        onChange={(e) => onChange(e.target.checked)}
-                    />
-                }
-                label="Ativo"
-            />
-        ),
-    },
+    // {
+    //     name: "isActive",
+    //     label: "Ativo",
+    //     component: ({ value, onChange }) => (
+    //         <FormControlLabel
+    //             control={
+    //                 <Switch
+    //                     checked={Boolean(value)}
+    //                     onChange={(e) => onChange(e.target.checked)}
+    //                 />
+    //             }
+    //             label="Ativo"
+    //         />
+    //     ),
+    // },
 ];

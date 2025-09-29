@@ -27,69 +27,69 @@ export const customerFields: FieldDef<Customer>[] = [
         label: "Nome Completo",
         component: ({ value, onChange }) => (
             <TextField
-        fullWidth
-        size="small"
-        value={ value ?? ""
-    }
-        onChange = {(e) => onChange(e.target.value)}
-required
-    />
-    ),
-  },
-{
-    name: "cpf",
+                fullWidth
+                size="small"
+                value={value ?? ""
+                }
+                onChange={(e) => onChange(e.target.value)}
+                required
+            />
+        ),
+    },
+    {
+        name: "cpf",
         label: "CPF",
-            component: ({ value, onChange }) => (
-                <TextField
-        fullWidth
-        size = "small"
-    value = { value ?? ""
-}
-onChange = {(e) => onChange(e.target.value)}
-      />
-    ),
-  },
-{
-    name: "email",
+        component: ({ value, onChange }) => (
+            <TextField
+                fullWidth
+                size="small"
+                value={value ?? ""
+                }
+                onChange={(e) => onChange(e.target.value)}
+            />
+        ),
+    },
+    {
+        name: "email",
         label: "E-mail",
-            component: ({ value, onChange }) => (
-                <TextField
-        fullWidth
-        size = "small"
-    type = "email"
-    value = { value ?? ""
-}
-onChange = {(e) => onChange(e.target.value)}
-      />
-    ),
-  },
-{
-    name: "phone01",
+        component: ({ value, onChange }) => (
+            <TextField
+                fullWidth
+                size="small"
+                type="email"
+                value={value ?? ""
+                }
+                onChange={(e) => onChange(e.target.value)}
+            />
+        ),
+    },
+    {
+        name: "phone01",
         label: "Telefone Principal",
-            component: ({ value, onChange }) => (
-                <TextField
-        fullWidth
-        size = "small"
-    value = { value ?? ""
-}
-onChange = {(e) => onChange(e.target.value)}
-      />
-    ),
-  },
-{
-    name: "isActive",
+        component: ({ value, onChange }) => (
+            <TextField
+                fullWidth
+                size="small"
+                value={value ?? ""
+                }
+                onChange={(e) => onChange(e.target.value)}
+            />
+        ),
+    },
+    {
+        name: "isActive",
         label: "Ativo",
-            component: ({ value, onChange }) => (
-                <FormControlLabel
-        control= {
-          < Switch
-    checked = { Boolean(value) }
-    onChange = {(e) => onChange(e.target.checked)
-}
-          />
-        }
-label = "Ativo"
-    />
-    ),
-  },
+        component: ({ value, onChange }) => (
+            <FormControlLabel
+                control={
+                    < Switch
+                        checked={Boolean(value)}
+                        onChange={(e) => onChange(e.target.checked)
+                        }
+                    />
+                }
+                label="Ativo"
+            />
+        ),
+    },
 ];
