@@ -15,7 +15,7 @@ export const saleColumns: ColumnDef<Sale>[] = [
         key: "client",
         label: "Cliente",
         // Acessa a propriedade aninhada 'name' do objeto 'client'
-        render: (row) => row.client?.name ?? "N/A",
+        render: (row) => row.clientName ?? "N/A",
     },
     {
         key: "total",
@@ -28,9 +28,9 @@ export const saleColumns: ColumnDef<Sale>[] = [
         render: (row) => new Date(row.createdAt).toLocaleDateString('pt-BR')
     },
     {
-        key: "isActive",
-        label: "Status",
-        render: (row) => (row.isActive ? "Ativa" : "Cancelada"),
+        key: "total",
+        label: "Total",
+        render: (row) => (row.total),
     },
 ];
 
@@ -49,6 +49,7 @@ export const saleFields: FieldDef<Sale>[] = [
                 fullWidth
                 size="small"
                 placeholder="Digite o ID do Cliente"
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 value={(value as any)?.id ?? ""}
                 onChange={(e) => onChange({ id: Number(e.target.value) })}
             />
@@ -61,7 +62,7 @@ export const saleFields: FieldDef<Sale>[] = [
             <CurrencyInput
                 fullWidth
                 size="small"
-                label="Valor do Desconto"
+                label=""
                 value={typeof value === "number" ? value : 0}
                 onChange={(numericValue) => onChange(numericValue)}
             />

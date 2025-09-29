@@ -7,6 +7,7 @@ import type { Protocol } from "./protocolTypes";
 export type Sale = {
     id: number;
     client: Customer;
+    clientName: string;
     protocol: Protocol | null;
     payment: Payment | null;
     productItems: ItemProduct[];
