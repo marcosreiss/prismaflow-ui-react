@@ -9,3 +9,5 @@ export type ItemProduct = {
     quantity: number;
     frameDetails: FrameDetails | null;
 };
+
+export type FrameMaterialType = "ACETATE" | "METAL" | "TR90" | "TITANIUM" | "MIXED";

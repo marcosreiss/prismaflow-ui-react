@@ -1,29 +1,35 @@
-import type { Protocol } from "./protocolTypes";
-
 export type Prescription = {
     id: number;
-    protocol: Protocol;
-    doctorName: string | null;
-    crm: string | null;
-
-    // Olho Direito (OD)
-    odSpherical: string | null;
-    odCylindrical: string | null;
-    odAxis: string | null;
-    odDnp: string | null;
-
-    // Olho Esquerdo (OE)
-    oeSpherical: string | null;
-    oeCylindrical: string | null;
-    oeAxis: string | null;
-    oeDnp: string | null;
-
-    // Adicionais
-    addition: string | null;
-    opticalCenter: string | null;
-
-    // Auditoria
+    protocol: any; // Protocol type
+    doctorName: string;
+    crm: string;
+    odSpherical: string;
+    odCylindrical: string;
+    odAxis: string;
+    odDnp: string;
+    oeSpherical: string;
+    oeCylindrical: string;
+    oeAxis: string;
+    oeDnp: string;
+    addition: string;
+    opticalCenter: string;
     createdAt: string;
     updatedAt: string;
     isActive: boolean;
+};
+
+// Tipo para criação (sem campos obrigatórios do backend)
+export type PrescriptionCreate = {
+    doctorName: string;
+    crm: string;
+    odSpherical: string;
+    odCylindrical: string;
+    odAxis: string;
+    odDnp: string;
+    oeSpherical: string;
+    oeCylindrical: string;
+    oeAxis: string;
+    oeDnp: string;
+    addition: string;
+    opticalCenter: string;
 };

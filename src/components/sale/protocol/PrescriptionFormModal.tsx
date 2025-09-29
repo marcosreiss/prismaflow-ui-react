@@ -6,7 +6,6 @@ import {
     DialogContent,
     DialogActions,
     Button,
-    Box,
     Stack,
     TextField,
     Typography,
