@@ -26,19 +26,19 @@ export const brandFields: FieldDef<Brand>[] = [
       />
     ),
   },
-  {
-    name: "isActive",
-    label: "Ativo",
-    component: ({ value, onChange }) => (
-      <FormControlLabel
-        control={
-          <Switch
-            checked={Boolean(value)}
-            onChange={(e) => onChange(e.target.checked)}
-          />
-        }
-        label="Ativo"
-      />
-    ),
-  },
+  // {
+  //   name: "isActive",
+  //   label: "Ativo",
+  //   component: ({ value, onChange }) => (
+  //     <FormControlLabel
+  //       control={
+  //         <Switch
+  //           checked={Boolean(value)}
+  //           onChange={(e) => onChange(e.target.checked)}
+  //         />
+  //       }
+  //       label="Ativo"
+  //     />
+  //   ),
+  // },
 ];

@@ -15,6 +15,7 @@ const ProductPage = lazy(() => import('@/pages/ProductsPage'));
 const TestProductPage = lazy(() => import('@/pages/TesteProducstPage'));
 const ServicePage = lazy(() => import('@/pages/ServicePage'));
 const CustomerPage = lazy(() => import('@/pages/CustomerPage'));
+const SalesPage = lazy(() => import('@/pages/SalesPage'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -47,7 +48,8 @@ export function PrivateRouter() {
                 { path: 'productstest', element: <TestProductPage /> },
                 { path: 'brandstest', element: <TestBrandPage /> },
                 { path: 'services', element: <ServicePage /> },
-                { path: 'customers', element: <CustomerPage /> }
+                { path: 'customers', element: <CustomerPage /> },
+                { path: 'sales', element: <SalesPage /> },
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },
