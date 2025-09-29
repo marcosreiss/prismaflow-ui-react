@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@/components/crud/PFTable";
 import type { Brand } from "@/types/brandTypes";
 import type { FieldDef } from "@/components/crud/PFDrawerModal";
-import { TextField, Switch, FormControlLabel } from "@mui/material";
+import { TextField } from "@mui/material";
 
 export const brandColumns: ColumnDef<Brand>[] = [
   { key: "id", label: "ID", width: 80 },
