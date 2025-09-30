@@ -6,16 +6,16 @@ import {
     TextField,
     Stack,
     Box,
-    Grid,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
 } from "@mui/material";
 import { FileText } from "lucide-react";
 
 export default function ProtocolForm() {
     const { control } = useFormContext<Sale>();
+
+    // Função para garantir que valores null sejam convertidos para string vazia
+    const getSafeValue = (value: any): string => {
+        return value === null ? '' : value || '';
+    };
 
     return (
         <Paper variant="outlined" sx={{ p: 3 }}>
@@ -26,50 +26,58 @@ export default function ProtocolForm() {
 
             <Stack spacing={3}>
                 {/* Dados Básicos do Protocolo */}
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                <Box>
+                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                        Dados Básicos do Protocolo
+                    </Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                         <Controller
                             name="protocol.recordNumber"
                             control={control}
+                            defaultValue=""
                             render={({ field }) => (
                                 <TextField
                                     {...field}
                                     label="Número do Registro"
                                     placeholder="PR-2025-001"
                                     fullWidth
+                                    value={getSafeValue(field.value)}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
                                 />
                             )}
                         />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
                         <Controller
                             name="protocol.os"
                             control={control}
+                            defaultValue=""
                             render={({ field }) => (
                                 <TextField
                                     {...field}
                                     label="Ordem de Serviço"
                                     placeholder="OS-9821"
                                     fullWidth
+                                    value={getSafeValue(field.value)}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
                                 />
                             )}
                         />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                    </Stack>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
                         <Controller
                             name="protocol.book"
                             control={control}
+                            defaultValue=""
                             render={({ field }) => (
                                 <TextField
                                     {...field}
                                     label="Livro"
                                     placeholder="Livro A"
                                     fullWidth
+                                    value={getSafeValue(field.value)}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
                                 />
                             )}
                         />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
                         <Controller
                             name="protocol.page"
                             control={control}
@@ -79,47 +87,52 @@ export default function ProtocolForm() {
                                     label="Página"
                                     type="number"
                                     fullWidth
+                                    value={field.value === null ? '' : field.value}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        field.onChange(value === '' ? null : parseInt(value, 10));
+                                    }}
                                 />
                             )}
                         />
-                    </Grid>
-                </Grid>
+                    </Stack>
+                </Box>
 
                 {/* Dados da Receita */}
                 <Box>
                     <Typography variant="subtitle1" sx={{ mb: 2 }}>
                         Dados da Receita
                     </Typography>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <Controller
-                                name="protocol.prescription.doctorName"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Nome do Médico"
-                                        placeholder="Dra. Fernanda Lopes"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <Controller
-                                name="protocol.prescription.crm"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="CRM"
-                                        placeholder="CRM-SP-123456"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                    </Grid>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <Controller
+                            name="protocol.prescription.doctorName"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Nome do Médico"
+                                    placeholder="Dra. Fernanda Lopes"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="protocol.prescription.crm"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="CRM"
+                                    placeholder="CRM-SP-123456"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                    </Stack>
                 </Box>
 
                 {/* Dados do Olho Direito (OD) */}
@@ -127,64 +140,66 @@ export default function ProtocolForm() {
                     <Typography variant="subtitle1" sx={{ mb: 2 }}>
                         Olho Direito (OD)
                     </Typography>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                            <Controller
-                                name="protocol.prescription.odSpherical"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Esférico"
-                                        placeholder="-2.00"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                            <Controller
-                                name="protocol.prescription.odCylindrical"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Cilíndrico"
-                                        placeholder="-0.75"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                            <Controller
-                                name="protocol.prescription.odAxis"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Eixo"
-                                        placeholder="90"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <Controller
-                                name="protocol.prescription.odDnp"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="DNP"
-                                        placeholder="31"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                    </Grid>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <Controller
+                            name="protocol.prescription.odSpherical"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Esférico"
+                                    placeholder="-2.00"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="protocol.prescription.odCylindrical"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Cilíndrico"
+                                    placeholder="-0.75"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="protocol.prescription.odAxis"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Eixo"
+                                    placeholder="90"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                    </Stack>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
+                        <Controller
+                            name="protocol.prescription.odDnp"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="DNP"
+                                    placeholder="31"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                    </Stack>
                 </Box>
 
                 {/* Dados do Olho Esquerdo (OE) */}
@@ -192,97 +207,99 @@ export default function ProtocolForm() {
                     <Typography variant="subtitle1" sx={{ mb: 2 }}>
                         Olho Esquerdo (OE)
                     </Typography>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                            <Controller
-                                name="protocol.prescription.oeSpherical"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Esférico"
-                                        placeholder="-1.50"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                            <Controller
-                                name="protocol.prescription.oeCylindrical"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Cilíndrico"
-                                        placeholder="-0.50"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                            <Controller
-                                name="protocol.prescription.oeAxis"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Eixo"
-                                        placeholder="85"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <Controller
-                                name="protocol.prescription.oeDnp"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="DNP"
-                                        placeholder="30"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                    </Grid>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <Controller
+                            name="protocol.prescription.oeSpherical"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Esférico"
+                                    placeholder="-1.50"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="protocol.prescription.oeCylindrical"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Cilíndrico"
+                                    placeholder="-0.50"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="protocol.prescription.oeAxis"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Eixo"
+                                    placeholder="85"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                    </Stack>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
+                        <Controller
+                            name="protocol.prescription.oeDnp"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="DNP"
+                                    placeholder="30"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                />
+                            )}
+                        />
+                    </Stack>
                 </Box>
 
                 {/* Dados Adicionais */}
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                        <Controller
-                            name="protocol.prescription.addition"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    label="Adição"
-                                    placeholder="+2.00"
-                                    fullWidth
-                                />
-                            )}
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                        <Controller
-                            name="protocol.prescription.opticalCenter"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    label="Centro Óptico"
-                                    placeholder="PD 61"
-                                    fullWidth
-                                />
-                            )}
-                        />
-                    </Grid>
-                </Grid>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <Controller
+                        name="protocol.prescription.addition"
+                        control={control}
+                        defaultValue=""
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                label="Adição"
+                                placeholder="+2.00"
+                                fullWidth
+                                value={getSafeValue(field.value)}
+                            />
+                        )}
+                    />
+                    <Controller
+                        name="protocol.prescription.opticalCenter"
+                        control={control}
+                        defaultValue=""
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                label="Centro Óptico"
+                                placeholder="PD 61"
+                                fullWidth
+                                value={getSafeValue(field.value)}
+                            />
+                        )}
+                    />
+                </Stack>
             </Stack>
         </Paper>
     );

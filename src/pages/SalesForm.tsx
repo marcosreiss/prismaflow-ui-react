@@ -1,18 +1,20 @@
 import { useNavigate } from "react-router-dom";
-import { FormProvider } from "react-hook-form"; // IMPORTANTE: Adicionar esta importação
+import { FormProvider } from "react-hook-form";
 import type { Sale } from "@/types/saleTypes";
 import { useSale } from "@/hooks/useSale";
 import { useCustomer } from "@/hooks/useCustomer";
 import { useProduct } from "@/hooks/useProduct";
 import { useNotification } from "@/context/NotificationContext";
 import { useSaleForm } from "@/hooks/useSaleForm";
-import { mapSaleToPayload, validateSaleForm } from "@/utils/salePayloadMapper";
+import { mapSaleToPayload, sanitizeSaleData } from "@/utils/sales/salePayloadMapper";
+import { validateSaleForm, canSubmitSale } from "@/utils/sales/saleValidators";
+import { getSummaryCalculations } from "@/utils/sales/calculations";
 import SaleSummary from "@/components/sale/SaleSummary";
-import ProtocolForm from "@/components/sale/protocol/ProtocolForm";
+import SaleFormActions from "@/components/sale/SaleFormActions";
 import ClientStep from "@/components/sale/steps/ClientStep";
 import ProductsStep from "@/components/sale/steps/ProductsStep";
+import ProtocolForm from "@/components/sale/protocol/ProtocolForm"; // Usando ProtocolForm diretamente
 import ReviewStep from "@/components/sale/steps/ReviewStep";
-import SaleFormActions from "@/components/sale/SaleFormActions";
 import {
     Paper,
     Box,
@@ -22,6 +24,7 @@ import {
     Stepper,
     Step,
     StepLabel,
+    Alert,
 } from "@mui/material";
 import { ArrowLeft } from "lucide-react";
 
@@ -40,9 +43,8 @@ export default function SaleForm() {
     const {
         methods,
         control,
-        subtotal,
-        total,
         activeStep,
+        setActiveStep,
         handleAddProduct,
         handleNext,
         handleBack,
@@ -53,38 +55,88 @@ export default function SaleForm() {
 
     const { handleSubmit, formState: { errors } } = methods;
 
+    // Cálculos do resumo usando o novo utilitário
+    const summaryCalculations = getSummaryCalculations(watchedProductItems, watchedDiscount);
+
     const handleStepNext = () => {
-        const validationError = validateSaleForm(methods.getValues(), activeStep);
-        if (validationError) {
-            addNotification(validationError, "warning");
+        const validation = validateSaleForm(methods.getValues(), activeStep);
+        if (!validation.isValid) {
+            validation.errors.forEach(error => addNotification(error, "warning"));
             return;
         }
         handleNext();
     };
 
     const handleSaveDraft = () => {
-        // Implementar lógica de salvar rascunho
+        const data = methods.getValues();
+        const sanitizedData = sanitizeSaleData(data);
+
+        // Aqui você implementaria a lógica de salvar rascunho
+        console.log("Salvando rascunho:", sanitizedData);
         addNotification("Rascunho salvo com sucesso!", "info");
     };
 
+    const handleStepChange = (newStep: number) => {
+        // Valida se pode mudar para a etapa
+        if (newStep < activeStep) {
+            setActiveStep(newStep);
+            return;
+        }
+
+        const validation = validateSaleForm(methods.getValues(), activeStep);
+        if (!validation.isValid) {
+            validation.errors.forEach(error => addNotification(error, "warning"));
+            return;
+        }
+        setActiveStep(newStep);
+    };
+
     const onSubmit = async (data: Sale) => {
-        const validationError = validateSaleForm(data, activeStep);
-        if (validationError) {
-            addNotification(validationError, "warning");
+        console.log("=== 🔍 DEBUG COMPLETO DA VENDA ===");
+
+        // Debug dos dados do formulário
+        console.log("1. CLIENTE:", data.client);
+        console.log("2. PRODUTOS:", data.productItems?.map(p => ({
+            nome: p.product?.name,
+            categoria: p.product?.category,
+            quantidade: p.quantity,
+            temFrameDetails: !!p.frameDetails
+        })));
+        console.log("3. PROTOCOLO COMPLETO:", data.protocol);
+        console.log("4. DADOS FINANCEIROS:", {
+            subtotal: data.subtotal,
+            discount: data.discount,
+            total: data.total
+        });
+
+        const finalValidation = canSubmitSale(data);
+        if (!finalValidation.isValid) {
+            console.log("5. ERROS DE VALIDAÇÃO:", finalValidation.errors);
+            finalValidation.errors.forEach(error => addNotification(error, "warning"));
             return;
         }
 
         try {
-            const payload = mapSaleToPayload(data);
-            console.log("Payload enviado:", payload);
+            const sanitizedData = sanitizeSaleData(data);
+            const payload = mapSaleToPayload(sanitizedData);
+
+            console.log("6. PAYLOAD FINAL PARA API:", payload);
+            console.log("=== FIM DEBUG ===");
 
             await create(payload as any);
             addNotification("Venda criada com sucesso!", "success");
             navigate("/sales");
 
-        } catch (error) {
-            console.error("Erro ao criar venda:", error);
-            addNotification("Erro ao criar a venda. Tente novamente.", "error");
+        } catch (error: any) {
+            console.error("7. ERRO NA API:", error);
+            console.error("8. RESPONSE DATA:", error.response?.data);
+            console.error("9. RESPONSE STATUS:", error.response?.status);
+
+            const errorMessage = error.response?.data?.message
+                || error.response?.data?.error
+                || "Erro ao criar a venda. Tente novamente.";
+
+            addNotification(errorMessage, "error");
         }
     };
 
@@ -116,28 +168,31 @@ export default function SaleForm() {
                 );
 
             case 2:
-                return <ProtocolForm />;
+                return <ProtocolForm />; // Usando ProtocolForm diretamente
 
             case 3:
                 return (
                     <ReviewStep
                         client={watchedClient}
                         productItems={watchedProductItems}
-                        subtotal={subtotal}
-                        discount={watchedDiscount}
-                        total={total}
+                        subtotal={summaryCalculations.subtotal}
+                        discount={summaryCalculations.discount}
+                        total={summaryCalculations.total}
                     />
                 );
 
             default:
-                return null;
+                return (
+                    <Alert severity="error">
+                        Etapa não encontrada. Por favor, recarregue a página.
+                    </Alert>
+                );
         }
     };
 
     return (
-        // ENVOLVER TODO O COMPONENTE COM FormProvider
         <FormProvider {...methods}>
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Paper sx={{ p: 3, borderRadius: 2, maxWidth: 1200, mx: 'auto' }}>
                 {/* Header */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                     <Button
@@ -153,14 +208,21 @@ export default function SaleForm() {
                 </Box>
                 <Divider sx={{ mb: 3 }} />
 
-                {/* Stepper */}
+                {/* Stepper com clique nas etapas */}
                 <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-                    {steps.map((label) => (
-                        <Step key={label}>
+                    {steps.map((label, index) => (
+                        <Step key={label} onClick={() => handleStepChange(index)} sx={{ cursor: 'pointer' }}>
                             <StepLabel>{label}</StepLabel>
                         </Step>
                     ))}
                 </Stepper>
+
+                {/* Alertas de validação */}
+                {errors.root && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {errors.root.message}
+                    </Alert>
+                )}
 
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Box sx={{ display: "flex", flexDirection: { xs: "column", lg: "row" }, gap: 4 }}>
@@ -171,10 +233,10 @@ export default function SaleForm() {
 
                         {/* Coluna Lateral - Resumo */}
                         {activeStep > 0 && (
-                            <Box sx={{ flex: 1 }}>
+                            <Box sx={{ flex: 1, minWidth: 300 }}>
                                 <SaleSummary
-                                    subtotal={subtotal}
-                                    total={total}
+                                    subtotal={summaryCalculations.subtotal}
+                                    total={summaryCalculations.total}
                                 />
                             </Box>
                         )}

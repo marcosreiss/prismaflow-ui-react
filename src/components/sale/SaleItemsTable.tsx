@@ -13,12 +13,13 @@ import {
     IconButton,
     TextField,
     Typography,
+    Box,
     Collapse,
-    Alert,
 } from "@mui/material";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import FrameDetailsForm from "./FrameDetailsForm";
+import React from "react";
 
 export default function SaleItemsTable() {
     const formContext = useFormContext<Sale>();
@@ -26,9 +27,11 @@ export default function SaleItemsTable() {
     // Fallback seguro se o formContext for null
     if (!formContext) {
         return (
-            <Alert severity="error" sx={{ mt: 2 }}>
-                Erro: Formulário não encontrado. Verifique se o componente está dentro de um FormProvider.
-            </Alert>
+            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderStyle: 'dashed' }}>
+                <Typography color="text.secondary" variant="body1">
+                    Erro: Formulário não encontrado
+                </Typography>
+            </Paper>
         );
     }
 
@@ -82,8 +85,9 @@ export default function SaleItemsTable() {
                         const hasFrameDetails = product?.category === "FRAME";
 
                         return (
-                            <>
-                                <TableRow key={item.id}>
+                            // CORREÇÃO: Fragment com key única
+                            <React.Fragment key={item.id}>
+                                <TableRow>
                                     <TableCell>
                                         {hasFrameDetails && (
                                             <IconButton
@@ -179,7 +183,7 @@ export default function SaleItemsTable() {
                                         </TableCell>
                                     </TableRow>
                                 )}
-                            </>
+                            </React.Fragment>
                         );
                     })}
                 </TableBody>
