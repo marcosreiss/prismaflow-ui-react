@@ -2,7 +2,7 @@ import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import type { ColumnDef } from "@/components/crud/PFTable";
 import CurrencyInput from "@/components/imask/CurrencyInput";
 import type { Service } from "@/types/serviceTypes";
-import { FormControlLabel, Switch, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 
 // ----------------------
 // Tabela

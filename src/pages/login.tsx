@@ -19,7 +19,7 @@ export default function Login() {
     const { control, handleSubmit } = useForm<UserLoginRequest>({
         defaultValues: {
             username: "marcos",
-            password: "Naosei_87#",
+            password: "Naoesei_87#",
         },
     });
 
@@ -43,7 +43,7 @@ export default function Login() {
             },
             onError: (err) => {
                 addNotification("Erro ao fazer login. Tente novamente.", "error");
-                console.error(err);
+                console.error(err.message);
             },
         });
     };

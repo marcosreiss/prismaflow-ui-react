@@ -4,7 +4,7 @@ import CurrencyInput from "@/components/imask/CurrencyInput";
 import PercentInput from "@/components/imask/PercentInput";
 import type { Brand } from "@/types/brandTypes";
 import { type Product, type ProductCategory, ProductCategoryLabels } from "@/types/productTypes";
-import { FormControlLabel, MenuItem, Switch, TextField } from "@mui/material";
+import { MenuItem, TextField } from "@mui/material";
 
 // ----------------------
 // Tabela
