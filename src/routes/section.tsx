@@ -15,7 +15,8 @@ const ProductPage = lazy(() => import('@/pages/ProductsPage'));
 const TestProductPage = lazy(() => import('@/pages/TesteProducstPage'));
 const ServicePage = lazy(() => import('@/pages/ServicePage'));
 const CustomerPage = lazy(() => import('@/pages/CustomerPage'));
-const SalesPage = lazy(() => import('@/pages/SalePage'));
+const SalesPage = lazy(() => import('@/pages/SalesForm'));
+
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">

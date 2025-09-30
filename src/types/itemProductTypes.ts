@@ -7,5 +7,8 @@ export type ItemProduct = {
     sale: Sale;
     product: Product;
     quantity: number;
-    frameDetails: FrameDetails | null;
+    frameDetails: FrameDetails | Omit<FrameDetails, "id" | "itemProduct"> | null; // ✅ aceita incompleto
 };
+
+
+export type FrameMaterialType = "ACETATE" | "METAL" | "TR90" | "TITANIUM" | "MIXED";

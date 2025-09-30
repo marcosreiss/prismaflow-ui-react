@@ -1,22 +1,19 @@
-import type { Customer } from "./customerTypes";
 import type { ItemProduct } from "./itemProductTypes";
-import type { ItemService } from "./itemServiceTypes";
-import type { Payment } from "./paymentTypes";
-import type { Protocol } from "./protocolTypes";
+import type { ProtocolCreate } from "./protocolTypes";
 
 export type Sale = {
-    id: number;
-    client: Customer;
-    clientName: string;
-    protocol: Protocol | null;
-    payment: Payment | null;
+    id?: number;
+    client?: any;
     productItems: ItemProduct[];
-    serviceItems: ItemService[];
-    subtotal: number;
+    serviceItems: Array<{
+        service: any;
+    }>;
     discount: number;
-    total: number;
-    notes: string | null;
-    createdAt: string;
-    updatedAt: string;
+    notes: string;
     isActive: boolean;
+    subtotal: number;
+    total: number;
+    protocol?: ProtocolCreate; // Usar o tipo de criação
+    createdAt?: string;
+    updatedAt?: string;
 };
