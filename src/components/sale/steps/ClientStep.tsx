@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Controller } from "react-hook-form";
-import type { Sale } from "@/types/saleTypes";
+
 import {
     Box,
     Typography,

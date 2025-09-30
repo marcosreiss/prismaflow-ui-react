@@ -1,10 +1,10 @@
 // src/pages/sales/SalesPage.tsx
 
+import type { Sale } from "@/types/saleTypes";
+import { CrudPage } from "./CrudPage";
 import { saleColumns, saleFields } from "@/config/sale.config";
 import { useSale } from "@/hooks/useSale";
-import type { Sale } from "@/types/saleTypes";
-import { Box, Typography, Chip, Divider } from "@mui/material";
-import { CrudPage } from "./CrudPage";
+import { Typography, Chip, Divider, Box } from "@mui/material";
 
 export default function SalesPage() {
     return (

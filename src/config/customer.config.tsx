@@ -1,7 +1,7 @@
 import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import type { ColumnDef } from "@/components/crud/PFTable";
 import type { Customer } from "@/types/customerTypes";
-import { FormControlLabel, Switch, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 
 // ----------------------
 // Tabela
