@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Sale } from "@/types/saleTypes";
 import type { Product } from "@/types/productTypes";
 
@@ -34,14 +35,14 @@ export const validateSaleForm = (data: Sale, step: number): ValidationResult => 
             break;
 
         case 2: // Protocolo
-            const protocolErrors = validateProtocol(data.protocol);
+            { const protocolErrors = validateProtocol(data.protocol);
             errors.push(...protocolErrors);
-            break;
+            break; }
 
         case 3: // Revisão
-            const reviewErrors = validateReview(data);
+            { const reviewErrors = validateReview(data);
             errors.push(...reviewErrors);
-            break;
+            break; }
     }
 
     return {
@@ -56,7 +57,7 @@ export const validateSaleForm = (data: Sale, step: number): ValidationResult => 
 export const validateProductItems = (productItems: Sale['productItems']): string[] => {
     const errors: string[] = [];
 
-    productItems.forEach((item, index) => {
+    productItems.forEach((item) => {
         const product = (item as any).product as Product;
         const quantity = (item as any).quantity;
 
