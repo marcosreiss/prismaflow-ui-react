@@ -88,9 +88,16 @@ export const validateProductItems = (productItems: Sale['productItems']): string
 /**
  * Validações dos detalhes da armação
  */
+// Adicione esta validação específica:
 export const validateFrameDetails = (frameDetails: any, productName: string): string[] => {
     const errors: string[] = [];
 
+    if (!frameDetails) {
+        errors.push(`Armação "${productName}": detalhes da armação são obrigatórios.`);
+        return errors;
+    }
+
+    // ✅ VALIDAÇÃO CRÍTICA: material não pode ser null/empty
     if (!frameDetails.material) {
         errors.push(`Armação "${productName}": tipo de material é obrigatório.`);
     }
@@ -101,6 +108,9 @@ export const validateFrameDetails = (frameDetails: any, productName: string): st
 
     return errors;
 };
+
+// Atualize a validateProductItems para incluir esta validação:
+
 
 /**
  * Validações do protocolo

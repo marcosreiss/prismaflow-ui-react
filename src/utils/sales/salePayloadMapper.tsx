@@ -18,8 +18,10 @@ export const mapSaleToPayload = (data: Sale) => {
         productItems: data.productItems?.map(item => ({
             productId: item.product.id,
             quantity: item.quantity || 1,
+            // Atualize a parte do frameDetails no mapper:
+            // CORRIJA o nome do campo no salePayloadMapper.ts:
             frameDetails: item.product?.category === "FRAME" && item.frameDetails ? {
-                material: item.frameDetails.material,
+                frameMaterialType: item.frameDetails.material || "ACETATE", // ✅ MUDOU PARA frameMaterialType
                 reference: item.frameDetails.reference?.trim() || null,
                 color: item.frameDetails.color?.trim() || null,
             } : null

@@ -92,26 +92,10 @@ export default function SaleForm() {
     };
 
     const onSubmit = async (data: Sale) => {
-        console.log("=== 🔍 DEBUG COMPLETO DA VENDA ===");
-
-        // Debug dos dados do formulário
-        console.log("1. CLIENTE:", data.client);
-        console.log("2. PRODUTOS:", data.productItems?.map(p => ({
-            nome: p.product?.name,
-            categoria: p.product?.category,
-            quantidade: p.quantity,
-            temFrameDetails: !!p.frameDetails
-        })));
-        console.log("3. PROTOCOLO COMPLETO:", data.protocol);
-        console.log("4. DADOS FINANCEIROS:", {
-            subtotal: data.subtotal,
-            discount: data.discount,
-            total: data.total
-        });
+        console.log("=== 🔍 VERIFICANDO CORREÇÃO ===");
 
         const finalValidation = canSubmitSale(data);
         if (!finalValidation.isValid) {
-            console.log("5. ERROS DE VALIDAÇÃO:", finalValidation.errors);
             finalValidation.errors.forEach(error => addNotification(error, "warning"));
             return;
         }
@@ -120,22 +104,25 @@ export default function SaleForm() {
             const sanitizedData = sanitizeSaleData(data);
             const payload = mapSaleToPayload(sanitizedData);
 
-            console.log("6. PAYLOAD FINAL PARA API:", payload);
-            console.log("=== FIM DEBUG ===");
+            // Debug específico do frameDetails corrigido
+            console.log("✅ FRAME_DETAILS CORRIGIDO:");
+            payload.productItems?.forEach((item, index) => {
+                if (item.frameDetails) {
+                    console.log(`   Item ${index}:`, {
+                        frameMaterialType: item.frameDetails.frameMaterialType, // ✅ DEVE APARECER AGORA
+                        reference: item.frameDetails.reference,
+                        color: item.frameDetails.color
+                    });
+                }
+            });
 
             await create(payload as any);
             addNotification("Venda criada com sucesso!", "success");
             navigate("/sales");
 
         } catch (error: any) {
-            console.error("7. ERRO NA API:", error);
-            console.error("8. RESPONSE DATA:", error.response?.data);
-            console.error("9. RESPONSE STATUS:", error.response?.status);
-
-            const errorMessage = error.response?.data?.message
-                || error.response?.data?.error
-                || "Erro ao criar a venda. Tente novamente.";
-
+            console.error("❌ ERRO:", error.response?.data);
+            const errorMessage = error.response?.data?.message || "Erro ao criar a venda. Tente novamente.";
             addNotification(errorMessage, "error");
         }
     };

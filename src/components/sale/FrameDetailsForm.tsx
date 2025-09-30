@@ -65,14 +65,15 @@ export default function FrameDetailsForm({ index }: FrameDetailsFormProps) {
                 <Controller
                     name={`productItems.${index}.frameDetails.material`}
                     control={control}
-                    defaultValue="ACETATE"
-                    render={({ field }) => (
-                        <FormControl fullWidth size="small">
-                            <InputLabel>Tipo de Material</InputLabel>
+                    defaultValue="ACETATE" // ✅ VALOR PADRÃO OBRIGATÓRIO
+                    rules={{ required: "O material é obrigatório" }}
+                    render={({ field, fieldState: { error } }) => (
+                        <FormControl fullWidth size="small" error={!!error}>
+                            <InputLabel>Tipo de Material *</InputLabel>
                             <Select
                                 {...field}
-                                label="Tipo de Material"
-                                value={field.value || "ACETATE"}
+                                label="Tipo de Material *"
+                                value={field.value || "ACETATE"} // ✅ Garante valor sempre definido
                             >
                                 {Object.entries(FrameMaterialTypeLabels).map(([value, label]) => (
                                     <MenuItem key={value} value={value}>
@@ -80,6 +81,11 @@ export default function FrameDetailsForm({ index }: FrameDetailsFormProps) {
                                     </MenuItem>
                                 ))}
                             </Select>
+                            {error && (
+                                <Typography variant="caption" color="error">
+                                    {error.message}
+                                </Typography>
+                            )}
                         </FormControl>
                     )}
                 />

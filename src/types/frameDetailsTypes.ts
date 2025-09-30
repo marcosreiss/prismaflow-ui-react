@@ -6,7 +6,7 @@ export type FrameMaterialType = "ACETATE" | "METAL" | "TITANIUM" | "TR90" | "OTH
 
 export type FrameDetails = {
     id: number;
-    itemProduct: ItemProduct;
+    itemProduct: ItemProduct | null; // Relação opcional para evitar ciclos
     material: FrameMaterialType;
     reference: string | null;
     color: string | null;
