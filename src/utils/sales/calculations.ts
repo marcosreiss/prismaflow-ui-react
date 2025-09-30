@@ -223,3 +223,18 @@ export const getSummaryCalculations = (productItems: Sale['productItems'], disco
         formattedProfitMargin: formatPercentage(profitMargin),
     };
 };
+
+// Adicione cálculos para serviços
+export const calculateServicesTotal = (serviceItems: any[]): number => {
+    return serviceItems.reduce((acc, item) => {
+        const service = (item as any).service;
+        return acc + (service?.price || 0);
+    }, 0);
+};
+
+export const calculateServicesProfit = (serviceItems: any[]): number => {
+    return serviceItems.reduce((acc, item) => {
+        const service = (item as any).service;
+        return acc + ((service?.price || 0) - (service?.cost || 0));
+    }, 0);
+};

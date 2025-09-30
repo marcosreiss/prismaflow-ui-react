@@ -13,7 +13,6 @@ import {
     IconButton,
     TextField,
     Typography,
-    Box,
     Collapse,
 } from "@mui/material";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";

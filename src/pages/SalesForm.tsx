@@ -27,6 +27,7 @@ import {
     Alert,
 } from "@mui/material";
 import { ArrowLeft } from "lucide-react";
+import { useService } from "@/hooks/useService";
 
 const steps = ['Cliente', 'Produtos', 'Protocolo', 'Revisão'];
 
@@ -91,6 +92,22 @@ export default function SaleForm() {
         setActiveStep(newStep);
     };
 
+    // Adicione o hook de serviços
+    const { list } = useService();
+
+    const services = list.data;
+    const isLoadingServices = list.isLoading;
+
+    // Adicione a função para adicionar serviços
+    const handleAddService = (service: any) => {
+        const currentServices = methods.getValues("serviceItems") || [];
+        methods.setValue("serviceItems", [
+            ...currentServices,
+            { service }
+        ], { shouldValidate: true });
+    };
+
+
     const onSubmit = async (data: Sale) => {
         console.log("=== 🔍 VERIFICANDO CORREÇÃO ===");
 
@@ -148,8 +165,11 @@ export default function SaleForm() {
                     <ProductsStep
                         {...stepProps}
                         products={products || []}
+                        services={services || []}
                         isLoadingProducts={isLoadingProducts}
+                        isLoadingServices={isLoadingServices}
                         onAddProduct={handleAddProduct}
+                        onAddService={handleAddService}
                         creating={creating}
                     />
                 );
