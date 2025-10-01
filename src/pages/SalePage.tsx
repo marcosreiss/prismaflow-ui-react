@@ -21,7 +21,7 @@ export default function SalesPage() {
     const saleListData: Sale[] = data || [];
 
     const handleCreate = () => {
-        navigate("/salesform");
+        navigate("/sales/new");
     };
 
     const handleView = (row: Sale) => {
@@ -29,7 +29,7 @@ export default function SalesPage() {
     };
 
     const handleEdit = (row: Sale) => {
-        navigate(`/salesForm?id=${row.id}&mode=edit`);
+        navigate(`/sales/edit/${row.id}`); // ← Assim vai funcionar`);
     };
 
     const handleDelete = (row: Sale) => {

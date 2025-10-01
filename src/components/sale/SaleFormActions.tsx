@@ -1,14 +1,11 @@
-import {
-    Box,
-    Button,
-} from "@mui/material";
-import { Save, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Box, Button } from "@mui/material";
 
 interface SaleFormActionsProps {
     activeStep: number;
     totalSteps: number;
-    creating: boolean;
+    isLoading: boolean;
     hasProducts: boolean;
+    isEditMode?: boolean;
     onBack: () => void;
     onNext: () => void;
     onSaveDraft: () => void;
@@ -18,51 +15,37 @@ interface SaleFormActionsProps {
 export default function SaleFormActions({
     activeStep,
     totalSteps,
-    creating,
+    isLoading,
     hasProducts,
+    isEditMode = false,
     onBack,
     onNext,
     onSaveDraft,
-    onSubmit
+    onSubmit,
 }: SaleFormActionsProps) {
     return (
-        <Box sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mt: 4,
-            pt: 2,
-            borderTop: 1,
-            borderColor: 'divider'
-        }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
             <Box>
                 {activeStep > 0 && (
-                    <Button
-                        onClick={onBack}
-                        variant="outlined"
-                        disabled={creating}
-                        startIcon={<ArrowLeft size={18} />}
-                    >
+                    <Button onClick={onBack} sx={{ mr: 1 }}>
                         Voltar
                     </Button>
                 )}
-            </Box>
-
-            <Box sx={{ display: "flex", gap: 2 }}>
                 <Button
                     variant="outlined"
-                    startIcon={<Save size={18} />}
-                    disabled={creating}
                     onClick={onSaveDraft}
+                    disabled={isLoading}
                 >
                     Salvar Rascunho
                 </Button>
+            </Box>
 
+            <Box>
                 {activeStep < totalSteps - 1 ? (
                     <Button
                         variant="contained"
                         onClick={onNext}
-                        disabled={creating}
+                        disabled={!hasProducts && activeStep === 1}
                     >
                         Próximo
                     </Button>
@@ -70,11 +53,9 @@ export default function SaleFormActions({
                     <Button
                         variant="contained"
                         onClick={onSubmit}
-                        disabled={creating || !hasProducts}
-                        startIcon={<ShoppingCart size={20} />}
-                        size="large"
+                        disabled={isLoading}
                     >
-                        {creating ? "Processando..." : "Finalizar Venda"}
+                        {isLoading ? 'Salvando...' : (isEditMode ? 'Atualizar Venda' : 'Finalizar Venda')}
                     </Button>
                 )}
             </Box>

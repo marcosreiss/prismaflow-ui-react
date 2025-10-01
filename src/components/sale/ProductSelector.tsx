@@ -21,14 +21,14 @@ interface ProductSelectorProps {
     products: Product[];
     isLoading: boolean;
     onAddProduct: (product: Product) => void;
-    disabled?: boolean;
+    disabled: boolean; // ✅ MUDAR DE 'creating' PARA 'disabled'
 }
 
 export default function ProductSelector({
     products,
     isLoading,
     onAddProduct,
-    disabled = false
+    disabled // ✅ RECEBER COMO 'disabled'
 }: ProductSelectorProps) {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [searchValue, setSearchValue] = useState("");

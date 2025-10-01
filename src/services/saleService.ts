@@ -10,12 +10,17 @@ export const saleService: EntityService<Sale> = {
         return res.data;
     },
 
+    // services/saleService.ts - Verifique se getById está correto
+    // services/saleService.ts
     getById: async (id) => {
+        console.log("🔄 Buscando venda ID:", id);
         const res = await api.get(`/api/sales/${id}`);
-        console.log('📋 Resposta completa da API:', res.data);
-        console.log('📋 Dados da venda:', res.data.data);
+        console.log("📋 Resposta completa da API:", res.data);
+        console.log("📋 Dados da venda:", res.data.data);
 
-        return res.data.data; // Provavelmente é aqui que estão os dados
+        // ✅ CORREÇÃO: Retorne res.data (que contém data, status, message)
+        // ou res.data.data dependendo da estrutura que seu hook espera
+        return res.data; // ou res.data.data - vamos testar
     },
 
     create: async (data) => {
