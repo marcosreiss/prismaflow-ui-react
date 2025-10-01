@@ -1,5 +1,5 @@
 import type { EntityService } from "@/services/entityService";
-import type { Sale } from "@/types/saleTypes";
+import type { Sale, SaleApi } from "@/types/saleTypes";
 import api from "./config/api";
 
 export const saleService: EntityService<Sale> = {
@@ -12,7 +12,10 @@ export const saleService: EntityService<Sale> = {
 
     getById: async (id) => {
         const res = await api.get(`/api/sales/${id}`);
-        return res.data;
+        console.log('📋 Resposta completa da API:', res.data);
+        console.log('📋 Dados da venda:', res.data.data);
+
+        return res.data.data; // Provavelmente é aqui que estão os dados
     },
 
     create: async (data) => {

@@ -1,50 +1,76 @@
-// src/pages/sales/SalesPage.tsx
-
-import type { Sale } from "@/types/saleTypes";
-import { CrudPage } from "./CrudPage";
-import { saleColumns, saleFields } from "@/config/sale.config";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import PFTopToolbar from "@/components/crud/PFTopToolbar";
+import PFTable from "@/components/crud/PFTable";
 import { useSale } from "@/hooks/useSale";
-import { Typography, Chip, Divider, Box } from "@mui/material";
+import { Paper } from "@mui/material";
+import type { Sale } from "@/types/saleTypes";
+import { useNotification } from "@/context/NotificationContext";
+import { saleColumns } from "@/config/sales.config";
 
 export default function SalesPage() {
+    const navigate = useNavigate();
+
+    const {
+        list: { data, total, isLoading, isFetching, page, setPage, size, setSize, setSearch, refetch, error: listError },
+    } = useSale();
+
+    const { addNotification } = useNotification();
+
+    // Usar o array direto de vendas
+    const saleListData: Sale[] = data || [];
+
+    const handleCreate = () => {
+        navigate("/salesform");
+    };
+
+    const handleView = (row: Sale) => {
+        navigate(`/sales/${row.id}`); // ← Assim vai funcionar
+    };
+
+    const handleEdit = (row: Sale) => {
+        navigate(`/salesForm?id=${row.id}&mode=edit`);
+    };
+
+    const handleDelete = (row: Sale) => {
+        // Implementar lógica de delete se necessário
+        console.log("Delete sale:", row.id);
+    };
+
+    useEffect(() => {
+        if (listError) addNotification("Erro ao carregar a lista de vendas.", "error");
+    }, [listError, addNotification]);
+
     return (
-        <CrudPage<Sale>
-            title="Vendas"
-            addLabel="Adicionar nova venda"
-            columns={saleColumns}
-            fields={saleFields}
-            useCrudHook={useSale}
-            renderView={(sale) => (
-                <Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                        <Typography variant="h6">Venda #{sale.id}</Typography>
-                        <Chip
-                            size="small"
-                            label={sale.isActive ? "Ativa" : "Cancelada"}
-                            color={sale.isActive ? "success" : "default"}
-                        />
-                    </Box>
-                    <Divider sx={{ my: 2 }} />
-                    <Box sx={{ display: "grid", gridTemplateColumns: "140px 1fr", rowGap: 1.5 }}>
-                        <Typography variant="body2" color="text.secondary">Cliente</Typography>
-                        <Typography variant="body1">{sale.client?.name ?? "N/A"}</Typography>
+        <Paper
+            sx={{
+                borderRadius: 2,
+                borderColor: "grey.200",
+                backgroundColor: "background.paper",
+                p: 3,
+            }}
+        >
+            <PFTopToolbar
+                title="Vendas"
+                addLabel="Nova Venda"
+                onSearch={(val) => setSearch(val)}
+                onRefresh={() => refetch()}
+                onAdd={handleCreate}
+            />
 
-                        <Typography variant="body2" color="text.secondary">Data</Typography>
-                        <Typography variant="body1">
-                            {new Date(sale.createdAt).toLocaleString('pt-BR')}
-                        </Typography>
-
-                        <Typography variant="body2" color="text.secondary">Subtotal</Typography>
-                        <Typography variant="body1">R$ {sale.subtotal.toFixed(2)}</Typography>
-
-                        <Typography variant="body2" color="text.secondary">Desconto</Typography>
-                        <Typography variant="body1">R$ {sale.discount.toFixed(2)}</Typography>
-
-                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold' }}>Total</Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>R$ {sale.total.toFixed(2)}</Typography>
-                    </Box>
-                </Box>
-            )}
-        />
+            <PFTable<Sale>
+                columns={saleColumns}
+                rows={saleListData}
+                loading={isLoading || isFetching}
+                total={total}
+                page={page}
+                pageSize={size}
+                onPageChange={setPage}
+                onPageSizeChange={setSize}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+            />
+        </Paper>
     );
 }

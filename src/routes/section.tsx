@@ -15,7 +15,9 @@ const ProductPage = lazy(() => import('@/pages/ProductsPage'));
 const TestProductPage = lazy(() => import('@/pages/TesteProducstPage'));
 const ServicePage = lazy(() => import('@/pages/ServicePage'));
 const CustomerPage = lazy(() => import('@/pages/CustomerPage'));
-const SalesPage = lazy(() => import('@/pages/SalesForm'));
+const SalesPage = lazy(() => import('@/pages/SalePage'));
+const SalesForm = lazy(() => import('@/pages/SalesForm'));
+const SalesDetailsPage = lazy(() => import('@/pages/salesDetailsPage'));
 
 
 const renderFallback = (
@@ -51,6 +53,8 @@ export function PrivateRouter() {
                 { path: 'services', element: <ServicePage /> },
                 { path: 'customers', element: <CustomerPage /> },
                 { path: 'sales', element: <SalesPage /> },
+                { path: 'salesform', element: <SalesForm /> },
+                { path: 'sales/:id', element: <SalesDetailsPage /> },
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },
