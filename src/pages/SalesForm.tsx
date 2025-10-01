@@ -8,7 +8,7 @@ import { useProduct } from "@/hooks/useProduct";
 import { useNotification } from "@/context/NotificationContext";
 import { useSaleForm } from "@/hooks/useSaleForm";
 import { mapSaleToPayload, sanitizeSaleData } from "@/utils/sales/salePayloadMapper";
-import { validateSaleForm, canSubmitSale } from "@/utils/sales/saleValidators";
+import { canSubmitSale } from "@/utils/sales/saleValidators";
 import { getSummaryCalculations } from "@/utils/sales/calculations";
 import SaleSummary from "@/components/salePageCustom/SaleSummary";
 import SaleFormActions from "@/components/salePageCustom/SaleFormActions";
