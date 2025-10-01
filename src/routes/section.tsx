@@ -12,9 +12,14 @@ const BrandPage = lazy(() => import('@/pages/BrandsPage'));
 const ProductPage = lazy(() => import('@/pages/ProductsPage'));
 const ServicePage = lazy(() => import('@/pages/ServicePage'));
 const CustomerPage = lazy(() => import('@/pages/CustomerPage'));
+
+
 const SalesPage = lazy(() => import('@/pages/SalePage'));
 const SalesForm = lazy(() => import('@/pages/SalesForm'));
 const SalesDetailsPage = lazy(() => import('@/pages/salesDetailsPage'));
+
+
+const PaymentPage = lazy(() => import('@/pages/PaymentsPage'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -46,11 +51,13 @@ export function PrivateRouter() {
                 { path: 'products', element: <ProductPage /> },
                 { path: 'services', element: <ServicePage /> },
                 { path: 'customers', element: <CustomerPage /> },
+
                 { path: 'sales', element: <SalesPage /> },
                 { path: 'sales/new', element: <SalesForm /> }, // ✅ CRIAÇÃO
                 { path: 'sales/edit/:id', element: <SalesForm mode="edit" /> }, // ✅ EDIÇÃO
                 { path: 'sales/:id', element: <SalesDetailsPage /> },
-                // ❌ REMOVA ESTA LINHA DUPLICADA: { path: 'sales', element: <SalesForm /> },
+
+                { path: 'payments', element: <PaymentPage /> },
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useNavigate, useParams } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import type { Sale } from "@/types/saleTypes";
@@ -26,6 +27,7 @@ import {
     StepLabel,
     Alert,
     CircularProgress,
+    IconButton,
 } from "@mui/material";
 import { ArrowLeft } from "lucide-react";
 import { useService } from "@/hooks/useService";
@@ -323,13 +325,14 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
             <Paper sx={{ p: 3, borderRadius: 2, maxWidth: 1200, mx: 'auto' }}>
                 {/* Header */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Button
-                        startIcon={<ArrowLeft size={20} />}
-                        onClick={() => navigate("/sales")}
-                        sx={{ minWidth: 'auto', px: 1 }}
-                    >
-                        Voltar
-                    </Button>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <IconButton
+                            onClick={() => navigate("/sales")}
+                            sx={{ width: { xs: 40, sm: 36 }, height: { xs: 40, sm: 36 } }}
+                        >
+                            <ArrowLeft size={20} />
+                        </IconButton>
+                    </Box>
                     <Typography variant="h5" fontWeight="bold">
                         {isEditMode ? 'Editar Venda' : 'Nova Venda'}
                         {isEditMode && existingSale && (

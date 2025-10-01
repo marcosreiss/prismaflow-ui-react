@@ -10,11 +10,10 @@ import CurrencyInput from "@/components/imask/CurrencyInput";
 // ----------------------
 export const paymentColumns: ColumnDef<Payment>[] = [
   { key: "id", label: "ID", width: 80 },
-  { key: "method", label: "Método", render: (row) => PaymentMethodLabels[row.method] },
+  { key: "clientName", label: "Nome do Cliente" },
   { key: "status", label: "Status", render: (row) => PaymentStatusLabels[row.status] },
   { key: "total", label: "Total", render: (row) => row.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) },
   { key: "paidAmount", label: "Pago", render: (row) => row.paidAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) },
-  { key: "createdAt", label: "Criado em", render: (row) => new Date(row.createdAt).toLocaleDateString() },
 ];
 
 // ----------------------
