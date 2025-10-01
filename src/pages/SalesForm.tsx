@@ -9,12 +9,12 @@ import { useSaleForm } from "@/hooks/useSaleForm";
 import { mapSaleToPayload, sanitizeSaleData } from "@/utils/sales/salePayloadMapper";
 import { validateSaleForm, canSubmitSale } from "@/utils/sales/saleValidators";
 import { getSummaryCalculations } from "@/utils/sales/calculations";
-import SaleSummary from "@/components/sale/SaleSummary";
-import SaleFormActions from "@/components/sale/SaleFormActions";
-import ClientStep from "@/components/sale/steps/ClientStep";
-import ProductsStep from "@/components/sale/steps/ProductsStep";
-import ProtocolForm from "@/components/sale/protocol/ProtocolForm";
-import ReviewStep from "@/components/sale/steps/ReviewStep";
+import SaleSummary from "@/components/salePageCustom/SaleSummary";
+import SaleFormActions from "@/components/salePageCustom/SaleFormActions";
+import ClientStep from "@/components/salePageCustom/steps/ClientStep";
+import ProductsStep from "@/components/salePageCustom/steps/ProductsStep";
+import ProtocolForm from "@/components/salePageCustom/protocol/ProtocolForm";
+import ReviewStep from "@/components/salePageCustom/steps/ReviewStep";
 import {
     Paper,
     Box,

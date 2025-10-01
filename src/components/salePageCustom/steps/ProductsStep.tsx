@@ -3,7 +3,7 @@ import { Box, Typography, TextField } from "@mui/material";
 import { FileText } from "lucide-react";
 import ProductSelector from "../ProductSelector";
 import SaleItemsTable from "../SaleItemsTable";
-import ServiceSelector from "@/components/sale/serviceSelector";
+import ServiceSelector from "@/components/salePageCustom/serviceSelector";
 import ServicesTable from "../serviceTable";
 import type { Product } from "@/types/productTypes";
 import type { Service } from "@/types/serviceTypes";
