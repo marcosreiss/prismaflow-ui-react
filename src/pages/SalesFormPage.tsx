@@ -10,12 +10,7 @@ import { useSaleForm } from "@/hooks/useSaleForm";
 import { mapSaleToPayload, sanitizeSaleData } from "@/utils/sales/salePayloadMapper";
 import { canSubmitSale } from "@/utils/sales/saleValidators";
 import { getSummaryCalculations } from "@/utils/sales/calculations";
-import SaleSummary from "@/components/salePageCustom/SaleSummary";
-import SaleFormActions from "@/components/salePageCustom/SaleFormActions";
-import ClientStep from "@/components/salePageCustom/steps/ClientStep";
-import ProductsStep from "@/components/salePageCustom/steps/ProductsStep";
-import ProtocolForm from "@/components/salePageCustom/protocol/ProtocolForm";
-import ReviewStep from "@/components/salePageCustom/steps/ReviewStep";
+
 import {
     Paper,
     Box,
@@ -32,6 +27,12 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { useService } from "@/hooks/useService";
 import { useEffect } from "react";
+import ProtocolForm from "@/components/saleForm/protocol/ProtocolForm";
+import SaleFormActions from "@/components/saleForm/ui/SaleFormActions";
+import SaleSummary from "@/components/saleForm/ui/SaleSummary";
+import ClientStep from "@/components/saleForm/steps/ClientStep";
+import ProductsStep from "@/components/saleForm/steps/ProductsStep";
+import ReviewStep from "@/components/saleForm/steps/ReviewStep";
 
 const steps = ['Cliente', 'Produtos', 'Protocolo', 'Revisão'];
 
@@ -39,7 +40,7 @@ interface SaleFormProps {
     mode?: 'create' | 'edit';
 }
 
-export default function SaleForm({ mode = 'create' }: SaleFormProps) {
+export default function SaleFormPage({ mode = 'create' }: SaleFormProps) {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const { addNotification } = useNotification();
@@ -84,7 +85,8 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
 
     useEffect(() => {
         // console.log("🎯 INICIALIZANDO FORMULÁRIO - Modo:", isEditMode ? "EDIÇÃO" : "CRIAÇÃO");
-
+        // console.log("venda existente", existingSale?.productItems[0].stockQuantity);
+        
         if (isEditMode && existingSale && !isLoadingSale) {
             // Modo edição: preencher com dados existentes
             const currentData = methods.getValues();
@@ -135,7 +137,6 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
                     })),
                     protocol: existingSale.protocol || undefined,
                 };
-
                 resetForm(formData);
             }
         }
@@ -198,7 +199,9 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
 
     const onSubmit = async (data: Sale) => {
 
+        // passa o flag de edição
         const finalValidation = canSubmitSale(data);
+
         if (!finalValidation.isValid) {
             finalValidation.errors.forEach(error => addNotification(error, "warning"));
             return;
@@ -207,7 +210,6 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
         try {
             const sanitizedData = sanitizeSaleData(data);
             const payload = mapSaleToPayload(sanitizedData, isEditMode);
-
 
             if (isEditMode && id) {
                 await update({ id, data: payload as any });
@@ -218,10 +220,10 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
             }
 
             navigate("/sales");
-
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message ||
-                `Erro ao ${isEditMode ? 'atualizar' : 'criar'} a venda. Tente novamente.`;
+            const errorMessage =
+                error.response?.data?.message ||
+                `Erro ao ${isEditMode ? "atualizar" : "criar"} a venda. Tente novamente.`;
             addNotification(errorMessage, "error");
         }
     };

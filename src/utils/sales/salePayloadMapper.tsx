@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Sale } from "@/types/saleTypes";
 import type { ProtocolCreate, PrescriptionCreate } from "@/types/protocolTypes";
-import type { FrameDetails } from "@/types/frameDetailsTypes"; // Adicione este import se existir
 
 export const mapSaleToPayload = (data: Sale, isEdit: boolean = false) => {
     // Verifica se há lentes para determinar se precisa de protocolo
@@ -62,7 +62,8 @@ const mapProtocolToPayload = (protocol: Sale['protocol'], isEdit: boolean = fals
 /**
  * Mapeia dados da prescrição para a API - ✅ CORREÇÃO: Tratamento seguro do id
  */
-const mapPrescriptionToPayload = (prescription: any, isEdit: boolean = false): PrescriptionCreate => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const mapPrescriptionToPayload = (prescription: any, _isEdit: boolean = false): PrescriptionCreate => {
     return {
         // ✅ CORREÇÃO: Só inclui ID se existir e for edição
         doctorName: prescription.doctorName?.trim() || '',
