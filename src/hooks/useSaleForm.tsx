@@ -83,6 +83,7 @@ export const useSaleForm = () => {
             product,
             quantity: 1,
             frameDetails,
+            stockQuantity: 0
         };
 
         setValue("productItems", [
