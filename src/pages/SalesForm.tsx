@@ -47,7 +47,7 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
     // ✅ CORREÇÃO: Declare isEditMode apenas uma vez
     const isEditMode = mode === 'edit' || !!id;
 
-    console.log("🎯 DETECÇÃO DE MODO:", { mode, id, isEditMode });
+    // console.log("🎯 DETECÇÃO DE MODO:", { mode, id, isEditMode });
 
     // Hooks externos
     const { list: { data: customers, isLoading: isLoadingCustomers } } = useCustomer(null);
@@ -82,20 +82,13 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
     const { handleSubmit, formState: { errors } } = methods;
 
 
-    // No useEffect de preenchimento do formulário, substitua por:
-    // No SaleForm.tsx, substitua o useEffect problemático por:
-    // ✅ CORREÇÃO: Separar em useEffects diferentes para cada modo
-
-    // No SaleForm.tsx, use este useEffect corrigido:
     useEffect(() => {
-        console.log("🎯 INICIALIZANDO FORMULÁRIO - Modo:", isEditMode ? "EDIÇÃO" : "CRIAÇÃO");
+        // console.log("🎯 INICIALIZANDO FORMULÁRIO - Modo:", isEditMode ? "EDIÇÃO" : "CRIAÇÃO");
 
         if (isEditMode && existingSale && !isLoadingSale) {
             // Modo edição: preencher com dados existentes
             const currentData = methods.getValues();
             if (!currentData.client && existingSale.client) {
-                console.log("📋 PREENCHENDO DADOS EDIÇÃO");
-
                 // ✅ CORREÇÃO: Definir a variável formData
                 const formData: Sale = {
                     id: existingSale.id,
@@ -154,7 +147,6 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
 
     const handleStepNext = () => {
         // ✅ TEMPORARIAMENTE: Validação mínima para teste
-        console.log("⏩ AVANÇANDO PARA PRÓXIMA ETAPA");
         handleNext();
 
         // ❌ COMENTE TEMPORARIAMENTE a validação complexa:
@@ -180,7 +172,6 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
             return;
         }
 
-        // ✅ TEMPORARIAMENTE: Pular validação ao mudar de etapa
         setActiveStep(newStep);
 
         // ❌ COMENTE TEMPORARIAMENTE:
@@ -206,7 +197,6 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
     };
 
     const onSubmit = async (data: Sale) => {
-        console.log("=== 🔍 DADOS DO FORMULÁRIO ===", data);
 
         const finalValidation = canSubmitSale(data);
         if (!finalValidation.isValid) {
@@ -218,7 +208,6 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
             const sanitizedData = sanitizeSaleData(data);
             const payload = mapSaleToPayload(sanitizedData, isEditMode);
 
-            console.log("✅ PAYLOAD ENVIADO:", payload);
 
             if (isEditMode && id) {
                 await update({ id, data: payload as any });
@@ -231,7 +220,6 @@ export default function SaleForm({ mode = 'create' }: SaleFormProps) {
             navigate("/sales");
 
         } catch (error: any) {
-            console.error("❌ ERRO:", error.response?.data);
             const errorMessage = error.response?.data?.message ||
                 `Erro ao ${isEditMode ? 'atualizar' : 'criar'} a venda. Tente novamente.`;
             addNotification(errorMessage, "error");
