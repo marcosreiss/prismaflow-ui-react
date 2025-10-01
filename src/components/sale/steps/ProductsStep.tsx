@@ -5,17 +5,19 @@ import ProductSelector from "../ProductSelector";
 import SaleItemsTable from "../SaleItemsTable";
 import ServiceSelector from "@/components/sale/serviceSelector";
 import ServicesTable from "../serviceTable";
+import type { Product } from "@/types/productTypes";
+import type { Service } from "@/types/serviceTypes";
 
 interface ProductsStepProps {
     control: any;
     errors: any;
-    products: any[];
-    services: any[];
+    products: Product[];
+    services: Service[];
     isLoadingProducts: boolean;
     isLoadingServices: boolean;
-    onAddProduct: (product: any) => void;
-    onAddService: (service: any) => void;
-    creating: boolean;
+    onAddProduct: (product: Product) => void;
+    onAddService: (service: Service) => void;
+    isLoading: boolean;
 }
 
 export default function ProductsStep({
@@ -26,7 +28,7 @@ export default function ProductsStep({
     isLoadingServices,
     onAddProduct,
     onAddService,
-    creating
+    isLoading
 }: ProductsStepProps) {
     return (
         <Box>
@@ -36,7 +38,7 @@ export default function ProductsStep({
                     products={products}
                     isLoading={isLoadingProducts}
                     onAddProduct={onAddProduct}
-                    disabled={creating}
+                    disabled={isLoading}
                 />
 
                 <Box sx={{ mt: 2 }}>
@@ -50,7 +52,7 @@ export default function ProductsStep({
                     services={services}
                     isLoading={isLoadingServices}
                     onAddService={onAddService}
-                    disabled={creating}
+                    disabled={isLoading}
                 />
 
                 <Box sx={{ mt: 2 }}>

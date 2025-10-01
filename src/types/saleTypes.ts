@@ -50,21 +50,7 @@ export type Sale = {
     protocol?: ProtocolCreate; // Usar o tipo de criação
     createdAt: string;
     updatedAt?: string;
-    id?: number;
-    client?: any;
-    clientName?: string;
-    productItems: ItemProduct[];
-    serviceItems: Array<{
-        service: any;
-    }>;
-    discount: number;
-    notes: string;
-    isActive: boolean;
-    subtotal: number;
-    total: number;
-    protocol?: ProtocolCreate;
-    createdAt?: string;
-    updatedAt?: string;
+
 };
 
 

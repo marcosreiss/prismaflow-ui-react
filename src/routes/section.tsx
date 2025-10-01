@@ -7,7 +7,6 @@ import BlankLayout from '../layout/blanckLayout';
 import DashboardLayout from '../layout/dashboardLayout';
 
 const SignInPage = lazy(() => import('@/pages/login'));
-//const CustomersPage = lazy(() => import('@/pages/cliente/clienteIndex'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const BrandPage = lazy(() => import('@/pages/BrandsPage'));
 const TestBrandPage = lazy(() => import('@/pages/TesteBrandsPage'));
@@ -18,7 +17,7 @@ const CustomerPage = lazy(() => import('@/pages/CustomerPage'));
 const SalesPage = lazy(() => import('@/pages/SalePage'));
 const SalesForm = lazy(() => import('@/pages/SalesForm'));
 const SalesDetailsPage = lazy(() => import('@/pages/salesDetailsPage'));
-
+// ❌ REMOVA ESTA LINHA DUPLICADA: const SalesEditPage = lazy(() => import('@/pages/SalesForm'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -53,8 +52,10 @@ export function PrivateRouter() {
                 { path: 'services', element: <ServicePage /> },
                 { path: 'customers', element: <CustomerPage /> },
                 { path: 'sales', element: <SalesPage /> },
-                { path: 'salesform', element: <SalesForm /> },
+                { path: 'sales/new', element: <SalesForm /> }, // ✅ CRIAÇÃO
+                { path: 'sales/edit/:id', element: <SalesForm mode="edit" /> }, // ✅ EDIÇÃO
                 { path: 'sales/:id', element: <SalesDetailsPage /> },
+                // ❌ REMOVA ESTA LINHA DUPLICADA: { path: 'sales', element: <SalesForm /> },
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },
