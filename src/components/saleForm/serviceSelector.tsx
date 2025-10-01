@@ -65,6 +65,7 @@ export default function ServiceSelector({
     };
 
     // ✅ CORREÇÃO: Render option corrigida
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const renderOption = (props: any, service: Service) => {
         // ✅ Extrair key das props e passar diretamente
         const { key, ...otherProps } = props;
