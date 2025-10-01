@@ -7,6 +7,7 @@ export type ItemProduct = {
     sale: Sale;
     product: Product;
     quantity: number;
+    stockQuantity: number;
     frameDetails: FrameDetails | Omit<FrameDetails, "id" | "itemProduct"> | null; // ✅ aceita incompleto
 };
 

@@ -41,12 +41,84 @@ export default function ServiceSelector({
         }
     };
 
+    // ✅ CORREÇÃO: Funções com verificação de null
     const calculateProfit = (service: Service) => {
-        return service.price - service.cost;
+        const price = service.price || 0;
+        const cost = service.cost || 0;
+        return price - cost;
     };
 
     const calculateProfitMargin = (service: Service) => {
-        return ((service.price - service.cost) / service.cost) * 100;
+        const price = service.price || 0;
+        const cost = service.cost || 0;
+        if (cost === 0) return 0;
+        return ((price - cost) / cost) * 100;
+    };
+
+    // ✅ CORREÇÃO: Função para formatar preço com fallback
+    const formatPrice = (price: number | null | undefined): string => {
+        if (price == null) return 'R$ 0,00';
+        return price.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    };
+
+    // ✅ CORREÇÃO: Render option corrigida
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const renderOption = (props: any, service: Service) => {
+        // ✅ Extrair key das props e passar diretamente
+        const { key, ...otherProps } = props;
+
+        return (
+            <li key={key} {...otherProps}>
+                <Box sx={{ width: '100%' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <Typography variant="body2" fontWeight="medium">
+                            {service.name || 'Serviço sem nome'}
+                        </Typography>
+                        <Chip
+                            label={formatPrice(service.price)}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                        />
+                    </Box>
+
+                    {service.description && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                            {service.description}
+                        </Typography>
+                    )}
+
+                    <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                        <Chip
+                            label={`Custo: ${formatPrice(service.cost)}`}
+                            size="small"
+                            variant="outlined"
+                        />
+                        <Chip
+                            label={`Lucro: ${formatPrice(calculateProfit(service))}`}
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                        />
+                        <Chip
+                            label={`Margem: ${calculateProfitMargin(service).toFixed(1)}%`}
+                            size="small"
+                            color="success"
+                        />
+                    </Box>
+                </Box>
+            </li>
+        );
+    };
+
+    // ✅ CORREÇÃO: Get option label com verificação
+    const getOptionLabel = (service: Service): string => {
+        const name = service.name || 'Serviço sem nome';
+        const price = formatPrice(service.price);
+        return `${name} - ${price}`;
     };
 
     return (
@@ -61,9 +133,7 @@ export default function ServiceSelector({
                     <Autocomplete
                         sx={{ flexGrow: 1 }}
                         options={services || []}
-                        getOptionLabel={(service) =>
-                            `${service.name} - ${service.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
-                        }
+                        getOptionLabel={getOptionLabel}
                         loading={isLoading}
                         value={selectedService}
                         onChange={(_, newValue) => setSelectedService(newValue)}
@@ -77,48 +147,7 @@ export default function ServiceSelector({
                                 fullWidth
                             />
                         )}
-                        renderOption={(props, service) => (
-                            <li {...props}>
-                                <Box sx={{ width: '100%' }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <Typography variant="body2" fontWeight="medium">
-                                            {service.name}
-                                        </Typography>
-                                        <Chip
-                                            label={service.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                            size="small"
-                                            color="primary"
-                                            variant="outlined"
-                                        />
-                                    </Box>
-
-                                    {service.description && (
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                            {service.description}
-                                        </Typography>
-                                    )}
-
-                                    <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                                        <Chip
-                                            label={`Custo: ${service.cost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
-                                            size="small"
-                                            variant="outlined"
-                                        />
-                                        <Chip
-                                            label={`Lucro: ${calculateProfit(service).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
-                                            size="small"
-                                            color="success"
-                                            variant="outlined"
-                                        />
-                                        <Chip
-                                            label={`Margem: ${calculateProfitMargin(service).toFixed(1)}%`}
-                                            size="small"
-                                            color="success"
-                                        />
-                                    </Box>
-                                </Box>
-                            </li>
-                        )}
+                        renderOption={renderOption}
                     />
                     <Button
                         variant="outlined"
@@ -144,7 +173,7 @@ export default function ServiceSelector({
                         <Stack spacing={1} sx={{ flex: 1 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" fontWeight="medium">Nome:</Typography>
-                                <Typography variant="body2">{selectedService.name}</Typography>
+                                <Typography variant="body2">{selectedService.name || 'Serviço sem nome'}</Typography>
                             </Box>
                             {selectedService.description && (
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -158,19 +187,19 @@ export default function ServiceSelector({
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" fontWeight="medium">Preço de Venda:</Typography>
                                 <Typography variant="body2" fontWeight="bold" color="primary.main">
-                                    {selectedService.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    {formatPrice(selectedService.price)}
                                 </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" fontWeight="medium">Custo:</Typography>
                                 <Typography variant="body2">
-                                    {selectedService.cost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    {formatPrice(selectedService.cost)}
                                 </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" fontWeight="medium">Lucro:</Typography>
                                 <Typography variant="body2" color="success.main" fontWeight="bold">
-                                    {calculateProfit(selectedService).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    {formatPrice(calculateProfit(selectedService))}
                                     ({calculateProfitMargin(selectedService).toFixed(1)}%)
                                 </Typography>
                             </Box>

@@ -209,7 +209,7 @@ export default function PFTable<T extends object>({
                     <Card variant="outlined">
                         <CardContent sx={{ textAlign: "center", color: "text.secondary" }}>
                             <Inbox size={32} style={{ marginBottom: 8 }} />
-                            <Typography variant="body2">Nenhum dado encontrado</Typography>
+                            <Typography variant="body2">Nenhum registro encontrado</Typography>
                         </CardContent>
                     </Card>
                 )}

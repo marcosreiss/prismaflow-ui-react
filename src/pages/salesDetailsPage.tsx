@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -19,9 +20,13 @@ export default function SalesDetailsPage() {
     const { addNotification } = useNotification();
 
     const saleId = id ? parseInt(id) : null;
-    const { data: sale, isLoading, error } = useSaleDetails(saleId);
+    const { data: apiResponse, isLoading, error } = useSaleDetails(saleId);
 
-    console.log('🔍 Dados do hook específico:', sale);
+    // ✅✅✅ CORREÇÃO FINAL: Extrair sale.data (não apiResponse direto)
+    const sale = (apiResponse as any)?.data;
+
+    console.log('🔍 Resposta completa da API:', apiResponse);
+    console.log('🔍 Dados da venda (sale.data):', sale);
 
     useEffect(() => {
         if (error) {
@@ -41,6 +46,7 @@ export default function SalesDetailsPage() {
         );
     }
 
+    // ✅ CORREÇÃO: Verificar se sale existe (agora é sale.data)
     if (!sale) {
         return (
             <Paper sx={{ p: 3 }}>
@@ -180,7 +186,7 @@ export default function SalesDetailsPage() {
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h6" sx={{ mb: 2 }}>Produtos ({sale.products?.length || 0})</Typography>
                 {sale.products && sale.products.length > 0 ? (
-                    sale.products.map((product) => (
+                    sale.products.map((product: any) => (
                         <Box key={product.id} sx={{
                             p: 2,
                             mb: 1,
@@ -228,7 +234,7 @@ export default function SalesDetailsPage() {
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h6" sx={{ mb: 2 }}>Serviços ({sale.services?.length || 0})</Typography>
                 {sale.services && sale.services.length > 0 ? (
-                    sale.services.map((service) => (
+                    sale.services.map((service: any) => (
                         <Box key={service.id} sx={{
                             p: 2,
                             mb: 1,
@@ -275,14 +281,14 @@ export default function SalesDetailsPage() {
                         Total Produtos:
                     </Typography>
                     <Typography variant="body2">
-                        R$ {sale.products?.reduce((sum, p) => sum + (p.total || 0), 0)?.toFixed(2) || "0,00"}
+                        R$ {sale.products?.reduce((sum: any, p: any) => sum + (p.total || 0), 0)?.toFixed(2) || "0,00"}
                     </Typography>
 
                     <Typography variant="body2" color="text.secondary">
                         Total Serviços:
                     </Typography>
                     <Typography variant="body2">
-                        R$ {sale.services?.reduce((sum, s) => sum + (s.price || 0), 0)?.toFixed(2) || "0,00"}
+                        R$ {sale.services?.reduce((sum: any, s: any) => sum + (s.price || 0), 0)?.toFixed(2) || "0,00"}
                     </Typography>
 
                     <Typography variant="body2" color="text.secondary">

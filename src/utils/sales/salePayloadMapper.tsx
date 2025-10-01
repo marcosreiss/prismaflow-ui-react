@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Sale } from "@/types/saleTypes";
 import type { ProtocolCreate, PrescriptionCreate } from "@/types/protocolTypes";
 
@@ -61,7 +62,7 @@ const mapProtocolToPayload = (protocol: Sale['protocol'], isEdit: boolean = fals
 /**
  * Mapeia dados da prescrição para a API - ✅ CORREÇÃO: Tratamento seguro do id
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mapPrescriptionToPayload = (prescription: any, _isEdit: boolean = false): PrescriptionCreate => {
     return {
         // ✅ CORREÇÃO: Só inclui ID se existir e for edição

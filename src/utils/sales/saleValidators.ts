@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Sale } from "@/types/saleTypes";
 import type { Product } from "@/types/productTypes";
-
+type ValidatorOptions = { isEditMode?: boolean };
 /**
  * Validações para o formulário de venda
  */
@@ -14,76 +14,94 @@ export interface ValidationResult {
 /**
  * Validação principal do formulário por etapa
  */
-export const validateSaleForm = (data: Sale, step: number): ValidationResult => {
-    const errors: string[] = [];
+export const validateSaleForm = (
+  data: Sale,
+  step: number,
+  options?: ValidatorOptions
+): ValidationResult => {
+  const errors: string[] = [];
 
-    switch (step) {
-        case 0: // Cliente
-            if (!data.client?.id) {
-                errors.push("Por favor, selecione um cliente.");
-            }
-            break;
+  switch (step) {
+    case 0: // Cliente
+      if (!data.client?.id) {
+        errors.push("Por favor, selecione um cliente.");
+      }
+      break;
 
-        case 1: // Produtos
-            if (data.productItems.length === 0) {
-                errors.push("Por favor, adicione pelo menos um produto.");
-            } else {
-                // Validações específicas dos produtos
-                const productErrors = validateProductItems(data.productItems);
-                errors.push(...productErrors);
-            }
-            break;
+    case 1: // Produtos
+      if (!data.productItems || data.productItems.length === 0) {
+        errors.push("Por favor, adicione pelo menos um produto.");
+      } else {
+        // Validações específicas dos produtos
+        const productErrors = validateProductItems(data.productItems, options);
+        errors.push(...productErrors);
+      }
+      break;
 
-        case 2: // Protocolo
-            { const protocolErrors = validateProtocol(data.protocol);
-            errors.push(...protocolErrors);
-            break; }
+    case 2: // Protocolo
+      {
+        const protocolErrors = validateProtocol(data.protocol);
+        errors.push(...protocolErrors);
+      }
+      break;
 
-        case 3: // Revisão
-            { const reviewErrors = validateReview(data);
-            errors.push(...reviewErrors);
-            break; }
-    }
+    case 3: // Revisão
+      {
+        const reviewErrors = validateReview(data);
+        errors.push(...reviewErrors);
+      }
+      break;
+  }
 
-    return {
-        isValid: errors.length === 0,
-        errors
-    };
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
 };
 
 /**
  * Validações específicas dos itens de produto
  */
-export const validateProductItems = (productItems: Sale['productItems']): string[] => {
-    const errors: string[] = [];
+export const validateProductItems = (
+  productItems: Sale["productItems"],
+  options?: ValidatorOptions
+): string[] => {
+  const errors: string[] = [];
 
-    productItems.forEach((item) => {
-        const product = (item as any).product as Product;
-        const quantity = (item as any).quantity;
+  productItems.forEach((item: any) => {
+    const product = item?.product as Product;
+    const quantity = Number(item?.quantity || 0);
 
-        // Validação de quantidade
-        if (!quantity || quantity < 1) {
-            errors.push(`Produto "${product.name}": quantidade deve ser pelo menos 1.`);
-        }
+    if (!product) return;
 
-        // Validação de estoque
-        if (product.stockQuantity < quantity) {
-            errors.push(`Produto "${product.name}": estoque insuficiente. Disponível: ${product.stockQuantity}, Solicitado: ${quantity}`);
-        }
+    // regras básicas
+    if (!quantity || quantity < 1) {
+      errors.push(`Produto "${product.name}": quantidade deve ser pelo menos 1.`);
+      return;
+    }
 
-        // Validação de estoque mínimo
-        if (product.stockQuantity - quantity < product.minimumStock) {
-            errors.push(`Produto "${product.name}": estoque ficará abaixo do mínimo após a venda.`);
-        }
+    // detectar se é um item existente e inalterado (edição)
+    const unchanged =
+      !!options?.isEditMode &&
+      !!item?.saleItemId && // id do item da venda (não do produto)
+      item?._original &&
+      Number(item?._original?.quantity) === quantity &&
+      String(item?._original?.productId) === String(product?.id);
 
-        // Validações específicas para armações
-        if (product.category === "FRAME" && (item as any).frameDetails) {
-            const frameErrors = validateFrameDetails((item as any).frameDetails, product.name);
-            errors.push(...frameErrors);
-        }
-    });
+    // só valida estoque quando NÃO for inalterado
+    console.log("product esetoque:", product.stockQuantity);
+    
+    if (!unchanged) {
+      const available = Number((product as any)?.stockQuantity ?? 0);
+      if (available < quantity) {
+        errors.push(
+          `Produto "${product.name}": estoque insuficiente. Disponível: ${available}, Solicitado: ${quantity}.`
+        );
+      }
+    }
+  });
 
-    return errors;
+  return errors;
 };
 
 /**
@@ -198,18 +216,17 @@ export const canProceedToNextStep = (data: Sale, currentStep: number): boolean =
  * Validação para submit final
  */
 export const canSubmitSale = (data: Sale): ValidationResult => {
-    // Valida todas as etapas
-    const errors: string[] = [];
+  const errors: string[] = [];
 
-    for (let step = 0; step < 4; step++) {
-        const stepValidation = validateSaleForm(data, step);
-        errors.push(...stepValidation.errors);
-    }
+  const isEditMode = Boolean((data as any)?.id); // venda existente => edição
+  
 
-    return {
-        isValid: errors.length === 0,
-        errors
-    };
+  for (let step = 0; step < 4; step++) {
+    const stepValidation = validateSaleForm(data, step, { isEditMode });
+    errors.push(...stepValidation.errors);
+  }
+
+  return { isValid: errors.length === 0, errors };
 };
 
 /**
