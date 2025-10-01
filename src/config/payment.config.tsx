@@ -99,31 +99,44 @@ export const paymentFields: FieldDef<Payment>[] = [
         ),
     },
     {
-        name: "installmentsTotal",
-        label: "Qtd Parcelas",
+        name: "paidAmount",
+        label: "Total Pago",
         component: ({ value, onChange }) => (
-            <TextField
-                type="number"
+            <CurrencyInput
                 fullWidth
                 size="small"
-                value={value ?? ""}
-                onChange={(e) => onChange(parseInt(e.target.value, 10))}
+                label=""
+                value={typeof value === "number" ? value : 0}
+                onChange={(val) => onChange(val)}
             />
         ),
     },
-    {
-        name: "firstDueDate",
-        label: "Data 1ª Parcela",
-        component: ({ value, onChange }) => (
-            <TextField
-                fullWidth
-                size="small"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={value ?? ""}
-                onChange={(e) => onChange(e.target.value)}
-            />
-        ),
-    },
+    // {
+    //     name: "installmentsTotal",
+    //     label: "Qtd Parcelas",
+    //     component: ({ value, onChange }) => (
+    //         <TextField
+    //             type="number"
+    //             fullWidth
+    //             size="small"
+    //             value={value ?? ""}
+    //             onChange={(e) => onChange(parseInt(e.target.value, 10))}
+    //         />
+    //     ),
+    // },
+    // {
+    //     name: "firstDueDate",
+    //     label: "Data 1ª Parcela",
+    //     component: ({ value, onChange }) => (
+    //         <TextField
+    //             fullWidth
+    //             size="small"
+    //             type="date"
+    //             InputLabelProps={{ shrink: true }}
+    //             value={value ?? ""}
+    //             onChange={(e) => onChange(e.target.value)}
+    //         />
+    //     ),
+    // },
 ];
 

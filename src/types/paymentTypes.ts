@@ -12,14 +12,14 @@ export const PaymentStatusLabels: Record<PaymentStatus, string> = {
   CANCELED: "Cancelado",
 };
 
-export type PaymentMethod = "PIX" | "MONEY" | "DEBIT" | "CREDIT" | "INSTALLMENT";
+export type PaymentMethod = "PIX" | "MONEY" | "DEBIT" | "CREDIT"; // | "INSTALLMENT"
 
 export const PaymentMethodLabels: Record<PaymentMethod, string> = {
   PIX: "Pix",
   MONEY: "Dinheiro",
   DEBIT: "Débito",
   CREDIT: "Crédito",
-  INSTALLMENT: "Parcelado",
+  // INSTALLMENT: "Parcelado",
 };
 
 // ----------------------
