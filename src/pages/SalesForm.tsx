@@ -27,12 +27,12 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { useService } from "@/hooks/useService";
 import { useEffect } from "react";
-import ProtocolForm from "@/components/saleFormPage/protocol/ProtocolForm";
-import SaleFormActions from "@/components/saleFormPage/SaleFormActions";
-import SaleSummary from "@/components/saleFormPage/SaleSummary";
-import ClientStep from "@/components/saleFormPage/steps/ClientStep";
-import ProductsStep from "@/components/saleFormPage/steps/ProductsStep";
-import ReviewStep from "@/components/saleFormPage/steps/ReviewStep";
+import ProtocolForm from "@/components/saleForm/protocol/ProtocolForm";
+import SaleFormActions from "@/components/saleForm/ui/SaleFormActions";
+import SaleSummary from "@/components/saleForm/ui/SaleSummary";
+import ClientStep from "@/components/saleForm/steps/ClientStep";
+import ProductsStep from "@/components/saleForm/steps/ProductsStep";
+import ReviewStep from "@/components/saleForm/steps/ReviewStep";
 
 const steps = ['Cliente', 'Produtos', 'Protocolo', 'Revisão'];
 
