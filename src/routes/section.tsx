@@ -9,15 +9,12 @@ import DashboardLayout from '../layout/dashboardLayout';
 const SignInPage = lazy(() => import('@/pages/login'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const BrandPage = lazy(() => import('@/pages/BrandsPage'));
-const TestBrandPage = lazy(() => import('@/pages/TesteBrandsPage'));
 const ProductPage = lazy(() => import('@/pages/ProductsPage'));
-const TestProductPage = lazy(() => import('@/pages/TesteProducstPage'));
 const ServicePage = lazy(() => import('@/pages/ServicePage'));
 const CustomerPage = lazy(() => import('@/pages/CustomerPage'));
 const SalesPage = lazy(() => import('@/pages/SalePage'));
 const SalesForm = lazy(() => import('@/pages/SalesForm'));
 const SalesDetailsPage = lazy(() => import('@/pages/salesDetailsPage'));
-// ❌ REMOVA ESTA LINHA DUPLICADA: const SalesEditPage = lazy(() => import('@/pages/SalesForm'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -47,8 +44,6 @@ export function PrivateRouter() {
                 { index: true, element: <DashboardPage /> },
                 { path: 'brands', element: <BrandPage /> },
                 { path: 'products', element: <ProductPage /> },
-                { path: 'productstest', element: <TestProductPage /> },
-                { path: 'brandstest', element: <TestBrandPage /> },
                 { path: 'services', element: <ServicePage /> },
                 { path: 'customers', element: <CustomerPage /> },
                 { path: 'sales', element: <SalesPage /> },

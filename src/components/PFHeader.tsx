@@ -56,7 +56,7 @@ export default function PFHeader({ onToggleSidebar }: PFHeaderProps) {
                 {/* Botão de alternar tema */}
                 <Tooltip title={mode === "light" ? "Modo escuro" : "Modo claro"}>
                     <IconButton onClick={toggleMode} sx={{ mr: 1 }}>
-                        {mode === "light" ? (
+                        {mode === "dark" ? (
                             <Moon size={20} strokeWidth={1.8} />
                         ) : (
                             <Sun size={20} strokeWidth={1.8} />

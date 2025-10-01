@@ -1,221 +1,55 @@
-import { useState, useEffect } from "react";
-import PFTopToolbar from "@/components/crud/PFTopToolbar";
-import PFTable from "@/components/crud/PFTable";
-import PFDrawerModal from "@/components/crud/PFDrawerModal";
-import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
+import { brandColumns, brandFields } from "@/config/brands.config";
 import { useBrand } from "@/hooks/useBrand";
-import { brandColumns, brandFields } from "../config/brands.config";
-import { Box, Typography, Chip, Divider, Paper } from "@mui/material";
 import type { Brand } from "@/types/brandTypes";
-import { useNotification } from "@/context/NotificationContext";
-import type { AxiosError } from "axios";
-import type { ApiResponse } from "@/types/apiResponse";
+import { Box, Typography, Chip, Divider } from "@mui/material";
+import { CrudPage } from "./CrudPage";
 
 export default function BrandsPage() {
-    const [drawerOpen, setDrawerOpen] = useState(false);
-    const [drawerMode, setDrawerMode] = useState<"create" | "edit" | "view">("view");
-    const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [confirmOpen, setConfirmOpen] = useState(false);
-
-    const {
-        list: { data, total, isLoading, isFetching, page, setPage, size, setSize, setSearch, refetch, error: listError },
-        detail,
-        create,
-        update,
-        remove,
-        creating,
-        updating,
-        removing,
-    } = useBrand(selectedId);
-
-    const { addNotification } = useNotification();
-
-    const selectedBrand: Brand | null =
-        drawerMode === "create"
-            ? null
-            : (detail.isLoading || ((detail.data as Brand | undefined)?.id !== selectedId))
-                ? null
-                : ((detail.data as Brand | undefined) ?? null);
-
-    const handleOpenCreate = () => {
-        setDrawerMode("create");
-        setSelectedId(null);
-        setDrawerOpen(true);
-    };
-    const handleOpenView = (row: Brand) => {
-        setDrawerMode("view");
-        setSelectedId(row.id);
-        setDrawerOpen(true);
-    };
-    const handleOpenEdit = (row: Brand) => {
-        setDrawerMode("edit");
-        setSelectedId(row.id);
-        setDrawerOpen(true);
-    };
-
-    const handleCloseDrawer = () => {
-        setDrawerOpen(false);
-    };
-
-    const handleAskDelete = (row: Brand) => {
-        setSelectedId(row.id);
-        setConfirmOpen(true);
-    };
-
-    const handleCreate = async (values: Partial<Brand>) => {
-        try {
-            const res = await create(values);
-            addNotification(res?.message || "Registro criado com sucesso.", "success");
-            handleCloseDrawer();
-        } catch (e: unknown) {
-            const error = e as AxiosError<ApiResponse<Brand>>;
-            console.error(error);
-            addNotification(error?.response?.data?.message || "Erro ao criar registro. Tente novamente.", "error");
-        }
-    };
-
-    const handleUpdate = async (id: number, values: Partial<Brand>) => {
-        try {
-            const res = await update({ id, data: values });
-            addNotification(res?.message || "Registro atualizado com sucesso.", "success");
-            handleCloseDrawer();
-        } catch (e) {
-            console.error(e);
-            addNotification("Erro ao atualizar registro. Tente novamente.", "error");
-        }
-    };
-
-    const handleDeleteConfirm = async () => {
-        if (!selectedId) return;
-        try {
-            const res = await remove(selectedId);
-            addNotification(res?.message || "Registro excluído com sucesso.", "success");
-            setSelectedId(null); // 👈 limpa o id depois do sucesso
-        } catch (e) {
-            console.error(e);
-            addNotification("Erro ao excluir registro. Tente novamente.", "error");
-        } finally {
-            setConfirmOpen(false);
-        }
-    };
-
-    const handleSubmit = async (values: Partial<Brand>) => {
-        if (drawerMode === "create") return handleCreate(values);
-        if (drawerMode === "edit" && selectedId) return handleUpdate(selectedId, values);
-    };
-
-    useEffect(() => {
-        if (listError) addNotification("Erro ao carregar a lista de marcas.", "error");
-    }, [listError, addNotification]);
-
-    useEffect(() => {
-        if (selectedId && detail.error) {
-            addNotification("Erro ao carregar detalhes da marca.", "error");
-        }
-    }, [selectedId, detail.error, addNotification]);
-
     return (
-        <Paper
-            sx={{
-                borderRadius: 2,
-                borderColor: "grey.200",
-                backgroundColor: "background.paper",
-                p: 3,
-            }}
-        >
-            <PFTopToolbar
-                title="Marcas"
-                addLabel="Adicionar nova marca"
-                onSearch={(val) => setSearch(val)}
-                onRefresh={() => refetch()}
-                onAdd={handleOpenCreate}
-            />
-
-            <PFTable<Brand>
-                columns={brandColumns}
-                rows={data}
-                loading={isLoading || isFetching}
-                total={total}
-                page={page}
-                pageSize={size}
-                onPageChange={setPage}
-                onPageSizeChange={setSize}
-                onView={handleOpenView}
-                onEdit={handleOpenEdit}
-                onDelete={handleAskDelete}
-            />
-
-            <PFDrawerModal<Brand>
-                key={`${drawerMode}-${selectedId ?? "new"}`}
-                open={drawerOpen}
-                mode={drawerMode}
-                title={
-                    drawerMode === "create"
-                        ? "Nova Marca"
-                        : drawerMode === "edit"
-                            ? "Editar Marca"
-                            : "Detalhes da Marca"
-                }
-                data={selectedBrand}
-                fields={brandFields}
-                onClose={handleCloseDrawer}
-                onSubmit={handleSubmit}
-                creating={creating}
-                updating={updating}
-                renderView={(brand) => (
-                    <Box>
-                        <Box
-                            sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
-                        >
-                            <Typography variant="h6">{brand.name}</Typography>
-                            <Chip
-                                size="small"
-                                label={brand.isActive ? "Ativa" : "Inativa"}
-                                color={brand.isActive ? "success" : "default"}
-                                variant={brand.isActive ? "filled" : "outlined"}
-                            />
-                        </Box>
-                        <Divider sx={{ my: 2 }} />
-                        <Box
-                            sx={{
-                                display: "grid",
-                                gridTemplateColumns: "140px 1fr",
-                                rowGap: 1.5,
-                            }}
-                        >
-                            <Typography variant="body2" color="text.secondary">
-                                ID
-                            </Typography>
-                            <Typography variant="body1">{brand.id}</Typography>
-
-                            <Typography variant="body2" color="text.secondary">
-                                Nome
-                            </Typography>
-                            <Typography variant="body1">{brand.name}</Typography>
-
-                            <Typography variant="body2" color="text.secondary">
-                                Status
-                            </Typography>
-                            <Typography variant="body1">
-                                {brand.isActive ? "Sim" : "Não"}
-                            </Typography>
-                        </Box>
+        <CrudPage<Brand>
+            title="Marca"
+            addLabel="Adicionar nova marca"
+            columns={brandColumns}
+            fields={brandFields}
+            useCrudHook={useBrand}
+            renderView={(brand) => (
+                <Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                        <Typography variant="h6">{brand.name}</Typography>
+                        <Chip
+                            size="small"
+                            label={brand.isActive ? "Ativa" : "Inativa"}
+                            color={brand.isActive ? "success" : "default"}
+                            variant={brand.isActive ? "filled" : "outlined"}
+                        />
                     </Box>
-                )}
-                ModalPropsOverride={{
-                    onExited: () => setSelectedId(null),
-                }}
-            />
+                    <Divider sx={{ my: 2 }} />
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: "140px 1fr",
+                            rowGap: 1.5,
+                        }}
+                    >
+                        <Typography variant="body2" color="text.secondary">
+                            ID
+                        </Typography>
+                        <Typography variant="body1">{brand.id}</Typography>
 
-            <PFConfirmDialog
-                open={confirmOpen}
-                title="Excluir Marca"
-                description="Tem certeza que deseja excluir esta marca?"
-                onCancel={() => setConfirmOpen(false)}
-                onConfirm={handleDeleteConfirm}
-                loading={removing}
-            />
-        </Paper>
+                        <Typography variant="body2" color="text.secondary">
+                            Nome
+                        </Typography>
+                        <Typography variant="body1">{brand.name}</Typography>
+
+                        <Typography variant="body2" color="text.secondary">
+                            Status
+                        </Typography>
+                        <Typography variant="body1">
+                            {brand.isActive ? "Sim" : "Não"}
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
+        />
     );
-
 }
