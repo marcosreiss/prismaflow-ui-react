@@ -85,7 +85,8 @@ export default function SaleFormPage({ mode = 'create' }: SaleFormProps) {
 
     useEffect(() => {
         // console.log("🎯 INICIALIZANDO FORMULÁRIO - Modo:", isEditMode ? "EDIÇÃO" : "CRIAÇÃO");
-
+        // console.log("venda existente", existingSale?.productItems[0].stockQuantity);
+        
         if (isEditMode && existingSale && !isLoadingSale) {
             // Modo edição: preencher com dados existentes
             const currentData = methods.getValues();
@@ -136,7 +137,6 @@ export default function SaleFormPage({ mode = 'create' }: SaleFormProps) {
                     })),
                     protocol: existingSale.protocol || undefined,
                 };
-
                 resetForm(formData);
             }
         }
@@ -199,7 +199,9 @@ export default function SaleFormPage({ mode = 'create' }: SaleFormProps) {
 
     const onSubmit = async (data: Sale) => {
 
+        // passa o flag de edição
         const finalValidation = canSubmitSale(data);
+
         if (!finalValidation.isValid) {
             finalValidation.errors.forEach(error => addNotification(error, "warning"));
             return;
@@ -208,7 +210,6 @@ export default function SaleFormPage({ mode = 'create' }: SaleFormProps) {
         try {
             const sanitizedData = sanitizeSaleData(data);
             const payload = mapSaleToPayload(sanitizedData, isEditMode);
-
 
             if (isEditMode && id) {
                 await update({ id, data: payload as any });
@@ -219,10 +220,10 @@ export default function SaleFormPage({ mode = 'create' }: SaleFormProps) {
             }
 
             navigate("/sales");
-
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message ||
-                `Erro ao ${isEditMode ? 'atualizar' : 'criar'} a venda. Tente novamente.`;
+            const errorMessage =
+                error.response?.data?.message ||
+                `Erro ao ${isEditMode ? "atualizar" : "criar"} a venda. Tente novamente.`;
             addNotification(errorMessage, "error");
         }
     };
