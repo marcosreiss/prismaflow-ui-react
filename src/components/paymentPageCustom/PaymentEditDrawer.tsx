@@ -12,7 +12,10 @@ import { X } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useEffect } from "react";
 import type { Payment } from "@/types/paymentTypes";
-import { PaymentMethodLabels, PaymentStatusLabels } from "@/types/paymentTypes";
+import {
+    PaymentMethodLabels,
+    PaymentStatusLabels,
+} from "@/types/paymentTypes";
 import MenuItem from "@mui/material/MenuItem";
 import CurrencyInput from "../imask/CurrencyInput";
 
@@ -25,6 +28,24 @@ type PaymentEditDrawerProps = {
     onSubmit: (values: Partial<Payment>) => Promise<void> | void;
 };
 
+// componente helper para reduzir repetição
+function LabeledField({
+    label,
+    children,
+}: {
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <Box>
+            <Typography variant="body2" fontWeight="500" mb={0.5}>
+                {label}
+            </Typography>
+            {children}
+        </Box>
+    );
+}
+
 export default function PaymentEditDrawer({
     open,
     title = "Editar Pagamento",
@@ -33,16 +54,17 @@ export default function PaymentEditDrawer({
     onClose,
     onSubmit,
 }: PaymentEditDrawerProps) {
-    const { control, handleSubmit, watch, setValue, reset } = useForm<Partial<Payment>>({
-        defaultValues: data ?? {
-            method: "PIX",
-            status: "PENDING",
-            total: 0,
-            discount: 0,
-            downPayment: 0,
-            paidAmount: 0,
-        },
-    });
+    const { control, handleSubmit, watch, setValue, reset } =
+        useForm<Partial<Payment>>({
+            defaultValues: data ?? {
+                method: "PIX",
+                status: "PENDING",
+                total: 0,
+                discount: 0,
+                downPayment: 0,
+                paidAmount: 0,
+            },
+        });
 
     // assistir campos
     const total = watch("total") || 0;
@@ -50,21 +72,21 @@ export default function PaymentEditDrawer({
     const downPayment = watch("downPayment") || 0;
     const paidAmount = watch("paidAmount") || 0;
 
-    // regra: desconto abate do total
+    // valor líquido (total - desconto) só para exibição
     const netTotal = total - discount;
 
-    // regra: entrada soma no pago
-    const effectivePaid = paidAmount + downPayment;
-
-    // refletir regras dentro do form
+    // atualizar paidAmount sempre que entrada mudar
     useEffect(() => {
-        // atualiza total líquido
-        setValue("total", netTotal);
-        // atualiza pago com entrada
-        setValue("paidAmount", effectivePaid);
-    }, [netTotal, effectivePaid, setValue]);
+        const newPaid = (data?.paidAmount ?? 0) + downPayment;
+        if (paidAmount !== newPaid) {
+            setValue("paidAmount", newPaid, {
+                shouldValidate: true,
+                shouldDirty: true,
+            });
+        }
+    }, [downPayment, data?.paidAmount, paidAmount, setValue]);
 
-    // resetar form ao abrir
+    // resetar form ao abrir com dados
     useEffect(() => {
         if (open && data) reset(data);
     }, [open, data, reset]);
@@ -102,13 +124,15 @@ export default function PaymentEditDrawer({
                         name="method"
                         control={control}
                         render={({ field }) => (
-                            <TextField {...field} select fullWidth size="small" label="Método de Pagamento">
-                                {Object.entries(PaymentMethodLabels).map(([key, label]) => (
-                                    <MenuItem key={key} value={key}>
-                                        {label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                            <LabeledField label="Método de Pagamento">
+                                <TextField {...field} select fullWidth size="small">
+                                    {Object.entries(PaymentMethodLabels).map(([key, label]) => (
+                                        <MenuItem key={key} value={key}>
+                                            {label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </LabeledField>
                         )}
                     />
 
@@ -117,30 +141,32 @@ export default function PaymentEditDrawer({
                         name="status"
                         control={control}
                         render={({ field }) => (
-                            <TextField {...field} select fullWidth size="small" label="Status">
-                                {Object.entries(PaymentStatusLabels).map(([key, label]) => (
-                                    <MenuItem key={key} value={key}>
-                                        {label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                            <LabeledField label="Status">
+                                <TextField {...field} select fullWidth size="small">
+                                    {Object.entries(PaymentStatusLabels).map(([key, label]) => (
+                                        <MenuItem key={key} value={key}>
+                                            {label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </LabeledField>
                         )}
                     />
 
-                    {/* Total (calculado com desconto aplicado) */}
+                    {/* Total bruto */}
                     <Controller
                         name="total"
                         control={control}
                         render={({ field }) => (
-                            <CurrencyInput
-                                {...field}
-                                label="Valor Total"
-                                fullWidth
-                                size="small"
-                                disabled
-                                value={field.value ?? 0}
-                                onChange={(v) => field.onChange(v)}
-                            />
+                            <LabeledField label="Valor Total (Bruto)">
+                                <CurrencyInput
+                                    fullWidth
+                                    size="small"
+                                    disabled
+                                    value={field.value ?? 0}
+                                    onChange={(v) => field.onChange(v)}
+                                />
+                            </LabeledField>
                         )}
                     />
 
@@ -149,14 +175,14 @@ export default function PaymentEditDrawer({
                         name="discount"
                         control={control}
                         render={({ field }) => (
-                            <CurrencyInput
-                                {...field}
-                                label="Desconto"
-                                fullWidth
-                                size="small"
-                                value={field.value ?? 0}
-                                onChange={(v) => field.onChange(v)}
-                            />
+                            <LabeledField label="Desconto">
+                                <CurrencyInput
+                                    fullWidth
+                                    size="small"
+                                    value={field.value ?? 0}
+                                    onChange={(v) => field.onChange(v)}
+                                />
+                            </LabeledField>
                         )}
                     />
 
@@ -165,33 +191,46 @@ export default function PaymentEditDrawer({
                         name="downPayment"
                         control={control}
                         render={({ field }) => (
-                            <CurrencyInput
-                                {...field}
-                                label="Entrada"
-                                fullWidth
-                                size="small"
-                                value={field.value ?? 0}
-                                onChange={(v) => field.onChange(v)}
-                            />
+                            <LabeledField label="Entrada">
+                                <CurrencyInput
+                                    fullWidth
+                                    size="small"
+                                    value={field.value ?? 0}
+                                    onChange={(v) => field.onChange(v)}
+                                />
+                            </LabeledField>
                         )}
                     />
 
-                    {/* Pago (com entrada somada) */}
+                    {/* Pago (calculado) */}
                     <Controller
                         name="paidAmount"
                         control={control}
                         render={({ field }) => (
-                            <CurrencyInput
-                                {...field}
-                                label="Total Pago"
-                                fullWidth
-                                size="small"
-                                disabled
-                                value={field.value ?? 0}
-                                onChange={(v) => field.onChange(v)}
-                            />
+                            <LabeledField label="Total Pago">
+                                <CurrencyInput
+                                    fullWidth
+                                    size="small"
+                                    disabled
+                                    value={field.value ?? 0}
+                                    onChange={(v) => field.onChange(v)}
+                                />
+                            </LabeledField>
                         )}
                     />
+
+                    {/* Valor líquido exibido */}
+                    <Box mt={1}>
+                        <Typography variant="body2" color="text.secondary">
+                            Valor líquido (Total - Desconto):
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                            {netTotal.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                            })}
+                        </Typography>
+                    </Box>
                 </Box>
 
                 {/* Footer */}
