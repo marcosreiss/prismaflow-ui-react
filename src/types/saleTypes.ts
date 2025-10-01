@@ -53,7 +53,6 @@ export type Sale = {
 
 };
 
-
 // Tipo para a lista de vendas (response da API)
 export type SaleListResponse = {
     currentPage: number;
