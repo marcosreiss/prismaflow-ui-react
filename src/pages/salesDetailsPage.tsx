@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     Paper,
@@ -9,10 +9,71 @@ import {
     Divider,
     Button,
     CircularProgress,
+    Stack,
 } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import {
+    ArrowBack,
+    Person,
+    Receipt,
+    AttachMoney,
+    Inventory,
+    Build,
+    Assignment,
+} from "@mui/icons-material";
 import { useNotification } from "@/context/NotificationContext";
 import { useSaleDetails } from "@/services/useSaleDetails";
+import ProductAccordion from "@/components/saleDetails/ProductAccordion";
+import ServiceAccordion from "@/components/saleDetails/ServiceAccordion";
+import ProtocolAccordion from "@/components/saleDetails/ProtocolAccordion";
+
+interface InfoCardProps {
+    title: string;
+    children: React.ReactNode;
+    icon?: React.ReactNode;
+    sx?: any;
+}
+
+function InfoCard({ title, children, icon, sx }: InfoCardProps) {
+    return (
+        <Paper
+            sx={{
+                p: 2,
+                borderRadius: 2,
+                border: 1,
+                borderColor: 'grey.200',
+                ...sx,
+            }}
+        >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                {icon}
+                <Typography variant="h6" fontWeight="medium">
+                    {title}
+                </Typography>
+            </Box>
+            {children}
+        </Paper>
+    );
+}
+
+// interface EmptyStateProps {
+//     icon: React.ReactNode;
+//     title: string;
+//     description: string;
+// }
+
+// function EmptyState({ icon, title, description }: EmptyStateProps) {
+//     return (
+//         <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+//             {icon}
+//             <Typography variant="body1" sx={{ mt: 1, fontWeight: 'medium' }}>
+//                 {title}
+//             </Typography>
+//             <Typography variant="body2" sx={{ mt: 0.5 }}>
+//                 {description}
+//             </Typography>
+//         </Box>
+//     );
+// }
 
 export default function SalesDetailsPage() {
     const { id } = useParams<{ id: string }>();
@@ -21,12 +82,13 @@ export default function SalesDetailsPage() {
 
     const saleId = id ? parseInt(id) : null;
     const { data: apiResponse, isLoading, error } = useSaleDetails(saleId);
+    const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
 
-    // ✅✅✅ CORREÇÃO FINAL: Extrair sale.data (não apiResponse direto)
     const sale = (apiResponse as any)?.data;
 
-    console.log('🔍 Resposta completa da API:', apiResponse);
-    console.log('🔍 Dados da venda (sale.data):', sale);
+    const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+        setExpandedAccordion(isExpanded ? panel : false);
+    };
 
     useEffect(() => {
         if (error) {
@@ -46,7 +108,6 @@ export default function SalesDetailsPage() {
         );
     }
 
-    // ✅ CORREÇÃO: Verificar se sale existe (agora é sale.data)
     if (!sale) {
         return (
             <Paper sx={{ p: 3 }}>
@@ -58,256 +119,236 @@ export default function SalesDetailsPage() {
         );
     }
 
+    // No SalesDetailsPage.tsx, antes do return principal
+    console.log('Dados da venda:', sale);
+    console.log('Protocolo:', sale?.protocol);
+
     return (
-        <Paper
-            sx={{
-                borderRadius: 2,
-                borderColor: "grey.200",
-                backgroundColor: "background.paper",
-                p: 3,
-            }}
-        >
+        <Box>
             {/* Header */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Button onClick={handleBack} startIcon={<ArrowBack />}>
-                        Voltar
-                    </Button>
-                    <Typography variant="h4">Venda #{sale.id}</Typography>
-                    <Chip
-                        label={sale.isActive ? "Ativa" : "Cancelada"}
-                        color={sale.isActive ? "success" : "error"}
-                        variant="filled"
-                    />
-                </Box>
-            </Box>
+            <Paper sx={{ p: 3, mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Button onClick={handleBack} startIcon={<ArrowBack />}>
+                            Voltar
+                        </Button>
+                        <Typography variant="h4">Venda #{sale.id}</Typography>
+                        <Chip
+                            label={sale.isActive ? "Ativa" : "Cancelada"}
+                            color={sale.isActive ? "success" : "error"}
+                            variant="filled"
+                        />
+                    </Box>
 
-            <Divider sx={{ mb: 3 }} />
-
-            {/* Informações da Venda */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>Informações da Venda</Typography>
-                <Box
-                    sx={{
-                        display: "grid",
-                        gridTemplateColumns: "120px 1fr",
-                        rowGap: 2,
-                    }}
-                >
-                    <Typography variant="body2" color="text.secondary">
-                        ID:
-                    </Typography>
-                    <Typography variant="body1">{sale.id}</Typography>
-
-                    <Typography variant="body2" color="text.secondary">
-                        Cliente:
-                    </Typography>
-                    <Typography variant="body1">
-                        {sale.client?.name || "-"}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary">
-                        CPF:
-                    </Typography>
-                    <Typography variant="body1">
-                        {sale.client?.cpf || "-"}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary">
-                        Data:
-                    </Typography>
-                    <Typography variant="body1">
-                        {sale.createdAt ? new Date(sale.createdAt).toLocaleString('pt-BR') : "-"}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary">
-                        Atualizado em:
-                    </Typography>
-                    <Typography variant="body1">
-                        {sale.updatedAt ? new Date(sale.updatedAt).toLocaleString('pt-BR') : "-"}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary">
-                        Observações:
-                    </Typography>
-                    <Typography variant="body1">
-                        {sale.notes || "-"}
-                    </Typography>
-                </Box>
-            </Box>
-
-            {/* Protocolo */}
-            {sale.protocol && (
-                <Box sx={{ mb: 4 }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>Protocolo</Typography>
-                    <Box
-                        sx={{
-                            display: "grid",
-                            gridTemplateColumns: "140px 1fr",
-                            rowGap: 1.5,
-                        }}
-                    >
-                        <Typography variant="body2" color="text.secondary">
-                            ID Protocolo:
-                        </Typography>
-                        <Typography variant="body1">{sale.protocol.recordNumber}</Typography>
-
-                        {sale.protocol.recordNumber && (
-                            <>
-                                <Typography variant="body2" color="text.secondary">
-                                    Número:
-                                </Typography>
-                                <Typography variant="body1">{sale.protocol.recordNumber}</Typography>
-                            </>
-                        )}
-
-                        {sale.protocol.book && (
-                            <>
-                                <Typography variant="body2" color="text.secondary">
-                                    Livro:
-                                </Typography>
-                                <Typography variant="body1">{sale.protocol.book}</Typography>
-                            </>
-                        )}
-
-                        {sale.protocol.page && (
-                            <>
-                                <Typography variant="body2" color="text.secondary">
-                                    Página:
-                                </Typography>
-                                <Typography variant="body1">{sale.protocol.page}</Typography>
-                            </>
-                        )}
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Chip
+                            icon={<Inventory />}
+                            label={`${sale.products?.length || 0} produtos`}
+                            variant="outlined"
+                            size="small"
+                        />
+                        <Chip
+                            icon={<Build />}
+                            label={`${sale.services?.length || 0} serviços`}
+                            variant="outlined"
+                            size="small"
+                        />
+                        <Chip
+                            icon={<Assignment />}
+                            label={`${sale.protocol ? 1 : 0} protocolo`}
+                            variant="outlined"
+                            size="small"
+                        />
+                        <Chip
+                            icon={<AttachMoney />}
+                            label={`R$ ${sale.total?.toFixed(2) || '0,00'}`}
+                            color="primary"
+                            variant="outlined"
+                            size="small"
+                        />
                     </Box>
                 </Box>
-            )}
 
-            {/* Produtos */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>Produtos ({sale.products?.length || 0})</Typography>
-                {sale.products && sale.products.length > 0 ? (
-                    sale.products.map((product: any) => (
-                        <Box key={product.id} sx={{
-                            p: 2,
-                            mb: 1,
-                            bgcolor: 'grey.50',
-                            borderRadius: 1,
-                            border: 1,
-                            borderColor: 'grey.200'
-                        }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <Box>
-                                    <Typography variant="body1" fontWeight="medium">
-                                        {product.name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ID: {product.productId}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Quantidade: {product.quantity}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Preço unitário: R$ {product.unitPrice?.toFixed(2)}
-                                    </Typography>
-                                </Box>
-                                <Typography variant="body1" fontWeight="bold">
-                                    R$ {product.total?.toFixed(2)}
-                                </Typography>
-                            </Box>
-                            {product.frameDetailsResponse && (
-                                <Box sx={{ mt: 1, pt: 1, borderTop: 1, borderColor: 'grey.300' }}>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Detalhes da armação
-                                    </Typography>
-                                </Box>
-                            )}
-                        </Box>
-                    ))
-                ) : (
-                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                        Nenhum produto nesta venda
-                    </Typography>
-                )}
-            </Box>
+                <Divider />
 
-            {/* Serviços */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>Serviços ({sale.services?.length || 0})</Typography>
-                {sale.services && sale.services.length > 0 ? (
-                    sale.services.map((service: any) => (
-                        <Box key={service.id} sx={{
-                            p: 2,
-                            mb: 1,
-                            bgcolor: 'grey.50',
-                            borderRadius: 1,
-                            border: 1,
-                            borderColor: 'grey.200'
-                        }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <Box>
-                                    <Typography variant="body1" fontWeight="medium">
-                                        {service.description}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ID: {service.opticalServiceId}
-                                    </Typography>
-                                </Box>
-                                <Typography variant="body1" fontWeight="bold">
-                                    R$ {service.price?.toFixed(2)}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    ))
-                ) : (
-                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                        Nenhum serviço nesta venda
-                    </Typography>
-                )}
-            </Box>
+                <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
+                    <Box>
+                        <Typography variant="body2" color="text.secondary">
+                            Cliente
+                        </Typography>
+                        <Typography variant="body1">
+                            {sale.client?.name || "-"}
+                        </Typography>
+                    </Box>
+                    <Box>
+                        <Typography variant="body2" color="text.secondary">
+                            Data
+                        </Typography>
+                        <Typography variant="body1">
+                            {sale.createdAt ? new Date(sale.createdAt).toLocaleDateString('pt-BR') : "-"}
+                        </Typography>
+                    </Box>
+                    <Box>
+                        <Typography variant="body2" color="text.secondary">
+                            Status
+                        </Typography>
+                        <Typography variant="body1">
+                            {sale.isActive ? "Ativa" : "Finalizada"}
+                        </Typography>
+                    </Box>
+                </Box>
+            </Paper>
 
-            {/* Resumo Financeiro */}
+            {/* Layout Principal */}
             <Box sx={{
-                p: 3,
-                bgcolor: 'primary.50',
-                borderRadius: 2,
-                border: 1,
-                borderColor: 'primary.200',
-                maxWidth: 400,
-                ml: 'auto'
+                display: 'flex',
+                flexDirection: { xs: 'column', lg: 'row' },
+                gap: 3,
+                alignItems: 'flex-start'
             }}>
-                <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>Resumo Financeiro</Typography>
-                <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", rowGap: 1, columnGap: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                        Total Produtos:
-                    </Typography>
-                    <Typography variant="body2">
-                        R$ {sale.products?.reduce((sum: any, p: any) => sum + (p.total || 0), 0)?.toFixed(2) || "0,00"}
-                    </Typography>
+                {/* Coluna da Esquerda - Informações Principais */}
+                <Box sx={{ flex: 2 }}>
+                    <Stack spacing={3}>
+                        {/* Card de Informações da Venda */}
+                        <InfoCard title="Informações da Venda" icon={<Receipt />}>
+                            <Box
+                                sx={{
+                                    display: "grid",
+                                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+                                    gap: 2,
+                                }}
+                            >
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        ID da Venda
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight="medium">
+                                        #{sale.id}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Data de Criação
+                                    </Typography>
+                                    <Typography variant="body1">
+                                        {sale.createdAt ? new Date(sale.createdAt).toLocaleString('pt-BR') : "-"}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Última Atualização
+                                    </Typography>
+                                    <Typography variant="body1">
+                                        {sale.updatedAt ? new Date(sale.updatedAt).toLocaleString('pt-BR') : "-"}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Status
+                                    </Typography>
+                                    <Typography variant="body1">
+                                        {sale.isActive ? "🟢 Ativa" : "🔴 Finalizada"}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </InfoCard>
 
-                    <Typography variant="body2" color="text.secondary">
-                        Total Serviços:
-                    </Typography>
-                    <Typography variant="body2">
-                        R$ {sale.services?.reduce((sum: any, s: any) => sum + (s.price || 0), 0)?.toFixed(2) || "0,00"}
-                    </Typography>
+                        {/* Accordion de Produtos */}
+                        <ProductAccordion
+                            products={sale.products || []}
+                            expanded={expandedAccordion === 'products'}
+                            onChange={handleAccordionChange('products')}
+                        />
 
-                    <Typography variant="body2" color="text.secondary">
-                        Desconto:
-                    </Typography>
-                    <Typography variant="body2" color="error.main">
-                        - R$ {sale.discount?.toFixed(2) || "0,00"}
-                    </Typography>
+                        {/* Accordion de Serviços */}
+                        <ServiceAccordion
+                            services={sale.services || []}
+                            expanded={expandedAccordion === 'services'}
+                            onChange={handleAccordionChange('services')}
+                        />
+                        {/* Accordion de Protocolo */}
+                        <ProtocolAccordion
+                            protocol={sale.protocol || null}
+                            expanded={expandedAccordion === 'protocol'}
+                            onChange={handleAccordionChange('protocol')}
+                        />
 
-                    <Divider sx={{ gridColumn: '1 / -1', my: 1 }} />
+                        {/* Card de Observações (se existir) */}
+                        {sale.notes && (
+                            <InfoCard title="Observações">
+                                <Typography variant="body1">
+                                    {sale.notes}
+                                </Typography>
+                            </InfoCard>
+                        )}
+                    </Stack>
+                </Box>
 
-                    <Typography variant="body1" fontWeight="bold" color="text.secondary">
-                        Total Final:
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold" color="primary.main">
-                        R$ {sale.total?.toFixed(2) || "0,00"}
-                    </Typography>
+                {/* Coluna da Direita - Informações Secundárias */}
+                <Box sx={{ flex: 1, minWidth: { xs: '100%', lg: 300 } }}>
+                    <Stack spacing={3}>
+                        <InfoCard title="Cliente" icon={<Person />}>
+                            <Stack spacing={1.5}>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Nome
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight="medium">
+                                        {sale.client?.name || "-"}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        CPF
+                                    </Typography>
+                                    <Typography variant="body1">
+                                        {sale.client?.cpf || "-"}
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </InfoCard>
+
+                        <InfoCard title="Resumo Financeiro" icon={<AttachMoney />}>
+                            <Stack spacing={1.5}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="body2">Subtotal:</Typography>
+                                    <Typography variant="body2">
+                                        R$ {sale.subtotal?.toFixed(2) || "0,00"}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="body2">Desconto:</Typography>
+                                    <Typography variant="body2" color="error.main">
+                                        - R$ {sale.discount?.toFixed(2) || "0,00"}
+                                    </Typography>
+                                </Box>
+                                <Divider />
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="body1" fontWeight="bold">Total:</Typography>
+                                    <Typography variant="body1" fontWeight="bold" color="primary.main">
+                                        R$ {sale.total?.toFixed(2) || "0,00"}
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </InfoCard>
+                    </Stack>
                 </Box>
             </Box>
-        </Paper>
+
+            {/* Ações Rápidas */}
+            <Paper sx={{ p: 2, mt: 3, bgcolor: 'grey.50' }}>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                    <Button variant="outlined" onClick={handleBack}>
+                        Voltar para Lista
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => navigate(`/sales/edit/${sale.id}`)}
+                    >
+                        Editar Venda
+                    </Button>
+                </Box>
+            </Paper>
+        </Box>
     );
 }
