@@ -55,25 +55,6 @@ function InfoCard({ title, children, icon, sx }: InfoCardProps) {
     );
 }
 
-// interface EmptyStateProps {
-//     icon: React.ReactNode;
-//     title: string;
-//     description: string;
-// }
-
-// function EmptyState({ icon, title, description }: EmptyStateProps) {
-//     return (
-//         <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-//             {icon}
-//             <Typography variant="body1" sx={{ mt: 1, fontWeight: 'medium' }}>
-//                 {title}
-//             </Typography>
-//             <Typography variant="body2" sx={{ mt: 0.5 }}>
-//                 {description}
-//             </Typography>
-//         </Box>
-//     );
-// }
 
 export default function SalesDetailsPage() {
     const { id } = useParams<{ id: string }>();
@@ -85,10 +66,6 @@ export default function SalesDetailsPage() {
     const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
 
     const sale = (apiResponse as any)?.data;
-
-    const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-        setExpandedAccordion(isExpanded ? panel : false);
-    };
 
     useEffect(() => {
         if (error) {
@@ -133,11 +110,11 @@ export default function SalesDetailsPage() {
                             Voltar
                         </Button>
                         <Typography variant="h4">Venda #{sale.id}</Typography>
-                        <Chip
+                        {/* <Chip
                             label={sale.isActive ? "Ativa" : "Cancelada"}
                             color={sale.isActive ? "success" : "error"}
                             variant="filled"
-                        />
+                        /> */}
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -257,20 +234,20 @@ export default function SalesDetailsPage() {
                         <ProductAccordion
                             products={sale.products || []}
                             expanded={expandedAccordion === 'products'}
-                            onChange={handleAccordionChange('products')}
+                            onChange={(isExpanded) => setExpandedAccordion(isExpanded ? 'products' : false)} // ← ASSIM
                         />
 
                         {/* Accordion de Serviços */}
                         <ServiceAccordion
                             services={sale.services || []}
                             expanded={expandedAccordion === 'services'}
-                            onChange={handleAccordionChange('services')}
+                            onChange={(isExpanded) => setExpandedAccordion(isExpanded ? 'services' : false)}
                         />
                         {/* Accordion de Protocolo */}
                         <ProtocolAccordion
                             protocol={sale.protocol || null}
                             expanded={expandedAccordion === 'protocol'}
-                            onChange={handleAccordionChange('protocol')}
+                            onChange={(isExpanded) => setExpandedAccordion(isExpanded ? 'protocol' : false)}
                         />
 
                         {/* Card de Observações (se existir) */}

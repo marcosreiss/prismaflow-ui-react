@@ -36,13 +36,13 @@ interface Product {
 interface ProductAccordionProps {
     products: Product[];
     expanded: boolean;
-    onChange: (event: React.SyntheticEvent, isExpanded: boolean) => void;
+    onChange: (isExpanded: boolean) => void; // ← ASSIM
 }
 
 function ProductAccordion({ products, expanded, onChange }: ProductAccordionProps) {
     return (
         <Paper sx={{ border: 1, borderColor: 'grey.200', borderRadius: 2 }}>
-            <Accordion expanded={expanded} onChange={onChange}>
+            <Accordion expanded={expanded} onChange={(_event, isExpanded) => onChange(isExpanded)}>
                 <AccordionSummary expandIcon={<ExpandMore />}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Inventory />

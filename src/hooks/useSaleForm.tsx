@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import type { DeepPartial } from "react-hook-form";
 import type { Sale } from "@/types/saleTypes";
@@ -47,14 +47,16 @@ export const useSaleForm = () => {
 
     const [activeStep, setActiveStep] = useState(0);
 
-    const watchedProductItems = watch("productItems") || [];
+    const rawProductItems = watch("productItems");
+    const watchedProductItems = useMemo(() => rawProductItems || [], [rawProductItems]);
+
     const watchedDiscount = watch("discount") || 0;
     const watchedClient = watch("client");
 
     const subtotal = watch("subtotal") || 0;
     const total = watch("total") || 0;
 
-    // Efeito para calcular subtotal e total - COM TIPOS CORRETOS
+    // Efeito para calcular subtotal e total
     useEffect(() => {
         const calculatedSubtotal = watchedProductItems.reduce((acc: number, item: ItemProduct) => {
             const price = item.product?.salePrice || 0;
@@ -73,48 +75,57 @@ export const useSaleForm = () => {
     const handleAddProduct = (product: Product) => {
         const currentItems = [...watchedProductItems];
 
-        // Verificar se o produto já existe na lista - COM TIPO CORRETO
-        const existingProductIndex = currentItems.findIndex(
-            (item: ItemProduct) => item.product.id === product.id
-        );
+        // ✅ Definir categorias que podem ser agrupadas
+        const categoriesToGroup = ['ACCESSORY', 'LENS'];
+        const isGroupableProduct = categoriesToGroup.includes(product.category);
+        const isFrame = product.category === 'FRAME';
 
-        if (existingProductIndex !== -1) {
-            // Produto já existe - incrementar quantidade
-            const updatedItems = [...currentItems];
-            updatedItems[existingProductIndex] = {
-                ...updatedItems[existingProductIndex],
-                quantity: updatedItems[existingProductIndex].quantity + 1
-            };
-
-            setValue("productItems", updatedItems, { shouldValidate: true });
-        } else {
-            // Produto novo - adicionar à lista
-            const frameDetails = product.category === "FRAME" ? {
-                material: "ACETATE" as const,
-                reference: null,
-                color: null,
-            } : null;
-
-            const newItem: Omit<ItemProduct, "id" | "sale"> = {
-                product,
-                quantity: 1,
-                stockQuantity: product.stockQuantity || 0,
-                frameDetails,
-            };
-
-            setValue("productItems", [
-                ...currentItems,
-                newItem as ItemProduct
-            ], { shouldValidate: true });
-
-            const saleHasLens = [...currentItems, newItem as ItemProduct].some(
-                (item: ItemProduct) => item.product.category === 'LENS'
+        // ✅ Para produtos agrupáveis (acessórios e lentes): verificar se já existe
+        if (isGroupableProduct) {
+            const existingProductIndex = currentItems.findIndex(
+                (item: ItemProduct) => item.product.id === product.id
             );
-            const protocolExists = !!watch("protocol");
 
-            if (saleHasLens && !protocolExists) {
-                setValue("protocol", createDefaultProtocol());
+            if (existingProductIndex !== -1) {
+                // Incrementar quantidade do produto existente
+                const updatedItems = [...currentItems];
+                updatedItems[existingProductIndex] = {
+                    ...updatedItems[existingProductIndex],
+                    quantity: updatedItems[existingProductIndex].quantity + 1
+                };
+
+                setValue("productItems", updatedItems, { shouldValidate: true });
+                return;
             }
+        }
+
+        // ✅ Para armações ou produtos novos: adicionar como novo item
+        const frameDetails = isFrame ? {
+            material: "ACETATE" as const,
+            reference: null,
+            color: null,
+        } : null;
+
+        const newItem: Omit<ItemProduct, "id" | "sale"> = {
+            product,
+            quantity: 1,
+            stockQuantity: product.stockQuantity || 0,
+            frameDetails,
+        };
+
+        setValue("productItems", [
+            ...currentItems,
+            newItem as ItemProduct
+        ], { shouldValidate: true });
+
+        // ✅ Lógica do protocolo para lentes
+        const saleHasLens = [...currentItems, newItem as ItemProduct].some(
+            (item: ItemProduct) => item.product.category === 'LENS'
+        );
+        const protocolExists = !!watch("protocol");
+
+        if (saleHasLens && !protocolExists) {
+            setValue("protocol", createDefaultProtocol());
         }
     };
 

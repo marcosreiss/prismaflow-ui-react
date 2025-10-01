@@ -42,7 +42,7 @@ interface Protocol {
 interface ProtocolAccordionProps {
     protocol: Protocol | null;
     expanded: boolean;
-    onChange: (event: React.SyntheticEvent, isExpanded: boolean) => void;
+    onChange: (isExpanded: boolean) => void; // ← ASSIM
 }
 
 // EmptyState interno com tipos definidos
@@ -97,6 +97,8 @@ interface RenderableObject {
 }
 
 function ProtocolAccordion({ protocol, expanded, onChange }: ProtocolAccordionProps) {
+
+
     // Verifica se protocol existe e tem dados válidos
     const hasValidProtocol = protocol && (
         protocol.id ||
@@ -177,7 +179,7 @@ function ProtocolAccordion({ protocol, expanded, onChange }: ProtocolAccordionPr
 
     return (
         <Paper sx={{ border: 1, borderColor: 'grey.200', borderRadius: 2 }}>
-            <Accordion expanded={expanded} onChange={onChange}>
+            <Accordion expanded={expanded} onChange={(_event, isExpanded) => onChange(isExpanded)}>
                 <AccordionSummary expandIcon={<ExpandMore />}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Assignment />
