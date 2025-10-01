@@ -1,14 +1,12 @@
-// src/pages/PaymentsPage.tsx
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Box, Chip, Paper, Typography, Divider } from "@mui/material";
+
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFTable from "@/components/crud/PFTable";
 import PFDrawerModal from "@/components/crud/PFDrawerModal";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
-import { useNotification } from "@/context/NotificationContext";
 
+import { useNotification } from "@/context/NotificationContext";
 import { paymentColumns, paymentFields } from "@/config/payment.config";
 import { usePayment } from "@/hooks/usePayment";
 
@@ -16,9 +14,12 @@ import type { Payment } from "@/types/paymentTypes";
 import { PaymentMethodLabels, PaymentStatusLabels } from "@/types/paymentTypes";
 
 export default function PaymentsPage() {
-    const title = "Pagamento";
-    const addLabel = "Adicionar novo pagamento";
+    const TITLE = "Pagamento";
+    const ADD_LABEL = "Adicionar novo pagamento";
 
+    // -------------------------
+    // Estados
+    // -------------------------
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [drawerMode, setDrawerMode] = useState<"create" | "edit" | "view">("view");
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -26,6 +27,9 @@ export default function PaymentsPage() {
 
     const { addNotification } = useNotification();
 
+    // -------------------------
+    // Hook de pagamentos
+    // -------------------------
     const {
         list: {
             data,
@@ -49,6 +53,9 @@ export default function PaymentsPage() {
         removing,
     } = usePayment(selectedId);
 
+    // -------------------------
+    // Selecionado (detalhes)
+    // -------------------------
     const selectedItem: Payment | null =
         drawerMode === "create"
             ? null
@@ -56,93 +63,95 @@ export default function PaymentsPage() {
                 ? null
                 : ((detail.data as Payment | undefined) ?? null);
 
-    // ---- Ações de abrir ----
-    const handleOpenView = (row: Payment) => {
-        setDrawerMode("view");
-        setSelectedId(row.id);
-        setDrawerOpen(true);
-    };
-    const handleOpenEdit = (row: Payment) => {
-        if (row.status !== "PENDING") {
-            addNotification("Só é permitido editar pagamentos com status PENDENTE.", "warning");
-            return;
+    // -------------------------
+    // Ações Drawer
+    // -------------------------
+    const openDrawer = useCallback((mode: "view" | "edit" | "create", id?: number) => {
+        if (mode === "edit" && id) {
+            const row = data.find((p) => p.id === id);
+            if (row?.status !== "PENDING") {
+                addNotification("Só é permitido editar pagamentos com status PENDENTE.", "warning");
+                return;
+            }
         }
-        setDrawerMode("edit");
-        setSelectedId(row.id);
+        setDrawerMode(mode);
+        setSelectedId(id ?? null);
         setDrawerOpen(true);
-    };
-    const handleCloseDrawer = () => setDrawerOpen(false);
+    }, [data, addNotification]);
 
-    // ---- Exclusão ----
-    const handleAskDelete = (row: Payment) => {
+    const closeDrawer = () => setDrawerOpen(false);
+
+    // -------------------------
+    // Ações Delete
+    // -------------------------
+    const handleAskDelete = useCallback((row: Payment) => {
         setSelectedId(row.id);
         setConfirmOpen(true);
-    };
-    const handleDeleteConfirm = async () => {
+    }, []);
+
+    const handleDeleteConfirm = useCallback(async () => {
         if (!selectedId) return;
         const row = data.find((p) => p.id === selectedId);
+
         if (row?.status === "CONFIRMED") {
             addNotification("Não é permitido deletar pagamentos CONFIRMADOS.", "warning");
             setConfirmOpen(false);
             return;
         }
+
         try {
             const res = await remove(selectedId);
-            addNotification(res?.message || `${title} excluído com sucesso.`, "success");
+            addNotification(res?.message || `${TITLE} excluído com sucesso.`, "success");
             setSelectedId(null);
         } catch {
-            addNotification(`Erro ao excluir ${title.toLowerCase()}.`, "error");
+            addNotification(`Erro ao excluir ${TITLE.toLowerCase()}.`, "error");
         } finally {
             setConfirmOpen(false);
         }
-    };
-
-    // ---- Submit ----
-    const handleCreate = async (values: Partial<Payment>) => {
-        try {
-            const res = await create(values);
-            addNotification(res?.message || `${title} criado com sucesso.`, "success");
-            handleCloseDrawer();
-        } catch {
-            addNotification(`Erro ao criar ${title.toLowerCase()}.`, "error");
-        }
-    };
-    const handleUpdate = async (id: number, values: Partial<Payment>) => {
-        try {
-            const res = await update({ id, data: values });
-            addNotification(res?.message || `${title} atualizado com sucesso.`, "success");
-            handleCloseDrawer();
-        } catch {
-            addNotification(`Erro ao atualizar ${title.toLowerCase()}.`, "error");
-        }
-    };
-    const handleSubmit = async (values: Partial<Payment>) => {
-        if (drawerMode === "create") return handleCreate(values);
-        if (drawerMode === "edit" && selectedId) return handleUpdate(selectedId, values);
-    };
-
-    useEffect(() => {
-        if (listError) addNotification(`Erro ao carregar lista de ${title.toLowerCase()}.`, "error");
-    }, [listError, addNotification, title]);
+    }, [selectedId, data, remove, addNotification]);
 
     // -------------------------
-    // USANDO paymentColumns
+    // Submit
+    // -------------------------
+    const handleSubmit = async (values: Partial<Payment>) => {
+        try {
+            if (drawerMode === "create") {
+                const res = await create(values);
+                addNotification(res?.message || `${TITLE} criado com sucesso.`, "success");
+            } else if (drawerMode === "edit" && selectedId) {
+                const res = await update({ id: selectedId, data: values });
+                addNotification(res?.message || `${TITLE} atualizado com sucesso.`, "success");
+            }
+            closeDrawer();
+        } catch {
+            addNotification(`Erro ao ${drawerMode === "create" ? "criar" : "atualizar"} ${TITLE.toLowerCase()}.`, "error");
+        }
+    };
+
+    // -------------------------
+    // Notificação de erro listagem
+    // -------------------------
+    useEffect(() => {
+        if (listError) {
+            addNotification(`Erro ao carregar lista de ${TITLE.toLowerCase()}.`, "error");
+        }
+    }, [listError, addNotification]);
+
+    // -------------------------
+    // Configs tabelas/forms
     // -------------------------
     const columns = useMemo(() => paymentColumns, []);
-
-    // -------------------------
-    // USANDO paymentFields (com overrides pontuais)
-    // -------------------------
-
-
     const fields = useMemo(() => paymentFields, []);
 
     // -------------------------
-    // Detalhes (renderView)
+    // View Detalhes
     // -------------------------
     const renderView = (p: Payment) => {
         const saldo =
             (p.total ?? 0) - (p.discount ?? 0) - (p.downPayment ?? 0) - (p.paidAmount ?? 0);
+
+        const money = (val: number) =>
+            val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
         return (
             <Box>
@@ -173,29 +182,19 @@ export default function PaymentsPage() {
                     <Typography variant="body1">{PaymentMethodLabels[p.method]}</Typography>
 
                     <Typography variant="body2" color="text.secondary">Total</Typography>
-                    <Typography variant="body1">
-                        {p.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </Typography>
+                    <Typography variant="body1">{money(p.total)}</Typography>
 
                     <Typography variant="body2" color="text.secondary">Desconto</Typography>
-                    <Typography variant="body1">
-                        {p.discount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </Typography>
+                    <Typography variant="body1">{money(p.discount)}</Typography>
 
                     <Typography variant="body2" color="text.secondary">Entrada</Typography>
-                    <Typography variant="body1">
-                        {p.downPayment.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </Typography>
+                    <Typography variant="body1">{money(p.downPayment)}</Typography>
 
                     <Typography variant="body2" color="text.secondary">Pago</Typography>
-                    <Typography variant="body1">
-                        {p.paidAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </Typography>
+                    <Typography variant="body1">{money(p.paidAmount)}</Typography>
 
                     <Typography variant="body2" color="text.secondary">Saldo</Typography>
-                    <Typography variant="body1">
-                        {saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </Typography>
+                    <Typography variant="body1">{money(saldo)}</Typography>
 
                     <Typography variant="body2" color="text.secondary">Parcelas</Typography>
                     <Typography variant="body1">
@@ -218,13 +217,16 @@ export default function PaymentsPage() {
         );
     };
 
+    // -------------------------
+    // Render
+    // -------------------------
     return (
         <Paper sx={{ borderRadius: 2, borderColor: "grey.200", backgroundColor: "background.paper", p: 3 }}>
             <PFTopToolbar
-                title={title}
-                addLabel={addLabel}
-                onSearch={(val) => setSearch(val)}
-                onRefresh={() => refetch()}
+                title={TITLE}
+                addLabel={ADD_LABEL}
+                onSearch={setSearch}
+                onRefresh={refetch}
             />
 
             <PFTable<Payment>
@@ -236,8 +238,8 @@ export default function PaymentsPage() {
                 pageSize={size}
                 onPageChange={setPage}
                 onPageSizeChange={setSize}
-                onView={handleOpenView}
-                onEdit={handleOpenEdit}
+                onView={(row) => openDrawer("view", row.id)}
+                onEdit={(row) => openDrawer("edit", row.id)}
                 onDelete={handleAskDelete}
             />
 
@@ -247,14 +249,14 @@ export default function PaymentsPage() {
                 mode={drawerMode}
                 title={
                     drawerMode === "create"
-                        ? `Novo ${title}`
+                        ? `Novo ${TITLE}`
                         : drawerMode === "edit"
-                            ? `Editar ${title}`
-                            : `Detalhes do ${title}`
+                            ? `Editar ${TITLE}`
+                            : `Detalhes do ${TITLE}`
                 }
                 data={selectedItem}
                 fields={fields}
-                onClose={() => setDrawerOpen(false)}
+                onClose={closeDrawer}
                 onSubmit={handleSubmit}
                 creating={creating}
                 updating={updating}
@@ -264,8 +266,8 @@ export default function PaymentsPage() {
 
             <PFConfirmDialog
                 open={confirmOpen}
-                title={`Excluir ${title}`}
-                description={`Tem certeza que deseja excluir este ${title.toLowerCase()}?`}
+                title={`Excluir ${TITLE}`}
+                description={`Tem certeza que deseja excluir este ${TITLE.toLowerCase()}?`}
                 onCancel={() => setConfirmOpen(false)}
                 onConfirm={handleDeleteConfirm}
                 loading={removing}
