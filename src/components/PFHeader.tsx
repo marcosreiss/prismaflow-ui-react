@@ -1,12 +1,21 @@
 // PFHeader.tsx
 import {
-    AppBar, Toolbar, IconButton, Menu, MenuItem, Box, Tooltip, Avatar,
-    Typography, Divider
+    AppBar,
+    Toolbar,
+    IconButton,
+    Menu,
+    MenuItem,
+    Box,
+    Tooltip,
+    Avatar,
+    Typography,
+    Divider,
 } from "@mui/material";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@mui/material/styles";
-import { User, LogOut, Menu as MenuIcon } from "lucide-react";
+import { User, LogOut, Menu as MenuIcon, Sun, Moon } from "lucide-react";
+import useThemeMode from "@/context/theme/useThemeMode";
 
 type PFHeaderProps = {
     onToggleSidebar?: () => void;
@@ -19,6 +28,8 @@ export default function PFHeader({ onToggleSidebar }: PFHeaderProps) {
 
     const { username, useLogout, role } = useAuth();
     const initial = username ? username.charAt(0).toUpperCase() : "?";
+
+    const { mode, toggleMode } = useThemeMode(); // modo atual + função de toggle
 
     return (
         <AppBar
@@ -39,13 +50,27 @@ export default function PFHeader({ onToggleSidebar }: PFHeaderProps) {
                     </IconButton>
                 </Box>
 
-                {/* Espaço flexível para empurrar avatar à direita */}
+                {/* Espaço flexível para empurrar à direita */}
                 <Box sx={{ flexGrow: 1 }} />
+
+                {/* Botão de alternar tema */}
+                <Tooltip title={mode === "light" ? "Modo escuro" : "Modo claro"}>
+                    <IconButton onClick={toggleMode} sx={{ mr: 1 }}>
+                        {mode === "light" ? (
+                            <Moon size={20} strokeWidth={1.8} />
+                        ) : (
+                            <Sun size={20} strokeWidth={1.8} />
+                        )}
+                    </IconButton>
+                </Tooltip>
 
                 {/* Usuário */}
                 <Box>
                     <Tooltip title="Perfil">
-                        <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0 }}>
+                        <IconButton
+                            onClick={(e) => setAnchorEl(e.currentTarget)}
+                            sx={{ p: 0 }}
+                        >
                             <Avatar
                                 sx={{
                                     width: 32,
