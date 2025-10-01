@@ -24,6 +24,7 @@ export default function PaymentViewDrawer({
     title = "Detalhes do Pagamento",
     data,
 }: PaymentViewDrawerProps) {
+
     if (!data) return null;
 
     const money = (val?: number) =>
@@ -38,7 +39,12 @@ export default function PaymentViewDrawer({
             open={open}
             onClose={onClose}
             PaperProps={{
-                sx: { width: { xs: "100%", sm: 480, md: 560 }, p: 3 },
+                sx: {
+                    width: { xs: "100%", sm: 480, md: 560 },
+                    p: 3,
+                    bgcolor: "background.default", // fundo adaptável ao tema
+                    color: "text.primary",
+                },
             }}
         >
             {/* Header */}
@@ -50,10 +56,10 @@ export default function PaymentViewDrawer({
                     mb: 2,
                 }}
             >
-                <Typography variant="h6" fontWeight="bold">
+                <Typography variant="h6" fontWeight="bold" color="text.primary">
                     {title}
                 </Typography>
-                <IconButton onClick={onClose}>
+                <IconButton onClick={onClose} color="inherit">
                     <X size={20} />
                 </IconButton>
             </Box>
@@ -65,7 +71,7 @@ export default function PaymentViewDrawer({
                 sx={{
                     p: 2,
                     borderRadius: 2,
-                    bgcolor: "grey.50",
+                    bgcolor: "background.paper", // usa papel do tema
                     display: "flex",
                     flexDirection: "column",
                     gap: 2,
@@ -74,7 +80,7 @@ export default function PaymentViewDrawer({
             >
                 {/* Status */}
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Typography variant="subtitle1" fontWeight="bold">
+                    <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
                         Pagamento #{data.id}
                     </Typography>
                     <Chip

@@ -72,8 +72,16 @@ export default function PaymentEditDrawer({
     const downPayment = watch("downPayment") || 0;
     const paidAmount = watch("paidAmount") || 0;
 
-    // valor líquido (total - desconto) só para exibição
-    const netTotal = total - discount;
+    // recalcular total líquido (total - desconto) e atualizar campo total
+    useEffect(() => {
+        const netTotal = (data?.total ?? 0) - discount;
+        if (total !== netTotal) {
+            setValue("total", netTotal, {
+                shouldValidate: true,
+                shouldDirty: true,
+            });
+        }
+    }, [discount, data?.total, total, setValue]);
 
     // atualizar paidAmount sempre que entrada mudar
     useEffect(() => {
@@ -153,12 +161,12 @@ export default function PaymentEditDrawer({
                         )}
                     />
 
-                    {/* Total bruto */}
+                    {/* Total (já líquido) */}
                     <Controller
                         name="total"
                         control={control}
                         render={({ field }) => (
-                            <LabeledField label="Valor Total (Bruto)">
+                            <LabeledField label="Valor Total">
                                 <CurrencyInput
                                     fullWidth
                                     size="small"
@@ -218,19 +226,6 @@ export default function PaymentEditDrawer({
                             </LabeledField>
                         )}
                     />
-
-                    {/* Valor líquido exibido */}
-                    <Box mt={1}>
-                        <Typography variant="body2" color="text.secondary">
-                            Valor líquido (Total - Desconto):
-                        </Typography>
-                        <Typography variant="body1" fontWeight="bold">
-                            {netTotal.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                            })}
-                        </Typography>
-                    </Box>
                 </Box>
 
                 {/* Footer */}
