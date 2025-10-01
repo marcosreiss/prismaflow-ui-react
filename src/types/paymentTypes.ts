@@ -53,3 +53,9 @@ export type Payment = {
   updatedAt: string;
   isActive: boolean;
 };
+
+export type PaymentStatusBySale = {
+  saleId: number;
+  paymentId: number;
+  status: PaymentStatus;
+};
