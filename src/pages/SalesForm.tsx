@@ -8,14 +8,9 @@ import { useProduct } from "@/hooks/useProduct";
 import { useNotification } from "@/context/NotificationContext";
 import { useSaleForm } from "@/hooks/useSaleForm";
 import { mapSaleToPayload, sanitizeSaleData } from "@/utils/sales/salePayloadMapper";
-import { validateSaleForm, canSubmitSale } from "@/utils/sales/saleValidators";
+import { canSubmitSale } from "@/utils/sales/saleValidators";
 import { getSummaryCalculations } from "@/utils/sales/calculations";
-import SaleSummary from "@/components/salePageCustom/SaleSummary";
-import SaleFormActions from "@/components/salePageCustom/SaleFormActions";
-import ClientStep from "@/components/salePageCustom/steps/ClientStep";
-import ProductsStep from "@/components/salePageCustom/steps/ProductsStep";
-import ProtocolForm from "@/components/salePageCustom/protocol/ProtocolForm";
-import ReviewStep from "@/components/salePageCustom/steps/ReviewStep";
+
 import {
     Paper,
     Box,
@@ -32,6 +27,12 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { useService } from "@/hooks/useService";
 import { useEffect } from "react";
+import ProtocolForm from "@/components/saleFormPage/protocol/ProtocolForm";
+import SaleFormActions from "@/components/saleFormPage/SaleFormActions";
+import SaleSummary from "@/components/saleFormPage/SaleSummary";
+import ClientStep from "@/components/saleFormPage/steps/ClientStep";
+import ProductsStep from "@/components/saleFormPage/steps/ProductsStep";
+import ReviewStep from "@/components/saleFormPage/steps/ReviewStep";
 
 const steps = ['Cliente', 'Produtos', 'Protocolo', 'Revisão'];
 
