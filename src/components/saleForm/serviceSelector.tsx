@@ -150,7 +150,7 @@ export default function ServiceSelector({
                         renderOption={renderOption}
                     />
                     <Button
-                        variant="outlined"
+                        variant={selectedService ? "contained" : "outlined"} // ✅ Muda para contained quando há serviço selecionado
                         onClick={handleAddService}
                         disabled={!selectedService || disabled}
                         startIcon={<Plus size={18} />}
