@@ -40,7 +40,7 @@ function InfoCard({ title, children, icon, sx }: InfoCardProps) {
                 p: 2,
                 borderRadius: 2,
                 border: 1,
-                borderColor: 'grey.200',
+                borderColor: 'divider',
                 ...sx,
             }}
         >
@@ -313,7 +313,7 @@ export default function SalesDetailsPage() {
             </Box>
 
             {/* Ações Rápidas */}
-            <Paper sx={{ p: 2, mt: 3, bgcolor: 'grey.50' }}>
+            <Paper sx={{ p: 2, mt: 3, bgcolor: 'grey.divider' }}>
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                     <Button variant="outlined" onClick={handleBack}>
                         Voltar para Lista

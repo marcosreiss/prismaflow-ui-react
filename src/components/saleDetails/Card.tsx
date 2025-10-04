@@ -17,7 +17,7 @@ export default function InfoCard({ title, children, icon, sx }: InfoCardProps) {
                 p: 2,
                 borderRadius: 2,
                 border: 1,
-                borderColor: 'grey.200',
+                borderColor: 'grey.divider',
                 ...sx,
             }}
         >
