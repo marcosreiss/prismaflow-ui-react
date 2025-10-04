@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Controller } from "react-hook-form";
-import { Box, Typography, TextField } from "@mui/material";
-import { FileText } from "lucide-react";
+// 1. Importar Divider
+import { Box, Typography, TextField, Paper, Divider } from "@mui/material";
+import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import ProductSelector from "../ProductSelector";
 import SaleItemsTable from "../SaleItemsTable";
 import ServicesTable from "../serviceTable";
@@ -32,9 +33,18 @@ export default function ProductsStep({
     isLoading
 }: ProductsStepProps) {
     return (
-        <Box>
-            {/* Seção de Produtos */}
-            <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+            {/* Seção de Produtos - Mais Visível */}
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ShoppingCart size={24} color="#1976d2" /> {/* Ícone com cor */}
+                    <Typography variant="h6">
+                        Produtos
+                    </Typography>
+                </Box>
+                <Divider sx={{ my: 2 }} /> {/* Divisória */}
+
                 <ProductSelector
                     products={products}
                     isLoading={isLoadingProducts}
@@ -42,13 +52,23 @@ export default function ProductsStep({
                     disabled={isLoading}
                 />
 
-                <Box sx={{ mt: 2 }}>
-                    <SaleItemsTable />
-                </Box>
-            </Box>
+                {/* Subtítulo para a tabela */}
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
+                    Itens Adicionados
+                </Typography>
+                <SaleItemsTable />
+            </Paper>
 
-            {/* Seção de Serviços */}
-            <Box sx={{ mb: 4 }}>
+            {/* Seção de Serviços - Mais Visível */}
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Wrench size={24} color="#1976d2" /> {/* Ícone com cor */}
+                    <Typography variant="h6">
+                        Serviços
+                    </Typography>
+                </Box>
+                <Divider sx={{ my: 2 }} /> {/* Divisória */}
+
                 <ServiceSelector
                     services={services}
                     isLoading={isLoadingServices}
@@ -56,17 +76,23 @@ export default function ProductsStep({
                     disabled={isLoading}
                 />
 
-                <Box sx={{ mt: 2 }}>
-                    <ServicesTable />
-                </Box>
-            </Box>
-
-            {/* Observações */}
-            <Box>
-                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <FileText size={24} />
-                    Observações
+                {/* Subtítulo para a tabela */}
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
+                    Serviços Adicionados
                 </Typography>
+                <ServicesTable />
+            </Paper>
+
+            {/* Observações - Mais Visível */}
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FileText size={24} color="#1976d2" /> {/* Ícone com cor */}
+                    <Typography variant="h6">
+                        Observações
+                    </Typography>
+                </Box>
+                <Divider sx={{ my: 2 }} /> {/* Divisória */}
+
                 <Controller
                     name="notes"
                     control={control}
@@ -76,11 +102,12 @@ export default function ProductsStep({
                             multiline
                             rows={3}
                             fullWidth
+                            variant="outlined"
                             placeholder="Adicione observações sobre a venda..."
                         />
                     )}
                 />
-            </Box>
+            </Paper>
         </Box>
     );
 }

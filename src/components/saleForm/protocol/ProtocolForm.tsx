@@ -5,16 +5,18 @@ import {
     Typography,
     TextField,
     Stack,
-    Box,
 } from "@mui/material";
-import { FileText } from "lucide-react";
+import { FileText, Eye, EyeOff } from "lucide-react";
+import SphericalInput from "@/components/imask/protocolo/SphericalInput";
+import CylindricalInput from "@/components/imask/protocolo/CylindricalInput";
+import AdditionInput from "@/components/imask/protocolo/AdditionInput";
+import AxisInput from "@/components/imask/AxisInput";
 
 export default function ProtocolForm() {
     const { control } = useFormContext<Sale>();
 
-    // Função para garantir que valores null sejam convertidos para string vazia
-    const getSafeValue = (value: any): string => {
-        return value === null ? '' : value || '';
+    const getSafeValue = (value: string | number | null | undefined): string => {
+        return value === null || value === undefined ? '' : String(value);
     };
 
     return (
@@ -25,9 +27,10 @@ export default function ProtocolForm() {
             </Typography>
 
             <Stack spacing={3}>
-                {/* Dados Básicos do Protocolo */}
-                <Box>
-                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                {/* Dados Básicos do Protocolo - DENTRO DE CARD */}
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'grey.50' }}>
+                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'primary.main' }}>
+                        <FileText size={20} />
                         Dados Básicos do Protocolo
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -96,11 +99,12 @@ export default function ProtocolForm() {
                             )}
                         />
                     </Stack>
-                </Box>
+                </Paper>
 
-                {/* Dados da Receita */}
-                <Box>
-                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                {/* Dados da Receita - DENTRO DE CARD */}
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'grey.50' }}>
+                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'primary.main' }}>
+                        <FileText size={20} />
                         Dados da Receita
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -115,6 +119,7 @@ export default function ProtocolForm() {
                                     placeholder="Dra. Fernanda Lopes"
                                     fullWidth
                                     value={getSafeValue(field.value)}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
                                 />
                             )}
                         />
@@ -129,29 +134,32 @@ export default function ProtocolForm() {
                                     placeholder="CRM-SP-123456"
                                     fullWidth
                                     value={getSafeValue(field.value)}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
                                 />
                             )}
                         />
                     </Stack>
-                </Box>
+                </Paper>
 
-                {/* Dados do Olho Direito (OD) */}
-                <Box>
-                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                {/* Dados do Olho Direito (OD) - DENTRO DE CARD */}
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'blue.50', borderColor: 'blue.200' }}>
+                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'blue.700' }}>
+                        <Eye size={20} />
                         Olho Direito (OD)
                     </Typography>
+
+                    {/* Dados Principais OD */}
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                         <Controller
                             name="protocol.prescription.odSpherical"
                             control={control}
                             defaultValue=""
                             render={({ field }) => (
-                                <TextField
+                                <SphericalInput
                                     {...field}
-                                    label="Esférico"
-                                    placeholder="-2.00"
+                                    label="Esférico OD"
                                     fullWidth
-                                    value={getSafeValue(field.value)}
+                                    helperText="Formato: +0.00 ou -0.00"
                                 />
                             )}
                         />
@@ -160,12 +168,11 @@ export default function ProtocolForm() {
                             control={control}
                             defaultValue=""
                             render={({ field }) => (
-                                <TextField
+                                <CylindricalInput
                                     {...field}
-                                    label="Cilíndrico"
-                                    placeholder="-0.75"
+                                    label="Cilíndrico OD"
                                     fullWidth
-                                    value={getSafeValue(field.value)}
+                                    helperText="Sempre negativo: -0.00"
                                 />
                             )}
                         />
@@ -174,16 +181,17 @@ export default function ProtocolForm() {
                             control={control}
                             defaultValue=""
                             render={({ field }) => (
-                                <TextField
+                                <AxisInput
                                     {...field}
-                                    label="Eixo"
-                                    placeholder="90"
+                                    label="Eixo OD"
                                     fullWidth
-                                    value={getSafeValue(field.value)}
+                                    helperText="Ângulo entre 0° e 180°"
                                 />
                             )}
                         />
                     </Stack>
+
+                    {/* Dados Adicionais OD */}
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
                         <Controller
                             name="protocol.prescription.odDnp"
@@ -192,33 +200,40 @@ export default function ProtocolForm() {
                             render={({ field }) => (
                                 <TextField
                                     {...field}
-                                    label="DNP"
+                                    label="DNP OD"
                                     placeholder="31"
                                     fullWidth
                                     value={getSafeValue(field.value)}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
+                                    inputProps={{
+                                        maxLength: 2,
+                                        inputMode: 'numeric',
+                                    }}
                                 />
                             )}
                         />
                     </Stack>
-                </Box>
+                </Paper>
 
-                {/* Dados do Olho Esquerdo (OE) */}
-                <Box>
-                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                {/* Dados do Olho Esquerdo (OE) - DENTRO DE CARD */}
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'green.50', borderColor: 'green.200' }}>
+                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'green.700' }}>
+                        <EyeOff size={20} />
                         Olho Esquerdo (OE)
                     </Typography>
+
+                    {/* Dados Principais OE */}
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                         <Controller
                             name="protocol.prescription.oeSpherical"
                             control={control}
                             defaultValue=""
                             render={({ field }) => (
-                                <TextField
+                                <SphericalInput
                                     {...field}
-                                    label="Esférico"
-                                    placeholder="-1.50"
+                                    label="Esférico OE"
                                     fullWidth
-                                    value={getSafeValue(field.value)}
+                                    helperText="Formato: +0.00 ou -0.00"
                                 />
                             )}
                         />
@@ -227,12 +242,11 @@ export default function ProtocolForm() {
                             control={control}
                             defaultValue=""
                             render={({ field }) => (
-                                <TextField
+                                <CylindricalInput
                                     {...field}
-                                    label="Cilíndrico"
-                                    placeholder="-0.50"
+                                    label="Cilíndrico OE"
                                     fullWidth
-                                    value={getSafeValue(field.value)}
+                                    helperText="Sempre negativo: -0.00"
                                 />
                             )}
                         />
@@ -241,16 +255,17 @@ export default function ProtocolForm() {
                             control={control}
                             defaultValue=""
                             render={({ field }) => (
-                                <TextField
+                                <AxisInput
                                     {...field}
-                                    label="Eixo"
-                                    placeholder="85"
+                                    label="Eixo OE"
                                     fullWidth
-                                    value={getSafeValue(field.value)}
+                                    helperText="Ângulo entre 0° e 180°"
                                 />
                             )}
                         />
                     </Stack>
+
+                    {/* Dados Adicionais OE */}
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
                         <Controller
                             name="protocol.prescription.oeDnp"
@@ -259,47 +274,58 @@ export default function ProtocolForm() {
                             render={({ field }) => (
                                 <TextField
                                     {...field}
-                                    label="DNP"
+                                    label="DNP OE"
                                     placeholder="30"
                                     fullWidth
                                     value={getSafeValue(field.value)}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
+                                    inputProps={{
+                                        maxLength: 2,
+                                        inputMode: 'numeric',
+                                    }}
                                 />
                             )}
                         />
                     </Stack>
-                </Box>
+                </Paper>
 
-                {/* Dados Adicionais */}
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <Controller
-                        name="protocol.prescription.addition"
-                        control={control}
-                        defaultValue=""
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Adição"
-                                placeholder="+2.00"
-                                fullWidth
-                                value={getSafeValue(field.value)}
-                            />
-                        )}
-                    />
-                    <Controller
-                        name="protocol.prescription.opticalCenter"
-                        control={control}
-                        defaultValue=""
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Centro Óptico"
-                                placeholder="PD 61"
-                                fullWidth
-                                value={getSafeValue(field.value)}
-                            />
-                        )}
-                    />
-                </Stack>
+                {/* Dados Adicionais (Binoculares) - DENTRO DE CARD */}
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'orange.50', borderColor: 'orange.200' }}>
+                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'orange.700' }}>
+                        <FileText size={20} />
+                        Dados Binoculares
+                    </Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <Controller
+                            name="protocol.prescription.addition"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <AdditionInput
+                                    {...field}
+                                    label="Adição"
+                                    fullWidth
+                                    helperText="Formato: +0.00"
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="protocol.prescription.opticalCenter"
+                            control={control}
+                            defaultValue=""
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Centro Óptico"
+                                    placeholder="PD 61"
+                                    fullWidth
+                                    value={getSafeValue(field.value)}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
+                                />
+                            )}
+                        />
+                    </Stack>
+                </Paper>
             </Stack>
         </Paper>
     );

@@ -7,8 +7,8 @@ type ValidatorOptions = { isEditMode?: boolean };
  */
 
 export interface ValidationResult {
-    isValid: boolean;
-    errors: string[];
+  isValid: boolean;
+  errors: string[];
 }
 
 /**
@@ -90,7 +90,7 @@ export const validateProductItems = (
 
     // só valida estoque quando NÃO for inalterado
     console.log("product esetoque:", product.stockQuantity);
-    
+
     if (!unchanged) {
       const available = Number((product as any)?.stockQuantity ?? 0);
       if (available < quantity) {
@@ -109,23 +109,23 @@ export const validateProductItems = (
  */
 // Adicione esta validação específica:
 export const validateFrameDetails = (frameDetails: any, productName: string): string[] => {
-    const errors: string[] = [];
+  const errors: string[] = [];
 
-    if (!frameDetails) {
-        errors.push(`Armação "${productName}": detalhes da armação são obrigatórios.`);
-        return errors;
-    }
-
-    // ✅ VALIDAÇÃO CRÍTICA: material não pode ser null/empty
-    if (!frameDetails.material) {
-        errors.push(`Armação "${productName}": tipo de material é obrigatório.`);
-    }
-
-    if (!frameDetails.color) {
-        errors.push(`Armação "${productName}": cor é obrigatória.`);
-    }
-
+  if (!frameDetails) {
+    errors.push(`Armação "${productName}": detalhes da armação são obrigatórios.`);
     return errors;
+  }
+
+  // ✅ VALIDAÇÃO CRÍTICA: material não pode ser null/empty
+  if (!frameDetails.material) {
+    errors.push(`Armação "${productName}": tipo de material é obrigatório.`);
+  }
+
+  if (!frameDetails.color) {
+    errors.push(`Armação "${productName}": cor é obrigatória.`);
+  }
+
+  return errors;
 };
 
 // Atualize a validateProductItems para incluir esta validação:
@@ -135,81 +135,76 @@ export const validateFrameDetails = (frameDetails: any, productName: string): st
  * Validações do protocolo
  */
 export const validateProtocol = (protocol: Sale['protocol']): string[] => {
-    const errors: string[] = [];
+  const errors: string[] = [];
 
-    if (!protocol) {
-        return errors; // Protocolo é opcional
-    }
+  if (!protocol) {
+    return errors; // Protocolo é opcional
+  }
 
-    // Validações da prescrição se existir
-    if (protocol.prescription) {
-        const prescriptionErrors = validatePrescription(protocol.prescription);
-        errors.push(...prescriptionErrors);
-    }
+  // Validações da prescrição se existir
+  if (protocol.prescription) {
+    const prescriptionErrors = validatePrescription(protocol.prescription);
+    errors.push(...prescriptionErrors);
+  }
 
-    return errors;
+  return errors;
 };
 
 /**
  * Validações da prescrição médica
  */
 export const validatePrescription = (prescription: any): string[] => {
-    const errors: string[] = [];
+  const errors: string[] = [];
 
-    if (prescription.doctorName && !prescription.crm) {
-        errors.push("CRM é obrigatório quando o nome do médico é informado.");
-    }
+  if (prescription.doctorName && !prescription.crm) {
+    errors.push("CRM é obrigatório quando o nome do médico é informado.");
+  }
 
-    if (prescription.crm && !prescription.doctorName) {
-        errors.push("Nome do médico é obrigatório quando o CRM é informado.");
-    }
+  if (prescription.crm && !prescription.doctorName) {
+    errors.push("Nome do médico é obrigatório quando o CRM é informado.");
+  }
 
-    // Validação de formato do CRM
-    if (prescription.crm && !/^CRM-[A-Z]{2}-?\d{6}$/i.test(prescription.crm)) {
-        errors.push("Formato do CRM inválido. Use: CRM-XX-XXXXXX");
-    }
-
-    return errors;
+  return errors;
 };
 
 /**
  * Validações finais da revisão
  */
 export const validateReview = (data: Sale): string[] => {
-    const errors: string[] = [];
+  const errors: string[] = [];
 
-    // Validação de valores financeiros
-    if (data.subtotal < 0) {
-        errors.push("Subtotal não pode ser negativo.");
-    }
+  // Validação de valores financeiros
+  if (data.subtotal < 0) {
+    errors.push("Subtotal não pode ser negativo.");
+  }
 
-    if (data.discount < 0) {
-        errors.push("Desconto não pode ser negativo.");
-    }
+  if (data.discount < 0) {
+    errors.push("Desconto não pode ser negativo.");
+  }
 
-    if (data.discount > data.subtotal) {
-        errors.push("Desconto não pode ser maior que o subtotal.");
-    }
+  if (data.discount > data.subtotal) {
+    errors.push("Desconto não pode ser maior que o subtotal.");
+  }
 
-    if (data.total < 0) {
-        errors.push("Total não pode ser negativo.");
-    }
+  if (data.total < 0) {
+    errors.push("Total não pode ser negativo.");
+  }
 
-    // Validação de consistência dos cálculos
-    const expectedTotal = data.subtotal - data.discount;
-    if (Math.abs(data.total - expectedTotal) > 0.01) { // Permite pequena diferença de arredondamento
-        errors.push("Inconsistência nos cálculos financeiros.");
-    }
+  // Validação de consistência dos cálculos
+  const expectedTotal = data.subtotal - data.discount;
+  if (Math.abs(data.total - expectedTotal) > 0.01) { // Permite pequena diferença de arredondamento
+    errors.push("Inconsistência nos cálculos financeiros.");
+  }
 
-    return errors;
+  return errors;
 };
 
 /**
  * Validação rápida para habilitar/desabilitar botões
  */
 export const canProceedToNextStep = (data: Sale, currentStep: number): boolean => {
-    const validation = validateSaleForm(data, currentStep);
-    return validation.isValid;
+  const validation = validateSaleForm(data, currentStep);
+  return validation.isValid;
 };
 
 /**
@@ -219,7 +214,7 @@ export const canSubmitSale = (data: Sale): ValidationResult => {
   const errors: string[] = [];
 
   const isEditMode = Boolean((data as any)?.id); // venda existente => edição
-  
+
 
   for (let step = 0; step < 4; step++) {
     const stepValidation = validateSaleForm(data, step, { isEditMode });
@@ -233,22 +228,22 @@ export const canSubmitSale = (data: Sale): ValidationResult => {
  * Validação de produto individual antes de adicionar
  */
 export const validateProductBeforeAdd = (product: Product, quantity: number = 1): ValidationResult => {
-    const errors: string[] = [];
+  const errors: string[] = [];
 
-    if (!product.isActive) {
-        errors.push("Produto não está ativo.");
-    }
+  if (!product.isActive) {
+    errors.push("Produto não está ativo.");
+  }
 
-    if (product.stockQuantity < quantity) {
-        errors.push(`Estoque insuficiente. Disponível: ${product.stockQuantity}`);
-    }
+  if (product.stockQuantity < quantity) {
+    errors.push(`Estoque insuficiente. Disponível: ${product.stockQuantity}`);
+  }
 
-    if (quantity < 1) {
-        errors.push("Quantidade deve ser pelo menos 1.");
-    }
+  if (quantity < 1) {
+    errors.push("Quantidade deve ser pelo menos 1.");
+  }
 
-    return {
-        isValid: errors.length === 0,
-        errors
-    };
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
 };
