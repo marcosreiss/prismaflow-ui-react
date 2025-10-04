@@ -11,6 +11,7 @@ import SphericalInput from "@/components/imask/protocolo/SphericalInput";
 import CylindricalInput from "@/components/imask/protocolo/CylindricalInput";
 import AdditionInput from "@/components/imask/protocolo/AdditionInput";
 import AxisInput from "@/components/imask/AxisInput";
+import DnpInput from "@/components/imask/protocolo/DnpInput";
 
 export default function ProtocolForm() {
     const { control } = useFormContext<Sale>();
@@ -28,8 +29,8 @@ export default function ProtocolForm() {
 
             <Stack spacing={3}>
                 {/* Dados Básicos do Protocolo - DENTRO DE CARD */}
-                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'grey.50' }}>
-                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'primary.main' }}>
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'background.default' }}>
+                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <FileText size={20} />
                         Dados Básicos do Protocolo
                     </Typography>
@@ -64,8 +65,6 @@ export default function ProtocolForm() {
                                 />
                             )}
                         />
-                    </Stack>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
                         <Controller
                             name="protocol.book"
                             control={control}
@@ -81,6 +80,8 @@ export default function ProtocolForm() {
                                 />
                             )}
                         />
+                    </Stack>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
                         <Controller
                             name="protocol.page"
                             control={control}
@@ -101,9 +102,9 @@ export default function ProtocolForm() {
                     </Stack>
                 </Paper>
 
-                {/* Dados da Receita - DENTRO DE CARD */}
-                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'grey.50' }}>
-                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'primary.main' }}>
+                {/* Dados da Receita - CORRIGIDO */}
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'background.default' }}>
+                    <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <FileText size={20} />
                         Dados da Receita
                     </Typography>
@@ -142,7 +143,7 @@ export default function ProtocolForm() {
                 </Paper>
 
                 {/* Dados do Olho Direito (OD) - DENTRO DE CARD */}
-                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'blue.50', borderColor: 'blue.200' }}>
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'background.default' }}>
                     <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'blue.700' }}>
                         <Eye size={20} />
                         Olho Direito (OD)
@@ -198,25 +199,19 @@ export default function ProtocolForm() {
                             control={control}
                             defaultValue=""
                             render={({ field }) => (
-                                <TextField
+                                <DnpInput
                                     {...field}
                                     label="DNP OD"
-                                    placeholder="31"
+                                    placeholder="31.50"
                                     fullWidth
-                                    value={getSafeValue(field.value)}
-                                    onChange={(e) => field.onChange(e.target.value || null)}
-                                    inputProps={{
-                                        maxLength: 2,
-                                        inputMode: 'numeric',
-                                    }}
+                                    helperText="Distância naso-pupilar (0.01 - 99.99)"
                                 />
                             )}
-                        />
-                    </Stack>
+                        />                    </Stack>
                 </Paper>
 
                 {/* Dados do Olho Esquerdo (OE) - DENTRO DE CARD */}
-                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'green.50', borderColor: 'green.200' }}>
+                <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'background.default' }}>
                     <Typography variant="subtitle1" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'green.700' }}>
                         <EyeOff size={20} />
                         Olho Esquerdo (OE)
@@ -272,17 +267,12 @@ export default function ProtocolForm() {
                             control={control}
                             defaultValue=""
                             render={({ field }) => (
-                                <TextField
+                                <DnpInput
                                     {...field}
                                     label="DNP OE"
-                                    placeholder="30"
+                                    placeholder="30.50"
                                     fullWidth
-                                    value={getSafeValue(field.value)}
-                                    onChange={(e) => field.onChange(e.target.value || null)}
-                                    inputProps={{
-                                        maxLength: 2,
-                                        inputMode: 'numeric',
-                                    }}
+                                    helperText="Distância naso-pupilar (0.01 - 99.99)"
                                 />
                             )}
                         />
