@@ -11,7 +11,7 @@ import type {
 export const registerService = async (
   payload: UserRegisterRequest
 ): Promise<UserRegisterResponse> => {
-  const response = await api.post<UserRegisterResponse>("/auth/register", payload);
+  const response = await api.post<UserRegisterResponse>("/api/auth/register", payload);
   return response.data;
 };
 
@@ -19,6 +19,6 @@ export const registerService = async (
 export const loginService = async (
   payload: LoginRequest
 ): Promise<LoginResponse> => {
-  const response = await api.post<LoginResponse>("/auth/login", payload);
+  const response = await api.post<LoginResponse>("/api/auth/login", payload);
   return response.data;
 };
