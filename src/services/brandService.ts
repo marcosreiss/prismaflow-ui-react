@@ -1,33 +1,36 @@
-// src/services/brandService.ts
+// Versão final
 import type { EntityService } from "@/services/entityService";
-import type { Brand } from "@/types/brandTypes";
+import type { Brand, BrandsResponse, BrandResponse } from "@/types/brandTypes";
+import type { ApiResponse } from "@/types/apiResponse";
 import api from "./config/api";
 
 export const brandService: EntityService<Brand> = {
   getAll: async ({ page, size, search }) => {
-    const res = await api.get("/api/brands", {
+
+    const res = await api.get<BrandsResponse>("/brands", {
       params: { page, size, search },
     });
-    return res.data; // ApiResponse<PaginatedResponse<Brand>>
+    console.log(res.data.data);
+    return res.data;
   },
 
   getById: async (id) => {
-    const res = await api.get(`/api/brands/${id}`);
-    return res.data; // ApiResponse<Brand>
+    const res = await api.get<BrandResponse>(`/brands/${id}`);
+    return res.data;
   },
 
   create: async (data) => {
-    const res = await api.post("/api/brands", data);
-    return res.data; // ApiResponse<Brand>
+    const res = await api.post<BrandResponse>("/brands", data);
+    return res.data;
   },
 
   update: async (id, data) => {
-    const res = await api.put(`/api/brands/${id}`, data);
-    return res.data; // ApiResponse<Brand>
+    const res = await api.put<BrandResponse>(`/brands/${id}`, data);
+    return res.data;
   },
 
   delete: async (id) => {
-    const res = await api.delete(`/api/brands/${id}`);
-    return res.data; // ApiResponse<null>
+    const res = await api.delete<ApiResponse<null>>(`/brands/${id}`);
+    return res.data;
   },
 };

@@ -21,7 +21,7 @@ export type UserRegisterResponse = ApiResponse<UserRegisterData>;
 
 //  Login
 export type UserLoginRequest = {
-  username: string;
+  email: string;       // ← PARA ISSO
   password: string;
 };
 

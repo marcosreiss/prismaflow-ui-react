@@ -16,9 +16,8 @@ import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 
 /** ================== util de "criptografia" (ofuscação) ================== */
-// AVISO: chave embutida no front só ofusca. Use apenas se aceitar esse trade-off.
 const APP_KDF_SALT = "prismaflow::rememberme::v1";
-const APP_STATIC_KEY = "prismaflow-remember-me-🔐"; // mude isso e versione
+const APP_STATIC_KEY = "prismaflow-remember-me-🔐";
 
 async function deriveKey(): Promise<CryptoKey> {
     const enc = new TextEncoder();
@@ -46,6 +45,7 @@ async function deriveKey(): Promise<CryptoKey> {
 function b64encode(buf: ArrayBuffer) {
     return btoa(String.fromCharCode(...new Uint8Array(buf)));
 }
+
 function b64decode(b64: string) {
     return Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
 }
@@ -62,7 +62,6 @@ async function encryptJSON<T>(data: T) {
     };
 }
 
-
 async function decryptJSON<T>(payload: { iv: string; ct: string }): Promise<T> {
     const key = await deriveKey();
     const iv = new Uint8Array(b64decode(payload.iv));
@@ -72,12 +71,20 @@ async function decryptJSON<T>(payload: { iv: string; ct: string }): Promise<T> {
     return JSON.parse(dec.decode(decrypted)) as T;
 }
 
-
 /** ================== chaves de storage ================== */
 const LS_KEY_REMEMBER = "pf.remember";
 const LS_KEY_CREDS = "pf.creds";
 
-type LoginForm = UserLoginRequest & { rememberMe: boolean };
+type LoginForm = {
+    email: string;
+    password: string;
+    rememberMe: boolean;
+};
+
+type StoredCredentials = {
+    email: string;
+    password: string;
+};
 
 export default function Login() {
     const { addNotification } = useNotification();
@@ -85,7 +92,7 @@ export default function Login() {
 
     const { control, handleSubmit, setValue, getValues } = useForm<LoginForm>({
         defaultValues: {
-            username: "",
+            email: "",
             password: "",
             rememberMe: false,
         },
@@ -109,8 +116,8 @@ export default function Login() {
 
             (async () => {
                 try {
-                    const { username, password } = await decryptJSON<{ username: string; password: string }>(payload);
-                    setValue("username", username);
+                    const { email, password } = await decryptJSON<StoredCredentials>(payload);
+                    setValue("email", email);
                     setValue("password", password);
                     setValue("rememberMe", true);
                 } catch {
@@ -127,25 +134,29 @@ export default function Login() {
     const { mutate: login, isPending } = useLogin();
 
     const onSubmit = async (data: LoginForm) => {
-        // persiste/limpa antes de chamar a API, conforme checkbox
+        // Persiste/limpa antes de chamar a API
         try {
             if (data.rememberMe) {
-                const enc = await encryptJSON({ username: data.username, password: data.password });
+                const credentials: StoredCredentials = {
+                    email: data.email,
+                    password: data.password
+                };
+                const enc = await encryptJSON(credentials);
                 localStorage.setItem(LS_KEY_CREDS, JSON.stringify(enc));
                 localStorage.setItem(LS_KEY_REMEMBER, "true");
             } else {
                 localStorage.removeItem(LS_KEY_CREDS);
                 localStorage.removeItem(LS_KEY_REMEMBER);
-                // se você REALMENTE quiser limpar os inputs quando desmarcado, descomente:
-                // setValue("username", "");
-                // setValue("password", "");
             }
         } catch {
             // Se falhar salvar, segue o fluxo de login normalmente
         }
 
-        // chama a API
-        const payload: UserLoginRequest = { username: data.username, password: data.password };
+        // Prepara payload para a API
+        const payload: UserLoginRequest = {
+            email: data.email,
+            password: data.password
+        };
 
         login(payload, {
             onSuccess: (res) => {
@@ -165,14 +176,16 @@ export default function Login() {
             onError: (err) => {
                 addNotification("Erro ao fazer login. Tente novamente.", "error");
                 console.error(err.message);
-                // opcional: em caso de erro e rememberMe desligado, garantimos limpeza
+
+                // Em caso de erro e rememberMe desligado, garante limpeza
                 const remember = getValues("rememberMe");
                 if (!remember) {
                     try {
                         localStorage.removeItem(LS_KEY_CREDS);
                         localStorage.removeItem(LS_KEY_REMEMBER);
-                    } catch(err) {console.log(err);
-                     }
+                    } catch (storageErr) {
+                        console.log(storageErr);
+                    }
                 }
             },
         });
@@ -266,17 +279,23 @@ export default function Login() {
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <Stack spacing={2} width="100%">
                             <Controller
-                                name="username"
+                                name="email"
                                 control={control}
-                                rules={{ required: "Usuário é obrigatório" }}
+                                rules={{
+                                    required: "E-mail é obrigatório",
+                                    pattern: {
+                                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                        message: "E-mail inválido"
+                                    }
+                                }}
                                 render={({ field, fieldState }) => (
                                     <TextField
                                         {...field}
                                         fullWidth
-                                        label="Usuário de Acesso:"
+                                        label="E-mail:"
                                         variant="outlined"
                                         size="small"
-                                        autoComplete="username"
+                                        autoComplete="email"
                                         error={!!fieldState.error}
                                         helperText={fieldState.error?.message}
                                     />
