@@ -8,7 +8,7 @@ import DashboardLayout from '../layout/dashboardLayout';
 
 const SignInPage = lazy(() => import('@/pages/login'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
-const BrandPage = lazy(() => import('@/pages/BrandsPage'));
+const BrandPage = lazy(() => import('@/modules/brands/BrandsPage'));
 const ProductPage = lazy(() => import('@/pages/ProductsPage'));
 const ServicePage = lazy(() => import('@/pages/ServicePage'));
 const CustomerPage = lazy(() => import('@/pages/CustomerPage'));
