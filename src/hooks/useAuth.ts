@@ -2,24 +2,34 @@
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import type {
-  UserLoginRequest,
-  UserLoginResponse,
+  LoginRequest,
+  LoginResponse,
   UserRegisterRequest,
   UserRegisterResponse,
 } from "@/types/auth";
-import { loginService, registerService } from "@/services/authService";
+import { registerService } from "@/services/authService";
+import baseApi from "@/services/config/api";
+import type { ApiResponse } from "@/types/apiResponse";
 
 /**
- * Hook para autenticação (login) do usuário
+ * 🔐 Hook para autenticação (login) do usuário
  */
 export const useLogin = () => {
-  return useMutation<UserLoginResponse, AxiosError, UserLoginRequest>({
-    mutationFn: (payload) => loginService(payload),
+  return useMutation<LoginResponse, AxiosError<ApiResponse<null>>, LoginRequest>({
+    mutationFn: async (payload) => {
+      const { data } = await baseApi.post<LoginResponse>(
+        "/api/auth/login",
+        payload
+      );
+      return data;
+    },
     onSuccess: (data) => {
-      console.log("Login efetuado com sucesso:", data);
+      localStorage.setItem("authToken", data.token ?? "");
+      console.log("✅ Login efetuado com sucesso:", data.data?.name);
     },
     onError: (error) => {
-      console.error("Erro ao fazer login:", error);
+      const errData = error.response?.data;
+      console.error(`❌ ${errData?.message ?? "Erro desconhecido."}`);
     },
   });
 };

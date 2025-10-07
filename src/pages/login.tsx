@@ -11,7 +11,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { useEffect, useRef } from "react";
 import { useLogin } from "@/hooks/useAuth";
-import type { UserLoginRequest } from "@/types/auth";
+import type { LoginRequest } from "@/types/auth";
 import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -153,7 +153,7 @@ export default function Login() {
         }
 
         // Prepara payload para a API
-        const payload: UserLoginRequest = {
+        const payload: LoginRequest = {
             email: data.email,
             password: data.password
         };
@@ -165,26 +165,33 @@ export default function Login() {
 
                 if (token && user) {
                     setToken(token, {
-                        username: user.username,
+                        username: user.name, // sua API usa "name", não "username"
                         role: user.role,
                     });
-                    addNotification("Login realizado com sucesso!", "success");
+
+                    // Usa a mensagem real da API
+                    addNotification(res.message || "Login realizado com sucesso!", "success");
                 } else {
                     addNotification("Erro: resposta inválida do servidor.", "error");
                 }
             },
-            onError: (err) => {
-                addNotification("Erro ao fazer login. Tente novamente.", "error");
-                console.error(err.message);
 
-                // Em caso de erro e rememberMe desligado, garante limpeza
+            onError: (err) => {
+                // Tenta obter a mensagem padronizada da API
+                const apiMessage =
+                    err.response?.data?.message || "Erro ao fazer login. Tente novamente.";
+
+                addNotification(apiMessage, "error");
+                console.error("❌", apiMessage);
+
+                // Limpeza condicional do storage se 'rememberMe' estiver desativado
                 const remember = getValues("rememberMe");
                 if (!remember) {
                     try {
                         localStorage.removeItem(LS_KEY_CREDS);
                         localStorage.removeItem(LS_KEY_REMEMBER);
                     } catch (storageErr) {
-                        console.log(storageErr);
+                        console.warn("Erro ao limpar storage:", storageErr);
                     }
                 }
             },
