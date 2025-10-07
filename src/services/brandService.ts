@@ -1,6 +1,6 @@
 // Versão final
 import type { EntityService } from "@/services/entityService";
-import type { Brand, BrandsResponse, BrandResponse } from "@/types/brandTypes";
+import type { Brand, BrandsResponse, BrandResponse } from "@/modules/brands/brandTypes";
 import type { ApiResponse } from "@/types/apiResponse";
 import api from "./config/api";
 

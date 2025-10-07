@@ -1,11 +1,10 @@
 import type { ApiResponse } from "./apiResponse";
 
-//  Register
 export type UserRegisterRequest = {
   username: string;
   email: string;
   password: string;
-  role: "ADMIN" | "USER"; // pode expandir conforme sua API
+  role: UserRole;
 };
 
 export type UserRegisterData = {
@@ -19,21 +18,55 @@ export type UserRegisterData = {
 
 export type UserRegisterResponse = ApiResponse<UserRegisterData>;
 
-//  Login
-export type UserLoginRequest = {
-  email: string;       // ← PARA ISSO
+// =======================
+// 📨 REQUEST
+// =======================
+export type LoginRequest = {
+  email: string;
   password: string;
 };
 
+// =======================
+// 📦 RESPONSE (data)
+// =======================
 export type UserLoginData = {
-  id: string | number;
-  username: string;
+  id: string;
+  name: string;
   email: string;
   role: string;
-  password?: string | null;
+  tenantId: string;
+  branchId: string | null;
+  createdById: string | null;
+  updatedById: string | null;
+  createdAt: string;
+  updatedAt: string;
+  tenant: {
+    id: string;
+    name: string;
+    createdById: string | null;
+    updatedById: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  branch: {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
 };
 
-// 👇 Novo tipo de resposta que inclui token fora de data
-export type UserLoginResponse = ApiResponse<UserLoginData> & {
+// =======================
+// 🔐 FULL RESPONSE
+// =======================
+export type LoginResponse = ApiResponse<UserLoginData> & {
   token: string;
+};
+
+export type UserRole = "ADMIN" | "MANAGER" | "EMPLOYEE";
+
+export const UserRoleLabels: Record<UserRole, string> = {
+  ADMIN: "Administrador",
+  MANAGER: "Gerente",
+  EMPLOYEE: "Funcionário",
 };

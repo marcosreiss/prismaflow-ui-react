@@ -1,16 +1,11 @@
 import type { ColumnDef } from "@/components/crud/PFTable";
-import type { Brand } from "@/types/brandTypes";
+import type { Brand } from "@/modules/brands/brandTypes";
 import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import { TextField } from "@mui/material";
 
 export const brandColumns: ColumnDef<Brand>[] = [
   { key: "id", label: "ID", width: 80 },
   { key: "name", label: "Nome" },
-  {
-    key: "isActive",
-    label: "Ativo",
-    render: (row) => (row.isActive ? "Sim" : "Não"),
-  },
 ];
 
 export const brandFields: FieldDef<Brand>[] = [
@@ -26,19 +21,4 @@ export const brandFields: FieldDef<Brand>[] = [
       />
     ),
   },
-  // {
-  //   name: "isActive",
-  //   label: "Ativo",
-  //   component: ({ value, onChange }) => (
-  //     <FormControlLabel
-  //       control={
-  //         <Switch
-  //           checked={Boolean(value)}
-  //           onChange={(e) => onChange(e.target.checked)}
-  //         />
-  //       }
-  //       label="Ativo"
-  //     />
-  //   ),
-  // },
 ];

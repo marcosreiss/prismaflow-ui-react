@@ -3,8 +3,8 @@ import api from "./config/api";
 import type {
   UserRegisterRequest,
   UserRegisterResponse,
-  UserLoginRequest,
-  UserLoginResponse,
+  LoginRequest,
+  LoginResponse,
 } from "@/types/auth";
 
 //  Registro
@@ -17,8 +17,8 @@ export const registerService = async (
 
 //  Login
 export const loginService = async (
-  payload: UserLoginRequest
-): Promise<UserLoginResponse> => {
-  const response = await api.post<UserLoginResponse>("/api/auth/login", payload);
+  payload: LoginRequest
+): Promise<LoginResponse> => {
+  const response = await api.post<LoginResponse>("/api/auth/login", payload);
   return response.data;
 };

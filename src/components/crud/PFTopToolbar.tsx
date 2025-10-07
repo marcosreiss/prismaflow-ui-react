@@ -9,7 +9,7 @@ type PFTopToolbarProps = {
     onSearch?: (value: string) => void;
     onRefresh?: () => void;
     onAdd?: () => void;
-    addLabel?: string; // nome customizável do botão de adicionar
+    addLabel?: string;
     backUrl?: string;
 };
 
