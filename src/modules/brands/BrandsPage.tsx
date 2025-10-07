@@ -143,11 +143,13 @@ export default function BrandsPage() {
                     setConfirmDelete(true);
                 }}
                 onCreated={(brand) => {
+                    // Sucesso ao criar
                     addNotification("Marca criada com sucesso!", "success");
-                    handleOpenDrawer("view", brand);
-                    refetch();
+                    handleOpenDrawer("view", brand); // volta para modo de visualização
+                    refetch(); // recarrega listagem
                 }}
                 onUpdated={(brand) => {
+                    // Sucesso ao atualizar
                     addNotification("Marca atualizada com sucesso!", "success");
                     handleOpenDrawer("view", brand);
                     refetch();
