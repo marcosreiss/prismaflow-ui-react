@@ -14,6 +14,9 @@ import { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import type { Brand, CreateBrandPayload, UpdateBrandPayload } from "./brandTypes";
 import { useCreateBrand, useUpdateBrand } from "./useBrand";
+import { useNotification } from "@/context/NotificationContext";
+import type { AxiosError } from "axios";
+import type { ApiResponse } from "@/types/apiResponse";
 
 
 type DrawerMode = "create" | "edit" | "view";
@@ -39,9 +42,12 @@ export default function BrandDrawer({
     onCreated,
     onUpdated,
 }: BrandDrawerProps) {
-    const methods = useForm<{ name: string }>({
-        defaultValues: { name: "" },
+    const methods = useForm<{ name: string, isActive: boolean }>({
+        defaultValues: { name: "", isActive: true },
     });
+
+    const { addNotification } = useNotification();
+
 
     const isCreate = mode === "create";
     const isEdit = mode === "edit";
@@ -73,13 +79,19 @@ export default function BrandDrawer({
                     onCreated(res.data);
                 }
             } else if (isEdit && brand) {
-                const res = await updateBrand({ id: brand.id, data: values as UpdateBrandPayload });
+                const res = await updateBrand({
+                    id: brand.id,
+                    data: values as UpdateBrandPayload,
+                });
                 if (res?.data) {
                     onUpdated(res.data);
                 }
             }
         } catch (error) {
-            console.error("Erro ao salvar marca:", error);
+            const axiosErr = error as AxiosError<ApiResponse<null>>;
+            const message =
+                axiosErr.response?.data?.message ?? "Erro ao salvar marca.";
+            addNotification(message, "error");
         }
     });
 
