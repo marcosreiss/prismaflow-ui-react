@@ -165,17 +165,21 @@ export default function Login() {
 
                 if (token && user) {
                     setToken(token, {
-                        username: user.name, // sua API usa "name", não "username"
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
                         role: user.role,
+                        tenantId: user.tenantId,
+                        tenantName: user.tenant?.name ?? "",
+                        branchId: user.branchId,
+                        branchName: user.branch?.name ?? "",
                     });
 
-                    // Usa a mensagem real da API
                     addNotification(res.message || "Login realizado com sucesso!", "success");
                 } else {
                     addNotification("Erro: resposta inválida do servidor.", "error");
                 }
             },
-
             onError: (err) => {
                 // Tenta obter a mensagem padronizada da API
                 const apiMessage =

@@ -11,24 +11,32 @@ import React, {
 } from "react";
 import { useRouter } from "@/routes/hooks";
 
-interface AuthContextType {
-  token: string | null;
-  username: string | null;
-  role: string | null;
-  setToken: (
-    token: string | null,
-    user?: { username: string; role: string }
-  ) => void;
-  setUsername: (username: string | null) => void;
-  setRole: (role: string | null) => void;
-  isAuthenticated: () => boolean | null;
-  useLogout: () => void;
+// Tipos extras para organização
+interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  tenantId: string;
+  tenantName: string;
+  branchId: string | null;
+  branchName: string | null;
 }
 
 interface DecodedToken {
   exp: number;
-  username?: string;
+  sub?: string;
+  email?: string;
   role?: string;
+  tenantId?: string;
+}
+
+interface AuthContextType {
+  token: string | null;
+  user: AuthUser | null;
+  setToken: (token: string | null, user?: AuthUser) => void;
+  isAuthenticated: () => boolean | null;
+  useLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,59 +47,36 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setTokenState] = useState<string | null>(null);
-  const [username, setUsernameState] = useState<string | null>(null);
-  const [role, setRoleState] = useState<string | null>(null);
+  const [user, setUserState] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const router = useRouter(); // <-- agora usa o hook router
-
-  const setUsername = useCallback((newUsername: string | null) => {
-    setUsernameState(newUsername);
-    if (newUsername) {
-      localStorage.setItem("authUsername", newUsername);
-    } else {
-      localStorage.removeItem("authUsername");
-    }
-  }, []);
-
-  const setRole = useCallback((newRole: string | null) => {
-    setRoleState(newRole);
-    if (newRole) {
-      localStorage.setItem("authRole", newRole);
-    } else {
-      localStorage.removeItem("authRole");
-    }
-  }, []);
+  const router = useRouter();
 
   const setToken = useCallback(
-    (newToken: string | null, user?: { username: string; role: string }) => {
+    (newToken: string | null, userData?: AuthUser) => {
       setTokenState(newToken);
 
       if (newToken) {
         localStorage.setItem("authToken", newToken);
-
-        if (user) {
-          setUsername(user.username);
-          setRole(user.role);
+        if (userData) {
+          setUserState(userData);
+          localStorage.setItem("authUser", JSON.stringify(userData));
         }
       } else {
         localStorage.removeItem("authToken");
-        setUsername(null);
-        setRole(null);
+        localStorage.removeItem("authUser");
+        setUserState(null);
       }
     },
-    [setUsername, setRole]
+    []
   );
 
   useEffect(() => {
     const savedToken = localStorage.getItem("authToken");
-    const savedUsername = localStorage.getItem("authUsername");
-    const savedRole = localStorage.getItem("authRole");
+    const savedUser = localStorage.getItem("authUser");
 
     if (savedToken) {
       setTokenState(savedToken);
-      setUsernameState(savedUsername);
-      setRoleState(savedRole);
+      if (savedUser) setUserState(JSON.parse(savedUser));
 
       try {
         const decoded: DecodedToken = jwtDecode(savedToken);
@@ -99,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (decoded.exp <= currentTime) {
           setToken(null);
-          router.push("/"); // <-- troca navigate por router
+          router.push("/");
         } else {
           const timeout = (decoded.exp - currentTime) * 1000;
           const timer = setTimeout(() => {
@@ -137,36 +122,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const useLogout = useCallback(() => {
     setToken(null);
-    router.push("/"); // <-- também aqui
+    router.push("/");
   }, [setToken, router]);
 
-  const memorizedValue = useMemo(
+  const value = useMemo(
     () => ({
       token,
-      username,
-      role,
+      user,
       setToken,
-      setUsername,
-      setRole,
       isAuthenticated,
       useLogout,
     }),
-    [
-      token,
-      username,
-      role,
-      setToken,
-      setUsername,
-      setRole,
-      isAuthenticated,
-      useLogout,
-    ]
+    [token, user, setToken, isAuthenticated, useLogout]
   );
 
   return (
-    <AuthContext.Provider value={memorizedValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 };
 
