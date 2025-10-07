@@ -18,7 +18,9 @@ import { useNotification } from "@/context/NotificationContext";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/types/apiResponse";
 
-
+// ==========================
+// 🔹 Tipagens e Props
+// ==========================
 type DrawerMode = "create" | "edit" | "view";
 
 interface BrandDrawerProps {
@@ -32,6 +34,9 @@ interface BrandDrawerProps {
     onUpdated: (brand: Brand) => void;
 }
 
+// ==========================
+// 🔹 Componente principal
+// ==========================
 export default function BrandDrawer({
     open,
     mode,
@@ -42,20 +47,31 @@ export default function BrandDrawer({
     onCreated,
     onUpdated,
 }: BrandDrawerProps) {
-    const methods = useForm<{ name: string, isActive: boolean }>({
+    // ==========================
+    // 🔹 Formulário (React Hook Form)
+    // ==========================
+    const methods = useForm<{ name: string; isActive: boolean }>({
         defaultValues: { name: "", isActive: true },
     });
 
     const { addNotification } = useNotification();
 
-
+    // ==========================
+    // 🔹 Estados derivados
+    // ==========================
     const isCreate = mode === "create";
     const isEdit = mode === "edit";
     const isView = mode === "view";
 
+    // ==========================
+    // 🔹 Hooks de mutação
+    // ==========================
     const { mutateAsync: createBrand, isPending: creating } = useCreateBrand();
     const { mutateAsync: updateBrand, isPending: updating } = useUpdateBrand();
 
+    // ==========================
+    // 🔹 Efeitos
+    // ==========================
     // Resetar form sempre que abrir ou trocar modo
     useEffect(() => {
         if (!open) {
@@ -70,22 +86,20 @@ export default function BrandDrawer({
         }
     }, [open, isCreate, isEdit, isView, brand, methods]);
 
-    // Submissão do formulário
+    // ==========================
+    // 🔹 Submissão do formulário
+    // ==========================
     const handleSubmit = methods.handleSubmit(async (values) => {
         try {
             if (isCreate) {
                 const res = await createBrand(values as CreateBrandPayload);
-                if (res?.data) {
-                    onCreated(res.data);
-                }
+                if (res?.data) onCreated(res.data);
             } else if (isEdit && brand) {
                 const res = await updateBrand({
                     id: brand.id,
                     data: values as UpdateBrandPayload,
                 });
-                if (res?.data) {
-                    onUpdated(res.data);
-                }
+                if (res?.data) onUpdated(res.data);
             }
         } catch (error) {
             const axiosErr = error as AxiosError<ApiResponse<null>>;
@@ -95,6 +109,9 @@ export default function BrandDrawer({
         }
     });
 
+    // ==========================
+    // 🔹 Render
+    // ==========================
     return (
         <Drawer
             anchor="right"
@@ -109,7 +126,9 @@ export default function BrandDrawer({
                 },
             }}
         >
-            {/* Header */}
+            {/* ========================== */}
+            {/* 🔹 Header */}
+            {/* ========================== */}
             <Box
                 sx={{
                     display: "flex",
@@ -133,7 +152,9 @@ export default function BrandDrawer({
 
             <Divider sx={{ mb: 2 }} />
 
-            {/* Conteúdo principal */}
+            {/* ========================== */}
+            {/* 🔹 Conteúdo principal */}
+            {/* ========================== */}
             <Box
                 sx={{
                     flexGrow: 1,
@@ -142,9 +163,12 @@ export default function BrandDrawer({
                     pb: 3,
                 }}
             >
-                {/* MODO VIEW */}
+                {/* ========================== */}
+                {/* 🔸 MODO VIEW */}
+                {/* ========================== */}
                 {isView && brand && (
                     <Box>
+                        {/* Ações do modo view */}
                         <Stack direction="row" spacing={1} mb={2}>
                             <Button
                                 size="small"
@@ -167,6 +191,7 @@ export default function BrandDrawer({
 
                         <Divider sx={{ mb: 2 }} />
 
+                        {/* Detalhes da marca */}
                         <Stack spacing={1}>
                             <Row label="Nome" value={brand.name} />
                             <Row label="Ativo" value={brand.isActive ? "Sim" : "Não"} />
@@ -174,6 +199,7 @@ export default function BrandDrawer({
 
                         <Divider sx={{ my: 3 }} />
 
+                        {/* Botão para adicionar nova marca */}
                         <Button
                             variant="contained"
                             fullWidth
@@ -187,11 +213,14 @@ export default function BrandDrawer({
                     </Box>
                 )}
 
-                {/* MODO CREATE / EDIT */}
+                {/* ========================== */}
+                {/* 🔸 MODO CREATE / EDIT */}
+                {/* ========================== */}
                 {(isCreate || isEdit) && (
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit}>
                             <Stack spacing={2}>
+                                {/* Campo: Nome da marca */}
                                 <Box>
                                     <Typography variant="body2" fontWeight={500} mb={0.5}>
                                         Nome da marca
@@ -204,12 +233,15 @@ export default function BrandDrawer({
                                     />
                                 </Box>
 
+                                {/* Botão de ação */}
                                 <Button
                                     type="submit"
                                     variant="contained"
                                     disabled={creating || updating}
                                     startIcon={
-                                        creating || updating ? <CircularProgress size={18} /> : undefined
+                                        creating || updating ? (
+                                            <CircularProgress size={18} />
+                                        ) : undefined
                                     }
                                 >
                                     {isCreate
@@ -229,7 +261,9 @@ export default function BrandDrawer({
     );
 }
 
-// Subcomponente para exibir linhas de detalhes
+// ==========================
+// 🔹 Subcomponente auxiliar
+// ==========================
 function Row({ label, value }: { label: string; value: string | number | null | undefined }) {
     if (!value && value !== 0) return null;
 

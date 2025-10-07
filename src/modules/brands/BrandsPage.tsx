@@ -45,11 +45,6 @@ export default function BrandsPage() {
         { key: "id", label: "ID", width: 80 },
         { key: "name", label: "Nome" },
         {
-            key: "isActive",
-            label: "Ativo",
-            render: (row) => (row.isActive ? "Sim" : "Não"),
-        },
-        {
             key: "createdBy",
             label: "Criado por",
             render: (row) => row.createdBy?.name ?? "-",
@@ -143,13 +138,11 @@ export default function BrandsPage() {
                     setConfirmDelete(true);
                 }}
                 onCreated={(brand) => {
-                    // Sucesso ao criar
                     addNotification("Marca criada com sucesso!", "success");
-                    handleOpenDrawer("view", brand); // volta para modo de visualização
-                    refetch(); // recarrega listagem
+                    handleOpenDrawer("view", brand);
+                    refetch();
                 }}
                 onUpdated={(brand) => {
-                    // Sucesso ao atualizar
                     addNotification("Marca atualizada com sucesso!", "success");
                     handleOpenDrawer("view", brand);
                     refetch();

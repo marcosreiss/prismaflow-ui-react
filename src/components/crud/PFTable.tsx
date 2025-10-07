@@ -18,6 +18,9 @@ import { Inbox } from "lucide-react";
 import PFRowActionsMenu from "./PFRowActionsMenu";
 import type { ReactNode } from "react";
 
+// ==========================
+// 🔹 Tipagens
+// ==========================
 export type ColumnDef<T extends object> = {
     key: keyof T | string;
     label: string;
@@ -38,12 +41,14 @@ type PFTableProps<T extends object> = {
     onView?: (row: T) => void;
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
-    /** Callback ao clicar em uma linha */
     onRowClick?: (id: string | number, row: T) => void;
     customActionsMenu?: ReactNode;
     getRowId?: (row: T, index: number) => string | number;
 };
 
+// ==========================
+// 🔹 Componente principal
+// ==========================
 export default function PFTable<T extends object>({
     columns,
     rows,
@@ -60,6 +65,9 @@ export default function PFTable<T extends object>({
     customActionsMenu,
     getRowId,
 }: PFTableProps<T>) {
+    // ==========================
+    // 🔹 Render
+    // ==========================
     return (
         <Paper
             elevation={0}
@@ -69,7 +77,9 @@ export default function PFTable<T extends object>({
                 p: { xs: 1, sm: 0 },
             }}
         >
-            {/* === Tabela (desktop/tablet) === */}
+            {/* ========================== */}
+            {/* 🔹 Tabela (Desktop / Tablet) */}
+            {/* ========================== */}
             <TableContainer
                 sx={{
                     width: "100%",
@@ -87,6 +97,7 @@ export default function PFTable<T extends object>({
                         },
                     }}
                 >
+                    {/* Cabeçalho */}
                     <TableHead>
                         <TableRow sx={{ backgroundColor: "grey.100" }}>
                             {columns.map((col) => (
@@ -120,8 +131,11 @@ export default function PFTable<T extends object>({
                         </TableRow>
                     </TableHead>
 
+                    {/* Corpo */}
                     <TableBody>
-                        {/* Estado de loading */}
+                        {/* ========================== */}
+                        {/* 🔸 Estado de Loading */}
+                        {/* ========================== */}
                         {loading &&
                             Array.from({ length: pageSize }).map((_, i) => (
                                 <TableRow key={`skeleton-${i}`}>
@@ -138,7 +152,9 @@ export default function PFTable<T extends object>({
                                 </TableRow>
                             ))}
 
-                        {/* Estado vazio */}
+                        {/* ========================== */}
+                        {/* 🔸 Estado Vazio */}
+                        {/* ========================== */}
                         {!loading && rows.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={columns.length + 1}>
@@ -150,13 +166,17 @@ export default function PFTable<T extends object>({
                                         }}
                                     >
                                         <Inbox size={32} style={{ marginBottom: 8 }} />
-                                        <Typography variant="body2">Nenhum dado encontrado</Typography>
+                                        <Typography variant="body2">
+                                            Nenhum dado encontrado
+                                        </Typography>
                                     </Box>
                                 </TableCell>
                             </TableRow>
                         )}
 
-                        {/* Linhas de dados */}
+                        {/* ========================== */}
+                        {/* 🔸 Linhas de Dados */}
+                        {/* ========================== */}
                         {!loading &&
                             rows.map((row, rowIndex) => {
                                 const rowId = getRowId ? getRowId(row, rowIndex) : rowIndex;
@@ -184,12 +204,13 @@ export default function PFTable<T extends object>({
                                                         : ""}
                                             </TableCell>
                                         ))}
+
                                         {(onView || onEdit || onDelete || customActionsMenu) && (
                                             <TableCell
                                                 align="right"
                                                 sx={{
                                                     py: 1.5,
-                                                    cursor: "default", // evita conflito com clique da linha
+                                                    cursor: "default",
                                                 }}
                                                 onClick={(e) => e.stopPropagation()}
                                             >
@@ -211,7 +232,9 @@ export default function PFTable<T extends object>({
                 </Table>
             </TableContainer>
 
-            {/* === Cards (mobile) === */}
+            {/* ========================== */}
+            {/* 🔹 Cards (Mobile) */}
+            {/* ========================== */}
             <Box
                 sx={{
                     display: { xs: "flex", sm: "none" },
@@ -219,6 +242,7 @@ export default function PFTable<T extends object>({
                     gap: 1,
                 }}
             >
+                {/* 🔸 Loading */}
                 {loading &&
                     Array.from({ length: pageSize }).map((_, i) => (
                         <Card key={`skeleton-card-${i}`} variant="outlined">
@@ -230,15 +254,19 @@ export default function PFTable<T extends object>({
                         </Card>
                     ))}
 
+                {/* 🔸 Estado vazio */}
                 {!loading && rows.length === 0 && (
                     <Card variant="outlined">
                         <CardContent sx={{ textAlign: "center", color: "text.secondary" }}>
                             <Inbox size={32} style={{ marginBottom: 8 }} />
-                            <Typography variant="body2">Nenhum registro encontrado</Typography>
+                            <Typography variant="body2">
+                                Nenhum registro encontrado
+                            </Typography>
                         </CardContent>
                     </Card>
                 )}
 
+                {/* 🔸 Linhas (cards) */}
                 {!loading &&
                     rows.map((row, rowIndex) => {
                         const rowId = getRowId ? getRowId(row, rowIndex) : rowIndex;
@@ -271,6 +299,7 @@ export default function PFTable<T extends object>({
                                             </Typography>
                                         </Box>
                                     ))}
+
                                     {(onView || onEdit || onDelete || customActionsMenu) && (
                                         <>
                                             <Divider sx={{ my: 1 }} />
@@ -296,7 +325,9 @@ export default function PFTable<T extends object>({
                     })}
             </Box>
 
-            {/* Paginação */}
+            {/* ========================== */}
+            {/* 🔹 Paginação */}
+            {/* ========================== */}
             <TablePagination
                 component="div"
                 count={total}
