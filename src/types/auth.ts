@@ -1,11 +1,10 @@
 import type { ApiResponse } from "./apiResponse";
 
-//  Register
 export type UserRegisterRequest = {
   username: string;
   email: string;
   password: string;
-  role: "ADMIN" | "USER"; // pode expandir conforme sua API
+  role: UserRole;
 };
 
 export type UserRegisterData = {
@@ -62,4 +61,12 @@ export type UserLoginData = {
 // =======================
 export type LoginResponse = ApiResponse<UserLoginData> & {
   token: string;
+};
+
+export type UserRole = "ADMIN" | "MANAGER" | "EMPLOYEE";
+
+export const UserRoleLabels: Record<UserRole, string> = {
+  ADMIN: "Administrador",
+  MANAGER: "Gerente",
+  EMPLOYEE: "Funcionário",
 };

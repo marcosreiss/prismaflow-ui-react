@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@mui/material/styles";
 import { User, LogOut, Menu as MenuIcon, Sun, Moon, Building2, Building } from "lucide-react";
 import useThemeMode from "@/context/theme/useThemeMode";
+import { UserRoleLabels } from "@/types/auth"; // ✅ import dos rótulos traduzidos
 
 type PFHeaderProps = {
     onToggleSidebar?: () => void;
@@ -112,7 +113,7 @@ export default function PFHeader({ onToggleSidebar }: PFHeaderProps) {
                                     <Stack spacing={0.3}>
                                         {user?.role && (
                                             <Typography variant="caption" color="text.secondary">
-                                                <strong>Função:</strong> {user.role}
+                                                <strong>Cargo:</strong> {UserRoleLabels[user.role]}
                                             </Typography>
                                         )}
 

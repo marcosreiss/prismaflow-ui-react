@@ -1,4 +1,3 @@
-// src/contexts/AuthContext.tsx
 import type { ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
 import React, {
@@ -10,13 +9,14 @@ import React, {
   createContext,
 } from "react";
 import { useRouter } from "@/routes/hooks";
+import type { UserRole } from "@/types/auth";
 
 // Tipos extras para organização
 interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole; // ✅ agora tipado corretamente
   tenantId: string;
   tenantName: string;
   branchId: string | null;
@@ -27,7 +27,7 @@ interface DecodedToken {
   exp: number;
   sub?: string;
   email?: string;
-  role?: string;
+  role?: UserRole;
   tenantId?: string;
 }
 
