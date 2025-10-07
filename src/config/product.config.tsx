@@ -2,7 +2,7 @@ import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import type { ColumnDef } from "@/components/crud/PFTable";
 import CurrencyInput from "@/components/imask/CurrencyInput";
 import PercentInput from "@/components/imask/PercentInput";
-import type { Brand } from "@/types/brandTypes";
+import type { Brand } from "@/modules/brands/brandTypes";
 import { type Product, type ProductCategory, ProductCategoryLabels } from "@/types/productTypes";
 import { MenuItem, TextField } from "@mui/material";
 

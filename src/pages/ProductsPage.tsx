@@ -1,8 +1,8 @@
 import { productColumns, productFields } from "@/config/product.config";
 import { useProduct } from "@/hooks/useProduct";
-import { useBrand } from "@/hooks/useBrand";
+import { useBrand } from "@/modules/brands/useBrand";
 import { ProductCategoryLabels, type Product } from "@/types/productTypes";
-import type { Brand } from "@/types/brandTypes";
+import type { Brand } from "@/modules/brands/brandTypes";
 import {
     Box,
     Typography,

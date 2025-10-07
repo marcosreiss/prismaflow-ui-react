@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { Inbox } from "lucide-react";
 import PFRowActionsMenu from "./PFRowActionsMenu";
+import type { ReactNode } from "react";
 
 export type ColumnDef<T extends object> = {
     key: keyof T | string;
@@ -37,6 +38,10 @@ type PFTableProps<T extends object> = {
     onView?: (row: T) => void;
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
+    /** Callback ao clicar em uma linha */
+    onRowClick?: (id: string | number, row: T) => void;
+    customActionsMenu?: ReactNode;
+    getRowId?: (row: T, index: number) => string | number;
 };
 
 export default function PFTable<T extends object>({
@@ -51,6 +56,9 @@ export default function PFTable<T extends object>({
     onView,
     onEdit,
     onDelete,
+    onRowClick,
+    customActionsMenu,
+    getRowId,
 }: PFTableProps<T>) {
     return (
         <Paper
@@ -66,7 +74,7 @@ export default function PFTable<T extends object>({
                 sx={{
                     width: "100%",
                     overflowX: "auto",
-                    display: { xs: "none", sm: "block" }, // esconde no mobile
+                    display: { xs: "none", sm: "block" },
                 }}
             >
                 <Table
@@ -97,7 +105,7 @@ export default function PFTable<T extends object>({
                                     </Typography>
                                 </TableCell>
                             ))}
-                            {(onView || onEdit || onDelete) && (
+                            {(onView || onEdit || onDelete || customActionsMenu) && (
                                 <TableCell align="right" sx={{ py: 1 }}>
                                     <Typography
                                         variant="caption"
@@ -122,7 +130,7 @@ export default function PFTable<T extends object>({
                                             <Skeleton variant="text" />
                                         </TableCell>
                                     ))}
-                                    {(onView || onEdit || onDelete) && (
+                                    {(onView || onEdit || onDelete || customActionsMenu) && (
                                         <TableCell>
                                             <Skeleton variant="circular" width={24} height={24} />
                                         </TableCell>
@@ -150,38 +158,55 @@ export default function PFTable<T extends object>({
 
                         {/* Linhas de dados */}
                         {!loading &&
-                            rows.map((row, rowIndex) => (
-                                <TableRow
-                                    key={rowIndex}
-                                    hover
-                                    sx={{
-                                        "&:last-child td": { borderBottom: 0 },
-                                    }}
-                                >
-                                    {columns.map((col) => (
-                                        <TableCell
-                                            key={String(col.key)}
-                                            align={col.align || "left"}
-                                            sx={{ py: 1.5 }}
-                                        >
-                                            {col.render
-                                                ? col.render(row)
-                                                : col.key in row
-                                                    ? String(row[col.key as keyof T])
-                                                    : ""}
-                                        </TableCell>
-                                    ))}
-                                    {(onView || onEdit || onDelete) && (
-                                        <TableCell align="right" sx={{ py: 1.5 }}>
-                                            <PFRowActionsMenu
-                                                onView={onView ? () => onView(row) : undefined}
-                                                onEdit={onEdit ? () => onEdit(row) : undefined}
-                                                onDelete={onDelete ? () => onDelete(row) : undefined}
-                                            />
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            ))}
+                            rows.map((row, rowIndex) => {
+                                const rowId = getRowId ? getRowId(row, rowIndex) : rowIndex;
+
+                                return (
+                                    <TableRow
+                                        key={rowId}
+                                        hover
+                                        onClick={() => onRowClick?.(rowId, row)}
+                                        sx={{
+                                            cursor: onRowClick ? "pointer" : "default",
+                                            "&:last-child td": { borderBottom: 0 },
+                                        }}
+                                    >
+                                        {columns.map((col) => (
+                                            <TableCell
+                                                key={String(col.key)}
+                                                align={col.align || "left"}
+                                                sx={{ py: 1.5 }}
+                                            >
+                                                {col.render
+                                                    ? col.render(row)
+                                                    : col.key in row
+                                                        ? String(row[col.key as keyof T])
+                                                        : ""}
+                                            </TableCell>
+                                        ))}
+                                        {(onView || onEdit || onDelete || customActionsMenu) && (
+                                            <TableCell
+                                                align="right"
+                                                sx={{
+                                                    py: 1.5,
+                                                    cursor: "default", // evita conflito com clique da linha
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {customActionsMenu ? (
+                                                    customActionsMenu
+                                                ) : (
+                                                    <PFRowActionsMenu
+                                                        onView={onView ? () => onView(row) : undefined}
+                                                        onEdit={onEdit ? () => onEdit(row) : undefined}
+                                                        onDelete={onDelete ? () => onDelete(row) : undefined}
+                                                    />
+                                                )}
+                                            </TableCell>
+                                        )}
+                                    </TableRow>
+                                );
+                            })}
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -215,42 +240,60 @@ export default function PFTable<T extends object>({
                 )}
 
                 {!loading &&
-                    rows.map((row, rowIndex) => (
-                        <Card key={`card-${rowIndex}`} variant="outlined">
-                            <CardContent>
-                                {columns.map((col, j) => (
-                                    <Box key={j} sx={{ mb: 1 }}>
-                                        <Typography
-                                            variant="caption"
-                                            fontWeight={600}
-                                            color="text.secondary"
-                                        >
-                                            {col.label}
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            {col.render
-                                                ? col.render(row)
-                                                : col.key in row
-                                                    ? String(row[col.key as keyof T])
-                                                    : ""}
-                                        </Typography>
-                                    </Box>
-                                ))}
-                                {(onView || onEdit || onDelete) && (
-                                    <>
-                                        <Divider sx={{ my: 1 }} />
-                                        <Box textAlign="right">
-                                            <PFRowActionsMenu
-                                                onView={onView ? () => onView(row) : undefined}
-                                                onEdit={onEdit ? () => onEdit(row) : undefined}
-                                                onDelete={onDelete ? () => onDelete(row) : undefined}
-                                            />
+                    rows.map((row, rowIndex) => {
+                        const rowId = getRowId ? getRowId(row, rowIndex) : rowIndex;
+
+                        return (
+                            <Card
+                                key={`card-${rowIndex}`}
+                                variant="outlined"
+                                onClick={() => onRowClick?.(rowId, row)}
+                                sx={{
+                                    cursor: onRowClick ? "pointer" : "default",
+                                }}
+                            >
+                                <CardContent>
+                                    {columns.map((col, j) => (
+                                        <Box key={j} sx={{ mb: 1 }}>
+                                            <Typography
+                                                variant="caption"
+                                                fontWeight={600}
+                                                color="text.secondary"
+                                            >
+                                                {col.label}
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                {col.render
+                                                    ? col.render(row)
+                                                    : col.key in row
+                                                        ? String(row[col.key as keyof T])
+                                                        : ""}
+                                            </Typography>
                                         </Box>
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-                    ))}
+                                    ))}
+                                    {(onView || onEdit || onDelete || customActionsMenu) && (
+                                        <>
+                                            <Divider sx={{ my: 1 }} />
+                                            <Box
+                                                textAlign="right"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {customActionsMenu ? (
+                                                    customActionsMenu
+                                                ) : (
+                                                    <PFRowActionsMenu
+                                                        onView={onView ? () => onView(row) : undefined}
+                                                        onEdit={onEdit ? () => onEdit(row) : undefined}
+                                                        onDelete={onDelete ? () => onDelete(row) : undefined}
+                                                    />
+                                                )}
+                                            </Box>
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
             </Box>
 
             {/* Paginação */}

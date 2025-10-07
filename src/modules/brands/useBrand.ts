@@ -6,7 +6,7 @@ import type {
   BrandResponse,
   CreateBrandPayload,
   UpdateBrandPayload,
-} from "@/types/brandTypes";
+} from "@/modules/brands/brandTypes";
 import type { ApiResponse } from "@/types/apiResponse";
 import baseApi from "@/services/config/api";
 

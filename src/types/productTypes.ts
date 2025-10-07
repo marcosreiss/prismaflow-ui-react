@@ -1,4 +1,4 @@
-import type { Brand } from "./brandTypes";
+import type { Brand } from "../modules/brands/brandTypes";
 
 export type ProductCategory = "FRAME" | "LENS" | "ACCESSORY";
 

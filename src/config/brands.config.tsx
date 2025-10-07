@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@/components/crud/PFTable";
-import type { Brand } from "@/types/brandTypes";
+import type { Brand } from "@/modules/brands/brandTypes";
 import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import { TextField } from "@mui/material";
 

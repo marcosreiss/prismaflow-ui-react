@@ -1,6 +1,6 @@
 import { brandColumns, brandFields } from "@/config/brands.config";
-import { useBrand } from "@/hooks/useBrand";
-import type { Brand } from "@/types/brandTypes";
+import { useBrand } from "@/modules/brands/useBrand";
+import type { Brand } from "@/modules/brands/brandTypes";
 import { Box, Typography, Chip, Divider } from "@mui/material";
 import { CrudPage } from "./CrudPage";
 
