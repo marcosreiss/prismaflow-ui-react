@@ -1,0 +1,818 @@
+{
+    "info": {
+        "name": "PrismaFlow API - Node",
+        "_postman_id": "b0d1c260-bbfe-4cbb-84b2-5a2ff7fa0a33",
+        "description": "Coleção de rotas principais da API PrismaFlow (Node.js + Express + Prisma).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Registrar administrador (tenant + branch + admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/auth/register-admin",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"tenantName\": \"Ótica Vision\",\n  \"branchName\": \"Matriz São Luís\",\n  \"name\": \"Diogo França\",\n  \"email\": \"diogo@gmail.com\",\n  \"password\": \"123456\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login (gerar token JWT)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/auth/login",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"diogo@gmail.com\",\n  \"password\": \"123456\"\n}"
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "  const json = pm.response.json();",
+                                    "  if (json.token) pm.environment.set('token', json.token);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Alterar senha (usuário autenticado)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/auth/change-password",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"currentPassword\": \"123456\",\n  \"newPassword\": \"novaSenha789\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Registrar usuário (Manager ou Employee)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/auth/register-user",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Maria Oliveira\",\n  \"email\": \"maria@otica.com\",\n  \"password\": \"123456\",\n  \"role\": \"MANAGER\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"branchId\": \"{{branchId}}\"\n}"
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Branches",
+            "item": [
+                {
+                    "name": "Criar nova filial",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/branches",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Unidade Centro\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Listar filiais (somente ADMIN)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/branches?page=1&limit=10"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "Criar novo usuário",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/users",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Gerente A\",\n  \"email\": \"gerente@otica.com\",\n  \"password\": \"123456\",\n  \"role\": \"MANAGER\",\n  \"branchId\": \"<id_da_branch>\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Listar usuários (ADMIN / MANAGER)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/users?page=1&limit=10"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Brands",
+            "item": [
+                {
+                    "name": "Criar nova marca",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/brands",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Ray-Ban\",\n  \"isActive\": true\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Listar marcas (paginado + busca opcional)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/brands?page=1&limit=10&search=Ray"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Buscar marca por ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/brands/1"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Atualizar marca",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/brands/1",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Oakley\",\n  \"isActive\": true\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Excluir marca",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/brands/1"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Products",
+            "item": [
+                {
+                    "name": "Criar novo produto",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/products",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Armação Classic\",\n  \"description\": \"Armação leve em acetato\",\n  \"costPrice\": 120.50,\n  \"markup\": 2.0,\n  \"salePrice\": 241.00,\n  \"stockQuantity\": 50,\n  \"minimumStock\": 10,\n  \"category\": \"FRAME\",\n  \"brandId\": 1,\n  \"branchId\": \"br_01j9xyz72h\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Listar produtos (paginado + busca + filtro categoria)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/products?page=1&limit=10&search=armação&category=FRAME"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Buscar produto por ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/products/1"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Atualizar produto",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/products/1",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Lente Antirreflexo Premium\",\n  \"description\": \"Lente com filtro de luz azul\",\n  \"salePrice\": 320.00,\n  \"stockQuantity\": 25\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Excluir produto",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/products/1"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Optical Services",
+            "item": [
+                {
+                    "name": "Criar novo serviço ótico",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/optical-services",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Ajuste de Armação\",\n  \"description\": \"Serviço de alinhamento e ajuste em armações de óculos.\",\n  \"price\": 50.00,\n  \"branchId\": \"br_01j9xyz72h\",\n  \"isActive\": true\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Listar serviços (paginado + busca opcional)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/optical-services?page=1&limit=10&search=ajuste"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Buscar serviço por ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/optical-services/1"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Atualizar serviço ótico",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/optical-services/1",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Troca de Lentes\",\n  \"description\": \"Substituição de lentes em armações existentes.\",\n  \"price\": 80.00,\n  \"isActive\": true\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Excluir serviço ótico",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/optical-services/1"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Clients & Prescriptions",
+            "item": [
+                {
+                    "name": "Clients",
+                    "item": [
+                        {
+                            "name": "Criar novo cliente",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/clients",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"Maria Oliveira\",\n  \"nickname\": \"Maria O.\",\n  \"cpf\": \"12345678900\",\n  \"bornDate\": \"1990-05-12\",\n  \"gender\": \"FEMALE\",\n  \"email\": \"maria@otica.com\",\n  \"phone01\": \"5598999999999\",\n  \"street\": \"Av. dos Holandeses\",\n  \"city\": \"São Luís\",\n  \"uf\": \"MA\",\n  \"branchId\": \"<id_da_branch>\"\n}"
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Atualizar cliente existente",
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/clients/1",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"maria.oliveira@otica.com\",\n  \"phone02\": \"5598988888888\",\n  \"isBlacklisted\": false\n}"
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Buscar cliente por ID",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/clients/1"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Listar clientes (com paginação e busca por nome)",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/clients?page=1&limit=10&search=Maria"
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Prescriptions",
+                    "item": [
+                        {
+                            "name": "Criar nova receita",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/prescriptions",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"clientId\": 1,\n  \"prescriptionDate\": \"2025-10-04\",\n  \"doctorName\": \"Dr. Paulo Medeiros\",\n  \"crm\": \"CRM-MA 12345\",\n  \"odSpherical\": \"-1.25\",\n  \"odCylindrical\": \"-0.75\",\n  \"odAxis\": \"180\",\n  \"oeSpherical\": \"-1.00\",\n  \"oeCylindrical\": \"-0.50\",\n  \"oeAxis\": \"170\",\n  \"additionRight\": \"+2.00\",\n  \"additionLeft\": \"+1.75\",\n  \"opticalCenterRight\": \"31\",\n  \"opticalCenterLeft\": \"31\",\n  \"branchId\": \"<id_da_branch>\"\n}"
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Atualizar receita existente",
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/prescriptions/1",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"doctorName\": \"Dr. Carlos Silva\",\n  \"additionRight\": \"+2.25\",\n  \"opticalCenterRight\": \"32\"\n}"
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Buscar receita por ID",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/prescriptions/1"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Listar receitas (com paginação e filtro por cliente)",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/prescriptions?page=1&limit=10&clientId=1"
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Sales",
+            "item": [
+                {
+                    "name": "Criar nova venda",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/sales",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"clientId\": 1,\n  \"subtotal\": 500.00,\n  \"discount\": 50.00,\n  \"total\": 450.00,\n  \"notes\": \"Venda à vista com desconto\",\n  \"branchId\": \"br_01j9xyz72h\",\n  \"productItems\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2,\n      \"frameDetails\": {\n        \"frameMaterialType\": \"ACETATE\",\n        \"reference\": \"RB1234\",\n        \"color\": \"Preto\"\n      }\n    }\n  ],\n  \"serviceItems\": [\n    { \"serviceId\": 1 }\n  ],\n  \"protocol\": {\n    \"recordNumber\": \"A123\",\n    \"book\": \"1\",\n    \"page\": 20,\n    \"os\": \"OS001\"\n  }\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Atualizar venda existente",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/sales/1",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"subtotal\": 520.00,\n  \"discount\": 20.00,\n  \"total\": 500.00,\n  \"notes\": \"Venda ajustada com novo desconto\",\n  \"productItems\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 3,\n      \"frameDetails\": {\n        \"frameMaterialType\": \"ACETATE\",\n        \"reference\": \"RB1234\",\n        \"color\": \"Azul\"\n      }\n    }\n  ],\n  \"serviceItems\": [\n    { \"serviceId\": 1 },\n    { \"serviceId\": 2 }\n  ],\n  \"protocol\": {\n    \"recordNumber\": \"A123\",\n    \"book\": \"1\",\n    \"page\": 21,\n    \"os\": \"OS001\"\n  }\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Listar vendas (paginado + filtro opcional por cliente)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/sales?page=1&limit=10&clientId=1"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Buscar venda por ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/sales/1"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Excluir venda",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/sales/1"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Payments",
+            "item": [
+                {
+                    "name": "Criar novo pagamento",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/payments",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"saleId\": 1,\n  \"method\": \"CREDIT\",\n  \"status\": \"PENDING\",\n  \"total\": 450.00,\n  \"discount\": 50.00,\n  \"downPayment\": 100.00,\n  \"installmentsTotal\": 3,\n  \"paidAmount\": 0,\n  \"installmentsPaid\": 0,\n  \"firstDueDate\": \"2025-10-10T00:00:00.000Z\",\n  \"branchId\": \"br_01j9xyz72h\",\n  \"tenantId\": \"ten_01j8b32v7x\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Atualizar pagamento existente",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/payments/1",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"method\": \"PIX\",\n  \"status\": \"PENDING\",\n  \"total\": 500.00,\n  \"discount\": 0,\n  \"downPayment\": 150.00,\n  \"installmentsTotal\": 2,\n  \"paidAmount\": 150.00,\n  \"installmentsPaid\": 1,\n  \"lastPaymentAt\": \"2025-10-12T00:00:00.000Z\",\n  \"firstDueDate\": \"2025-10-10T00:00:00.000Z\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Listar pagamentos (paginado + filtro opcional por status)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/payments?page=1&limit=10&status=PENDING"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Buscar pagamento por ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/payments/1"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Buscar status do pagamento por saleId",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/payments/by-sale/1"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Excluir pagamento",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/payments/1"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}
