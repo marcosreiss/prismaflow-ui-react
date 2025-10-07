@@ -147,6 +147,10 @@ export default function BrandsPage() {
                     handleOpenDrawer("view", brand);
                     refetch();
                 }}
+                onCreateNew={() => {
+                    setSelectedBrand(null);
+                    setDrawerMode("create");
+                }}
             />
 
             {/* Confirmação de exclusão */}

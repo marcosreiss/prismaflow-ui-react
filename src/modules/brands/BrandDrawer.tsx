@@ -10,7 +10,7 @@ import {
     Stack,
 } from "@mui/material";
 import { X, Pencil, Trash2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import type { Brand, CreateBrandPayload, UpdateBrandPayload } from "./brandTypes";
 import { useCreateBrand, useUpdateBrand } from "./useBrand";
@@ -32,6 +32,7 @@ interface BrandDrawerProps {
     onDelete: (brand: Brand) => void;
     onCreated: (brand: Brand) => void;
     onUpdated: (brand: Brand) => void;
+    onCreateNew: () => void;
 }
 
 // ==========================
@@ -46,6 +47,7 @@ export default function BrandDrawer({
     onDelete,
     onCreated,
     onUpdated,
+    onCreateNew
 }: BrandDrawerProps) {
     // ==========================
     // 🔹 Formulário (React Hook Form)
@@ -53,7 +55,7 @@ export default function BrandDrawer({
     const methods = useForm<{ name: string; isActive: boolean }>({
         defaultValues: { name: "", isActive: true },
     });
-
+    const inputRef = useRef<HTMLInputElement | null>(null);
     const { addNotification } = useNotification();
 
     // ==========================
@@ -72,6 +74,14 @@ export default function BrandDrawer({
     // ==========================
     // 🔹 Efeitos
     // ==========================
+
+    // foca no input sempre que abre em modo create/edit
+    useEffect(() => {
+        if ((isCreate || isEdit) && open) {
+            inputRef.current?.focus();
+        }
+    }, [isCreate, isEdit, open]);
+
     // Resetar form sempre que abrir ou trocar modo
     useEffect(() => {
         if (!open) {
@@ -204,8 +214,8 @@ export default function BrandDrawer({
                             variant="contained"
                             fullWidth
                             onClick={() => {
-                                methods.reset({ name: "" });
-                                onEdit();
+                                methods.reset({ name: "", isActive: true });
+                                onCreateNew(); // 🔹 dispara o callback do pai
                             }}
                         >
                             Adicionar nova marca
@@ -227,6 +237,7 @@ export default function BrandDrawer({
                                     </Typography>
                                     <TextField
                                         fullWidth
+                                        inputRef={inputRef}
                                         size="small"
                                         {...methods.register("name", { required: true })}
                                         placeholder="Ex: Ray-Ban"
