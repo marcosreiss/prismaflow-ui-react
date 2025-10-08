@@ -1,5 +1,4 @@
 import { useFormContext, Controller } from "react-hook-form";
-import type { Sale } from "@/types/saleTypes";
 import { FrameMaterialTypeLabels } from "@/types/frameDetailsTypes";
 import {
     Paper,
@@ -12,6 +11,7 @@ import {
     MenuItem,
 } from "@mui/material";
 import { Glasses } from "lucide-react";
+import type { Sale } from "@/modules/sales/types/salesTypes";
 
 interface FrameDetailsFormProps {
     index: number;
@@ -21,8 +21,14 @@ export default function FrameDetailsForm({ index }: FrameDetailsFormProps) {
     const { control } = useFormContext<Sale>();
 
     return (
-        <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
-            <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Paper
+            variant="outlined"
+            sx={{ p: 2, mt: 1, bgcolor: "background.paper" }}
+        >
+            <Typography
+                variant="subtitle2"
+                sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
+            >
                 <Glasses size={18} />
                 Detalhes da Armação
             </Typography>
@@ -65,7 +71,7 @@ export default function FrameDetailsForm({ index }: FrameDetailsFormProps) {
                 <Controller
                     name={`productItems.${index}.frameDetails.material`}
                     control={control}
-                    defaultValue="ACETATE" // ✅ VALOR PADRÃO OBRIGATÓRIO
+                    defaultValue="ACETATE"
                     rules={{ required: "O material é obrigatório" }}
                     render={({ field, fieldState: { error } }) => (
                         <FormControl fullWidth size="small" error={!!error}>
@@ -73,7 +79,7 @@ export default function FrameDetailsForm({ index }: FrameDetailsFormProps) {
                             <Select
                                 {...field}
                                 label="Tipo de Material *"
-                                value={field.value || "ACETATE"} // ✅ Garante valor sempre definido
+                                value={field.value ?? "ACETATE"}
                             >
                                 {Object.entries(FrameMaterialTypeLabels).map(([value, label]) => (
                                     <MenuItem key={value} value={value}>

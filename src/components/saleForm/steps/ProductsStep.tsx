@@ -1,25 +1,24 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Controller } from "react-hook-form";
-// 1. Importar Divider
+import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import { Box, Typography, TextField, Paper, Divider } from "@mui/material";
 import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import ProductSelector from "../ProductSelector";
-import SaleItemsTable from "../SaleItemsTable";
-import ServicesTable from "../serviceTable";
+import SaleItemsTable from "../OldSaleItemsTable";
+import ServicesTable from "../../../modules/sales/components/productsStep/serviceTable";
 import type { Product } from "@/modules/products/types/productTypes";
-import type { Service } from "@/types/serviceTypes";
-import ServiceSelector from "../serviceSelector";
+import ServiceSelector from "../../../modules/sales/components/productsStep/serviceSelector";
+import type { OpticalService } from "@/types/opticalServiceTypes";
+import type { Sale } from "@/types/saleTypes";
 
 interface ProductsStepProps {
-    control: any;
-    errors: any;
-    products: Product[];
-    services: Service[];
-    isLoadingProducts: boolean;
-    isLoadingServices: boolean;
-    onAddProduct: (product: Product) => void;
-    onAddService: (service: Service) => void;
-    isLoading: boolean;
+  control: Control<Sale>;
+  errors: FieldErrors<Sale>;
+  products: Product[];
+  services: OpticalService[];
+  isLoadingProducts: boolean;
+  isLoadingServices: boolean;
+  onAddProduct: (product: Product) => void;
+  onAddService: (service: OpticalService) => void;
+  isLoading: boolean;
 }
 
 export default function ProductsStep({
@@ -35,15 +34,14 @@ export default function ProductsStep({
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-            {/* Seção de Produtos - Mais Visível */}
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ShoppingCart size={24} color="#1976d2" /> {/* Ícone com cor */}
+                    <ShoppingCart size={24} color="#1976d2" /> 
                     <Typography variant="h6">
                         Produtos
                     </Typography>
                 </Box>
-                <Divider sx={{ my: 2 }} /> {/* Divisória */}
+                <Divider sx={{ my: 2 }} /> 
 
                 <ProductSelector
                     products={products}
@@ -52,22 +50,20 @@ export default function ProductsStep({
                     disabled={isLoading}
                 />
 
-                {/* Subtítulo para a tabela */}
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
                     Itens Adicionados
                 </Typography>
                 <SaleItemsTable />
             </Paper>
 
-            {/* Seção de Serviços - Mais Visível */}
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Wrench size={24} color="#1976d2" /> {/* Ícone com cor */}
+                    <Wrench size={24} color="#1976d2" /> 
                     <Typography variant="h6">
                         Serviços
                     </Typography>
                 </Box>
-                <Divider sx={{ my: 2 }} /> {/* Divisória */}
+                <Divider sx={{ my: 2 }} /> 
 
                 <ServiceSelector
                     services={services}
@@ -76,14 +72,12 @@ export default function ProductsStep({
                     disabled={isLoading}
                 />
 
-                {/* Subtítulo para a tabela */}
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
                     Serviços Adicionados
                 </Typography>
                 <ServicesTable />
             </Paper>
 
-            {/* Observações - Mais Visível */}
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <FileText size={24} color="#1976d2" /> {/* Ícone com cor */}
@@ -91,7 +85,7 @@ export default function ProductsStep({
                         Observações
                     </Typography>
                 </Box>
-                <Divider sx={{ my: 2 }} /> {/* Divisória */}
+                <Divider sx={{ my: 2 }} /> 
 
                 <Controller
                     name="notes"

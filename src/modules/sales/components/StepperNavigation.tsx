@@ -6,14 +6,26 @@ interface StepperNavigationProps {
     onStepChange: (index: number) => void;
 }
 
-export default function StepperNavigation({ steps, activeStep, onStepChange }: StepperNavigationProps) {
+export default function StepperNavigation({
+    steps,
+    activeStep,
+    onStepChange,
+}: StepperNavigationProps) {
     return (
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
             {steps.map((label, index) => (
                 <Step
                     key={label}
+                    completed={index < activeStep}
+                    active={index === activeStep}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => onStepChange(index)}
-                    sx={{ cursor: "pointer" }}
+                    onKeyDown={(e) => e.key === "Enter" && onStepChange(index)}
+                    sx={{
+                        cursor: "pointer",
+                        "&:hover .MuiStepLabel-label": { opacity: 0.8 },
+                    }}
                 >
                     <StepLabel>{label}</StepLabel>
                 </Step>

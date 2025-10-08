@@ -16,7 +16,7 @@ const ClientPrescriptionsPage = lazy(() => import('@/modules/clients/pages/Clien
 
 
 const SalesPage = lazy(() => import('@/pages/SalePage'));
-const SalesForm = lazy(() => import('@/pages/SalesFormPage'));
+const SalesForm = lazy(() => import('@/modules/sales/SalesFormPage'));
 const SalesDetailsPage = lazy(() => import('@/pages/salesDetailsPage'));
 
 
@@ -56,7 +56,7 @@ export function PrivateRouter() {
 
                 { path: 'sales', element: <SalesPage /> },
                 { path: 'sales/new', element: <SalesForm /> }, // ✅ CRIAÇÃO
-                { path: 'sales/edit/:id', element: <SalesForm mode="edit" /> }, // ✅ EDIÇÃO
+                { path: 'sales/edit/:id', element: <SalesForm /> }, // ✅ EDIÇÃO
                 { path: 'sales/:id', element: <SalesDetailsPage /> },
 
                 { path: 'payments', element: <PaymentPage /> },

@@ -4,6 +4,7 @@
 export type Sale = {
   id: number;
   clientId: number;
+  prescriptionId?: number | null;
   subtotal: number;
   discount: number;
   total: number;
@@ -14,8 +15,9 @@ export type Sale = {
   createdAt: string;
   updatedAt: string;
 
-  // 🔹 Relações diretas
+  // 🔹 Relações
   client?: ClientSummary | null;
+  prescription?: PrescriptionSummary | null;
   productItems?: SaleProductItem[];
   serviceItems?: SaleServiceItem[];
   payment?: PaymentSummary | null;
@@ -81,11 +83,17 @@ export type FrameDetailsSummary = {
   color?: string | null;
 };
 
+export type PrescriptionSummary = {
+  id: number;
+  doctorName?: string | null;
+  prescriptionDate: string;
+};
+
 export type PaymentSummary = {
   id: number;
   total: number;
   status: PaymentStatus;
-  method: PaymentMethod;
+  method?: PaymentMethod | null;
 };
 
 // ==============================
@@ -119,18 +127,14 @@ export const PaymentStatusLabels: Record<PaymentStatus, string> = {
 // ==============================
 export type CreateSalePayload = {
   clientId: number;
-  productItems?: {
-    productId: number;
-    quantity: number;
-  }[];
-  serviceItems?: {
-    serviceId: number;
-  }[];
+  prescriptionId?: number | null;
+  productItems?: { productId: number; quantity: number }[];
+  serviceItems?: { serviceId: number }[];
   subtotal?: number;
   discount?: number;
   total?: number;
   notes?: string;
-  branchId: string;
+  protocol?: CreateProtocolPayload | null;
 };
 
 export type UpdateSalePayload = Partial<CreateSalePayload> & {
@@ -153,4 +157,12 @@ export type SaleDetails = Sale & {
   productItems: SaleProductItem[];
   serviceItems: SaleServiceItem[];
   payment?: PaymentSummary | null;
+};
+
+export type CreateProtocolPayload = {
+  recordNumber?: string | null;
+  book?: string | null;
+  page?: number | null;
+  os?: string | null;
+  isActive?: boolean; // default true
 };

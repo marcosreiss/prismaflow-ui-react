@@ -95,3 +95,13 @@ export type UpdateClientPayload = Partial<CreateClientPayload> & {
 // ==============================
 export type ClientsResponse = ApiResponse<PaginatedResponse<Client>>;
 export type ClientResponse = ApiResponse<Client>;
+
+// ===========================
+// 🔹 SELECT CLIENT TYPE
+// ===========================
+export type ClientSelectItem = {
+  id: number;
+  name: string;
+};
+
+export type ClientSelectResponse = ApiResponse<ClientSelectItem[]>;

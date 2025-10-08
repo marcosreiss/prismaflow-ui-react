@@ -83,6 +83,7 @@ export default function ProductSelector({
     };
 
     // CORREÇÃO: Função para renderizar opções sem problemas com key
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const renderOption = (props: any, product: Product) => {
         if (!product) return null;
 
