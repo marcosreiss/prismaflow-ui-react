@@ -11,10 +11,10 @@ import type { Product } from "@/modules/products/types/productTypes";
 import type { OpticalService } from "@/types/opticalServiceTypes";
 import type { Control, FieldErrors } from "react-hook-form";
 import type { Sale } from "../../types/salesTypes";
-import ProductSelector from "@/components/saleForm/ProductSelector";
-import SaleItemsTable from "@/components/saleForm/SaleItemsTable";
+import SaleItemsTable from "@/components/saleForm/OldSaleItemsTable";
 import ServiceSelector from "@/components/saleForm/serviceSelector";
 import ServicesTable from "@/components/saleForm/serviceTable";
+import ProductSelector from "./ProductSelector";
 
 interface ProductsStepProps {
     control: Control<Sale>;

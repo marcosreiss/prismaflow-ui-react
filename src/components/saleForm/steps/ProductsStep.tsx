@@ -2,7 +2,7 @@ import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import { Box, Typography, TextField, Paper, Divider } from "@mui/material";
 import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import ProductSelector from "../ProductSelector";
-import SaleItemsTable from "../SaleItemsTable";
+import SaleItemsTable from "../OldSaleItemsTable";
 import ServicesTable from "../serviceTable";
 import type { Product } from "@/modules/products/types/productTypes";
 import ServiceSelector from "../serviceSelector";
