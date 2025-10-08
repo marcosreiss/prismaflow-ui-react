@@ -134,7 +134,7 @@ export type CreateSalePayload = {
   discount?: number;
   total?: number;
   notes?: string;
-  branchId: string;
+  protocol?: CreateProtocolPayload | null;
 };
 
 export type UpdateSalePayload = Partial<CreateSalePayload> & {
@@ -157,4 +157,12 @@ export type SaleDetails = Sale & {
   productItems: SaleProductItem[];
   serviceItems: SaleServiceItem[];
   payment?: PaymentSummary | null;
+};
+
+export type CreateProtocolPayload = {
+  recordNumber?: string | null;
+  book?: string | null;
+  page?: number | null;
+  os?: string | null;
+  isActive?: boolean; // default true
 };
