@@ -5,7 +5,7 @@ export const navData: NavItem[] = [
   { title: "Marcas", path: "/brands", icon: "Tag" },
   { title: "Produtos", path: "/products", icon: "ShoppingCart" },
   { title: "Serviços", path: "/services", icon: "Box" },
-  { title: "Clientes", path: "/customers", icon: "Users" },
+  { title: "Clientes", path: "/clients", icon: "Users" },
   { title: "Vendas", path: "/sales", icon: "DollarSign" },
   { title: "Pagamentos", path: "/payments", icon: "CreditCard" },
 ];

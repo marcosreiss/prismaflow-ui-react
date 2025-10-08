@@ -71,6 +71,7 @@ export type CreateClientPayload = {
   reference01?: string | null;
   reference02?: string | null;
   reference03?: string | null;
+  isBlacklisted?: boolean;
 };
 
 export type UpdateClientPayload = Partial<CreateClientPayload> & {
