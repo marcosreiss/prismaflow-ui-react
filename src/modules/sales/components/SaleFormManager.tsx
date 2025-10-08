@@ -1,17 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from "react";
 import { FormProvider } from "react-hook-form";
 import { Box, Paper, Divider, Alert } from "@mui/material";
-import { useNotification } from "@/context/NotificationContext";
 import { useNavigate } from "react-router-dom";
+
+import { useNotification } from "@/context/NotificationContext";
 import { mapSaleToPayload, sanitizeSaleData } from "@/utils/sales/salePayloadMapper";
 import { canSubmitSale } from "@/utils/sales/saleValidators";
 import { getSummaryCalculations } from "@/utils/sales/calculations";
 
-import { useSale } from "@/hooks/useSale";
-import { useCustomer } from "@/hooks/useCustomer";
-import { useProduct } from "@/hooks/useProduct";
-import { useService } from "@/hooks/useService";
+// ⚙️ Hooks no padrão separado por operação
+
+import { useCreateSale, useUpdateSale } from "../hooks/useSales";
+
 import { useSaleForm } from "@/hooks/useSaleForm";
 
 import SaleFormHeader from "./SaleFormHeader";
@@ -19,19 +19,24 @@ import StepperNavigation from "./StepperNavigation";
 import SaleSummary from "./SaleSummary";
 import SaleFormActions from "./SaleFormActions";
 
-// ⚠️ usando seus componentes atuais
-import ClientStep from "../../../components/saleForm/steps/ClientStep";
-import ProductsStep from "../../../components/saleForm/steps/ProductsStep";
-import ReviewStep from "../../../components/saleForm/steps/ReviewStep";
+// Steps
 
-import type { Sale } from "@/types/saleTypes";
-import ProtocolForm from "../../../components/saleForm/protocol/ProtocolForm";
+import type { Sale, CreateSalePayload } from "../types/salesTypes";
+import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
+import { useGetProducts } from "@/modules/products/hooks/useProduct";
+import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
+import ClientStep from "./ClientStep";
+import ProductsStep from "./productsStep/ProductsStep";
+import ProtocolStep from "./ProtocolStep";
+import ReviewStep from "./ReviewStep";
+import type { AxiosError } from "axios";
+import type { ApiResponse } from "@/types/apiResponse";
 
 const steps = ["Cliente", "Produtos", "Protocolo", "Revisão"];
 
 interface SaleFormManagerProps {
     mode: "create" | "edit";
-    existingSale?: Sale | null;
+    existingSale?: Sale | null; // quando edição, virá do detalhe fora deste componente
 }
 
 export default function SaleFormManager({ mode, existingSale }: SaleFormManagerProps) {
@@ -39,18 +44,33 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
     const { addNotification } = useNotification();
     const isEditMode = mode === "edit";
 
-    // dados externos
-    const { list: { data: customers, isLoading: isLoadingCustomers } } = useCustomer(null);
-    const { list: { data: products, isLoading: isLoadingProducts } } = useProduct(null);
-    const { list } = useService();
-    const services = list.data;
-    const isLoadingServices = list.isLoading;
+    // Dados de apoio para seleção de itens
+    const {
+        data: productsResponse,
+        isLoading: isLoadingProducts,
+    } = useGetProducts({
+        page: 1,
+        limit: 1000, // pode ajustar se quiser paginação
+    });
 
-    // API create/update
-    const { create, creating, update, updating } = useSale(isEditMode ? existingSale?.id ?? null : null);
-    const isLoading = creating || updating;
+    const {
+        data: servicesResponse,
+        isLoading: isLoadingServices,
+    } = useGetOpticalServices({
+        page: 1,
+        limit: 1000,
+    });
 
-    // form
+    const products = productsResponse?.data!.content || [];
+    const services = servicesResponse?.data!.content || [];
+
+
+    // Mutations separadas
+    const createSale = useCreateSale();
+    const updateSale = useUpdateSale();
+    const isSubmitting = createSale.isPending || updateSale.isPending;
+
+    // Form Controller (estado global do formulário desta tela)
     const {
         methods,
         control,
@@ -59,54 +79,63 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
         handleAddProduct,
         handleNext,
         handleBack,
-        watchedProductItems,
-        watchedDiscount,
-        watchedClient,
         resetForm,
     } = useSaleForm();
 
-    const { handleSubmit, formState: { errors } } = methods;
+    const {
+        handleSubmit,
+        formState: { errors },
+        watch,
+        setValue,
+        getValues,
+    } = methods;
 
-    // hidratar form no modo edição (somente quando a venda chega)
+    // watchers (para review/summary)
+    const watchedProductItems = watch("productItems") ?? [];
+    const watchedServiceItems = watch("serviceItems") ?? [];
+    const watchedDiscount = watch("discount") ?? 0;
+    const watchedClient = watch("client") ?? null;
+    const watchedProtocol = watch("protocol") ?? undefined;
+
+    // Hidratar o formulário no modo edição
     useEffect(() => {
         if (!isEditMode || !existingSale) return;
-        const current = methods.getValues();
-        if (!current.client && existingSale) {
-            // se você já tiver um mapper para API -> form, chame aqui.
-            // Ex.: resetForm(mapSaleApiToFormData(existingSale));
-            resetForm(existingSale as any);
-        }
+        // Aqui é o lugar para um mapper dedicado API -> form se você tiver (recomendado)
+        resetForm(existingSale as unknown as CreateSalePayload);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditMode, existingSale, resetForm]);
+    }, [isEditMode, existingSale]);
 
-    // cálculos
+    // Cálculos do resumo
     const summaryCalculations = getSummaryCalculations(watchedProductItems, watchedDiscount);
 
-    // navegação
+    // Navegação entre steps
     const handleStepNext = () => handleNext();
     const handleStepChange = (newStep: number) => setActiveStep(newStep);
 
-    // adicionar serviço (⚠️ necessário para o ProductsStep)
-    const handleAddService = (service: any) => {
-        const currentServices = methods.getValues("serviceItems") || [];
-        methods.setValue(
-            "serviceItems",
-            [...currentServices, { service }],
-            { shouldValidate: true, shouldDirty: true }
-        );
+    // Adicionar serviço (mantendo padrão de itens no form)
+    const handleAddService = (service: OpticalService) => {
+        const current = getValues("serviceItems") || [];
+        setValue("serviceItems", [...current, { service }], {
+            shouldValidate: true,
+            shouldDirty: true,
+        });
     };
 
+
+    // Rascunho
     const handleSaveDraft = () => {
-        const data = methods.getValues();
-        const sanitizedData = sanitizeSaleData(data);
-        console.log("Rascunho salvo:", sanitizedData);
+        // const data = getValues();
+        // const sanitizedData = sanitizeSaleData(data);
+        // Você pode persistir num storage/localDraftsService aqui
+        // console.log("Rascunho salvo:", sanitizedData);
         addNotification("Rascunho salvo com sucesso!", "info");
     };
 
-    const onSubmit = async (data: Sale) => {
+    // Submit
+    const onSubmit = async (data: CreateSalePayload) => {
         const finalValidation = canSubmitSale(data);
         if (!finalValidation.isValid) {
-            finalValidation.errors.forEach(error => addNotification(error, "warning"));
+            finalValidation.errors.forEach((e) => addNotification(e, "warning"));
             return;
         }
 
@@ -115,35 +144,35 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
             const payload = mapSaleToPayload(sanitizedData, isEditMode);
 
             if (isEditMode && existingSale?.id) {
-                await update({ id: existingSale.id, data: payload as any });
+                await updateSale.mutateAsync({
+                    ...payload,
+                    id: existingSale.id,
+                });
                 addNotification("Venda atualizada com sucesso!", "success");
             } else {
-                await create(payload as any);
+                await createSale.mutateAsync(payload);
                 addNotification("Venda criada com sucesso!", "success");
             }
 
             navigate("/sales");
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as AxiosError<ApiResponse<null>>;
             const errorMessage =
-                error.response?.data?.message ||
+                error.response?.data?.message ??
                 `Erro ao ${isEditMode ? "atualizar" : "criar"} a venda. Tente novamente.`;
             addNotification(errorMessage, "error");
         }
     };
 
-    // render do step
+    // Render dos steps
     const renderStepContent = (step: number) => {
         const stepProps = { control, errors };
 
         switch (step) {
             case 0:
-                return (
-                    <ClientStep
-                        {...stepProps}
-                        customers={customers || []}
-                        isLoadingCustomers={isLoadingCustomers}
-                    />
-                );
+                // ClientStep usa useSelectClients internamente (padrão do projeto)
+                return <ClientStep {...stepProps} />;
+
             case 1:
                 return (
                     <ProductsStep
@@ -154,21 +183,28 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
                         isLoadingServices={isLoadingServices}
                         onAddProduct={handleAddProduct}
                         onAddService={handleAddService}
-                        isLoading={isLoading}
+                        isLoading={isSubmitting}
                     />
                 );
+
             case 2:
-                return <ProtocolForm />; {/* ✅ removeu {...stepProps} */ }
+                return <ProtocolStep />;
+
             case 3:
                 return (
                     <ReviewStep
-                        client={watchedClient}
+                        client={watchedClient ?? undefined}
+                        // Se você guardar prescription object no form, passe aqui. Se guarda só o id, deixe sem.
+                        // prescription={watchedPrescription ?? null}
                         productItems={watchedProductItems}
+                        serviceItems={watchedServiceItems}
+                        protocol={watchedProtocol}
                         subtotal={summaryCalculations.subtotal}
                         discount={summaryCalculations.discount}
                         total={summaryCalculations.total}
                     />
                 );
+
             default:
                 return <Alert severity="error">Etapa não encontrada.</Alert>;
         }
@@ -193,14 +229,16 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
 
                 {errors.root && (
                     <Alert severity="error" sx={{ mb: 2 }}>
-                        {errors.root.message}
+                        {errors.root.message as string}
                     </Alert>
                 )}
 
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Box sx={{ display: "flex", flexDirection: { xs: "column", lg: "row" }, gap: 4 }}>
+                        {/* Coluna principal */}
                         <Box sx={{ flex: 2 }}>{renderStepContent(activeStep)}</Box>
 
+                        {/* Lateral: resumo */}
                         {activeStep > 0 && (
                             <Box sx={{ flex: 1, minWidth: 300 }}>
                                 <SaleSummary
@@ -214,7 +252,7 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
                     <SaleFormActions
                         activeStep={activeStep}
                         totalSteps={steps.length}
-                        isLoading={isLoading}
+                        isLoading={isSubmitting}
                         hasProducts={watchedProductItems.length > 0}
                         isEditMode={isEditMode}
                         onBack={handleBack}
