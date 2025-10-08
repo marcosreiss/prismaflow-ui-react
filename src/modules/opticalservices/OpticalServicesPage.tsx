@@ -51,7 +51,6 @@ export default function OpticalServicesPage() {
     const columns: ColumnDef<OpticalService>[] = [
         { key: "id", label: "ID", width: 80 },
         { key: "name", label: "Serviço" },
-        { key: "description", label: "Descrição" },
         {
             key: "price",
             label: "Preço (R$)",
