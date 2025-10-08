@@ -16,7 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@mui/material/styles";
 import { User, LogOut, Menu as MenuIcon, Sun, Moon, Building2, Building } from "lucide-react";
 import useThemeMode from "@/context/theme/useThemeMode";
-import { UserRoleLabels } from "@/types/auth"; // ✅ import dos rótulos traduzidos
+import { UserRoleLabels } from "@/modules/auth/types/auth"; // ✅ import dos rótulos traduzidos
 
 type PFHeaderProps = {
     onToggleSidebar?: () => void;

@@ -10,10 +10,10 @@ import {
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { useEffect, useRef } from "react";
-import { useLogin } from "@/hooks/useAuth";
-import type { LoginRequest } from "@/types/auth";
+import type { LoginRequest } from "@/modules/auth/types/auth";
 import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
+import { useLogin } from "@/modules/auth/hooks/useAuth";
 
 /** ================== util de "criptografia" (ofuscação) ================== */
 const APP_KDF_SALT = "prismaflow::rememberme::v1";

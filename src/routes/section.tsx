@@ -6,7 +6,7 @@ import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgr
 import BlankLayout from '../layout/blanckLayout';
 import DashboardLayout from '../layout/dashboardLayout';
 
-const SignInPage = lazy(() => import('@/pages/login'));
+const SignInPage = lazy(() => import('@/modules/auth/pages/login'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const BrandPage = lazy(() => import('@/modules/brands/BrandsPage'));
 const ProductPage = lazy(() => import('@/modules/products/ProductsPage'));

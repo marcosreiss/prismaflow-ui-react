@@ -9,7 +9,7 @@ import React, {
   createContext,
 } from "react";
 import { useRouter } from "@/routes/hooks";
-import type { UserRole } from "@/types/auth";
+import type { UserRole } from "@/modules/auth/types/auth";
 
 // Tipos extras para organização
 interface AuthUser {

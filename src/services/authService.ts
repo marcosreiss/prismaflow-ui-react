@@ -5,7 +5,7 @@ import type {
   UserRegisterResponse,
   LoginRequest,
   LoginResponse,
-} from "@/types/auth";
+} from "@/modules/auth/types/auth";
 
 //  Registro
 export const registerService = async (

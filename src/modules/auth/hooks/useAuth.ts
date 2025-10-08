@@ -6,7 +6,7 @@ import type {
   LoginResponse,
   UserRegisterRequest,
   UserRegisterResponse,
-} from "@/types/auth";
+} from "@/modules/auth/types/auth";
 import { registerService } from "@/services/authService";
 import baseApi from "@/services/config/api";
 import type { ApiResponse } from "@/types/apiResponse";
