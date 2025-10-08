@@ -99,8 +99,8 @@ export default function PrescriptionModal({
 
             <DialogContent dividers sx={{ px: 1.5, py: 2 }}>
                 {/* ==============================
-            🔹 Modo de Visualização
-        ============================== */}
+                    🔹 Modo de Visualização
+                    ============================== */}
                 {isView && prescription && (
                     <Stack spacing={2}>
                         <Stack direction="row" spacing={1} mb={1}>
@@ -169,8 +169,8 @@ export default function PrescriptionModal({
                 )}
 
                 {/* ==============================
-            🔹 Formulário de Criação/Edição
-        ============================== */}
+                🔹 Formulário de Criação/Edição
+                ============================== */}
                 {(isCreate || isEdit) && (
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit}>
