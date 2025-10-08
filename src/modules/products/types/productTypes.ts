@@ -48,7 +48,6 @@ export type CreateProductPayload = {
   category: ProductCategory;
   brandId?: number | null;
   branchId?: string;
-  isActive?: boolean;
 };
 
 export type UpdateProductPayload = Partial<CreateProductPayload>;

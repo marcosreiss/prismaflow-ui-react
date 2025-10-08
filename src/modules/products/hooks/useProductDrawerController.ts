@@ -18,6 +18,19 @@ import type { ApiResponse } from "@/types/apiResponse";
 // ==============================
 export type ProductDrawerMode = "create" | "edit" | "view";
 
+// Valores usados no FORM (UI). Aqui o markup é PERCENTUAL.
+type ProductFormValues = {
+  name: string;
+  description: string;
+  costPrice: number;
+  markupPercent: number; // UI em %
+  salePrice: number;
+  stockQuantity: number;
+  minimumStock: number;
+  category: ProductCategory;
+  brandId?: number | null;
+};
+
 interface UseProductDrawerControllerProps {
   mode: ProductDrawerMode;
   product?: Product | null;
@@ -34,31 +47,25 @@ export function useProductDrawerController({
   onCreated,
   onUpdated,
 }: UseProductDrawerControllerProps) {
-  // ==========================
-  // 🔹 Contextos e estados locais
-  // ==========================
   const { addNotification } = useNotification();
 
   const [openCreateBrandModal, setOpenCreateBrandModal] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
 
-  // ==========================
-  // 🔹 Hooks de mutação
-  // ==========================
   const { mutateAsync: createProduct, isPending: creating } =
     useCreateProduct();
   const { mutateAsync: updateProduct, isPending: updating } =
     useUpdateProduct();
 
   // ==========================
-  // 🔹 Formulário (React Hook Form)
+  // 🔹 Formulário (markup em % na UI)
   // ==========================
-  const methods = useForm<CreateProductPayload>({
+  const methods = useForm<ProductFormValues>({
     defaultValues: {
       name: "",
       description: "",
       costPrice: 0,
-      markup: 1,
+      markupPercent: 0, // 0% por padrão
       salePrice: 0,
       stockQuantity: 0,
       minimumStock: 0,
@@ -70,7 +77,7 @@ export function useProductDrawerController({
   const { watch, setValue, reset } = methods;
 
   // ==========================
-  // 🔹 Carregar marcas (para autocomplete)
+  // 🔹 Marcas (autocomplete)
   // ==========================
   const { data: brandData, refetch: refetchBrands } = useGetBrands({
     page: 1,
@@ -83,17 +90,15 @@ export function useProductDrawerController({
   );
 
   // ==========================
-  // 🔹 Efeitos reativos (edição e cálculo)
+  // 🔹 Efeitos (carregar/editar + cálculos)
   // ==========================
-
-  // Preenche dados do produto ao entrar em modo edit/view
   useEffect(() => {
     if ((mode === "edit" || mode === "view") && product) {
       reset({
         name: product.name,
         description: product.description,
         costPrice: product.costPrice,
-        markup: product.markup,
+        markupPercent: Number(((product.markup ?? 1) - 1) * 100), // multip. -> %
         salePrice: product.salePrice,
         stockQuantity: product.stockQuantity,
         minimumStock: product.minimumStock,
@@ -106,7 +111,7 @@ export function useProductDrawerController({
         name: "",
         description: "",
         costPrice: 0,
-        markup: 1,
+        markupPercent: 0,
         salePrice: 0,
         stockQuantity: 0,
         minimumStock: 0,
@@ -117,49 +122,62 @@ export function useProductDrawerController({
     }
   }, [mode, product, reset]);
 
-  // Cálculo automático: ao mudar costPrice / markup → recalcula salePrice
   const costPrice = watch("costPrice");
-  const markup = watch("markup");
+  const markupPercent = watch("markupPercent");
   const salePrice = watch("salePrice");
 
-  // Atualiza salePrice quando costPrice ou markup mudam
-  useEffect(() => {
-    if (costPrice && markup && !isNaN(costPrice) && !isNaN(markup)) {
-      const calculatedSalePrice = costPrice * markup;
-      setValue("salePrice", Number(calculatedSalePrice.toFixed(2)), {
-        shouldDirty: true,
-      });
-    }
-  }, [costPrice, markup, setValue]);
+  const round2 = (n: number) => Number(n.toFixed(2));
 
-  // Atualiza markup quando salePrice muda manualmente
+  // costPrice/markup% -> salePrice
   useEffect(() => {
-    if (costPrice && salePrice && !isNaN(costPrice) && !isNaN(salePrice)) {
-      const calculatedMarkup = salePrice / costPrice;
-      if (calculatedMarkup && isFinite(calculatedMarkup)) {
-        setValue("markup", Number(calculatedMarkup.toFixed(2)), {
-          shouldDirty: true,
-        });
-      }
+    if (mode === "view") return;
+    if (typeof costPrice !== "number" || typeof markupPercent !== "number")
+      return;
+    if (costPrice <= 0) return; // evita cálculo sem base
+    const computed = round2(costPrice * (1 + markupPercent / 100));
+    if (Math.abs((salePrice ?? 0) - computed) > 0.01) {
+      setValue("salePrice", computed, { shouldDirty: true });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [salePrice]);
+  }, [costPrice, markupPercent]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Validação de preço de custo
+  // salePrice -> markup%
   useEffect(() => {
-    if (mode !== "view" && costPrice <= 0) {
-      addNotification("Informe o preço de custo para o cálculo.", "error");
+    if (mode === "view") return;
+    if (typeof costPrice !== "number" || typeof salePrice !== "number") return;
+    if (costPrice <= 0) {
+      return;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [costPrice]);
+    const computedPercent = round2((salePrice / costPrice - 1) * 100);
+    if (Math.abs((markupPercent ?? 0) - computedPercent) > 0.01) {
+      setValue("markupPercent", computedPercent, { shouldDirty: true });
+    }
+  }, [salePrice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ==========================
-  // 🔹 Handlers principais
+  // 🔹 Submit
   // ==========================
   const handleSubmit = methods.handleSubmit(async (values) => {
     try {
+      if (values.costPrice <= 0) {
+        addNotification("Preço de custo deve ser maior que zero.", "error");
+        return;
+      }
+
+      // Converte % -> multiplicador para a API
+      const payloadBase = {
+        name: values.name,
+        description: values.description,
+        costPrice: values.costPrice,
+        markup: Number((1 + values.markupPercent / 100).toFixed(4)),
+        salePrice: values.salePrice,
+        stockQuantity: values.stockQuantity,
+        minimumStock: values.minimumStock,
+        category: values.category,
+        brandId: values.brandId ?? undefined,
+      };
+
       if (mode === "create") {
-        const res = await createProduct(values);
+        const res = await createProduct(payloadBase as CreateProductPayload);
         if (res?.data) {
           onCreated(res.data);
           addNotification("Produto criado com sucesso!", "success");
@@ -167,7 +185,7 @@ export function useProductDrawerController({
       } else if (mode === "edit" && product) {
         const res = await updateProduct({
           id: product.id,
-          data: values as UpdateProductPayload,
+          data: payloadBase as UpdateProductPayload,
         });
         if (res?.data) {
           onUpdated(res.data);
@@ -183,12 +201,11 @@ export function useProductDrawerController({
   });
 
   // ==========================
-  // 🔹 Handlers auxiliares
+  // 🔹 Marcas (modal)
   // ==========================
   const handleOpenCreateBrandModal = () => setOpenCreateBrandModal(true);
   const handleCloseCreateBrandModal = () => setOpenCreateBrandModal(false);
 
-  // Quando cria nova marca via modal
   const handleBrandCreated = (brand: Brand) => {
     refetchBrands();
     setSelectedBrand(brand);
@@ -201,9 +218,6 @@ export function useProductDrawerController({
     setValue("brandId", brand?.id ?? undefined);
   };
 
-  // ==========================
-  // 🔹 Retorno do controller
-  // ==========================
   return {
     // form
     methods,
@@ -215,7 +229,7 @@ export function useProductDrawerController({
     selectedBrand,
     openCreateBrandModal,
 
-    // dados externos
+    // dados
     brandOptions,
 
     // handlers

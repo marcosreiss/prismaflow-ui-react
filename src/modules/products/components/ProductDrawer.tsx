@@ -208,12 +208,12 @@ export default function ProductDrawer({
                                         />
 
                                         <Controller
-                                            name="markup"
+                                            name="markupPercent"  // <- era "markup"
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <PercentInput
                                                     {...field}
-                                                    label="Markup"
+                                                    label="Acréscimo (%)"
                                                     fullWidth
                                                     size="small"
                                                     disabled={isView}
@@ -253,12 +253,14 @@ export default function ProductDrawer({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <TextField
-                                                    {...field}
-                                                    type="number"
                                                     label="Quantidade em estoque"
                                                     fullWidth
                                                     size="small"
+                                                    type="number"
+                                                    value={typeof field.value === "number" ? field.value : 0}
+                                                    onChange={(e) => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))}
                                                     disabled={isView}
+                                                    inputProps={{ min: 0 }}
                                                 />
                                             )}
                                         />
@@ -268,12 +270,14 @@ export default function ProductDrawer({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <TextField
-                                                    {...field}
-                                                    type="number"
                                                     label="Estoque mínimo"
                                                     fullWidth
                                                     size="small"
+                                                    type="number"
+                                                    value={typeof field.value === "number" ? field.value : 0}
+                                                    onChange={(e) => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))}
                                                     disabled={isView}
+                                                    inputProps={{ min: 0 }}
                                                 />
                                             )}
                                         />
