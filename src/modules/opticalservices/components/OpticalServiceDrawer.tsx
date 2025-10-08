@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { X, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, Controller } from "react-hook-form";
 import { useNotification } from "@/context/NotificationContext";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/types/apiResponse";
@@ -24,6 +24,7 @@ import type {
     CreateOpticalServicePayload,
     UpdateOpticalServicePayload,
 } from "../types/opticalServiceTypes";
+import CurrencyInput from "@/components/imask/CurrencyInput";
 
 // ==========================
 // 🔹 Tipagens e Props
@@ -289,16 +290,18 @@ export default function OpticalServiceDrawer({
                                     <Typography variant="body2" fontWeight={500} mb={0.5}>
                                         Preço (R$)
                                     </Typography>
-                                    <TextField
-                                        fullWidth
-                                        type="number"
-                                        inputProps={{ step: "0.01", min: "0" }}
-                                        size="small"
-                                        {...methods.register("price", {
-                                            required: true,
-                                            valueAsNumber: true,
-                                        })}
-                                        placeholder="0.00"
+                                    <Controller
+                                        name="price"
+                                        control={methods.control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <CurrencyInput
+                                                {...field}
+                                                label="Preço (R$)"
+                                                fullWidth
+                                                size="small"
+                                            />
+                                        )}
                                     />
                                 </Box>
 
