@@ -12,11 +12,11 @@ import {
 import { X, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import type { Brand, CreateBrandPayload, UpdateBrandPayload } from "./brandTypes";
-import { useCreateBrand, useUpdateBrand } from "./hooks/useBrand";
 import { useNotification } from "@/context/NotificationContext";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/types/apiResponse";
+import { useCreateBrand, useUpdateBrand } from "../hooks/useBrand";
+import type { Brand, CreateBrandPayload, UpdateBrandPayload } from "../types/brandTypes";
 
 // ==========================
 // 🔹 Tipagens e Props
