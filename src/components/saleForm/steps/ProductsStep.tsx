@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Paper, Divider } from "@mui/material";
 import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import ProductSelector from "../ProductSelector";
 import SaleItemsTable from "../OldSaleItemsTable";
-import ServicesTable from "../serviceTable";
+import ServicesTable from "../../../modules/sales/components/productsStep/serviceTable";
 import type { Product } from "@/modules/products/types/productTypes";
 import ServiceSelector from "../../../modules/sales/components/productsStep/serviceSelector";
 import type { OpticalService } from "@/types/opticalServiceTypes";

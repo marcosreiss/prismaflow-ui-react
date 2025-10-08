@@ -8,13 +8,13 @@ import {
 } from "@mui/material";
 import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import type { Product } from "@/modules/products/types/productTypes";
-import type { OpticalService } from "@/types/opticalServiceTypes";
 import type { Control, FieldErrors } from "react-hook-form";
 import type { Sale } from "../../types/salesTypes";
 import ProductSelector from "./ProductSelector";
 import SaleItemsTable from "@/components/saleForm/OldSaleItemsTable";
 import ServiceSelector from "@/modules/sales/components/productsStep/serviceSelector";
-import ServicesTable from "@/components/saleForm/serviceTable";
+import ServicesTable from "@/modules/sales/components/productsStep/serviceTable";
+import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 
 interface ProductsStepProps {
     control: Control<Sale>;

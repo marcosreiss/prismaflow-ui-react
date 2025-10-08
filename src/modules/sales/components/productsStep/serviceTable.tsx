@@ -1,6 +1,4 @@
 import { useFormContext, useFieldArray } from "react-hook-form";
-import type { Sale } from "@/types/saleTypes";
-import type { Service } from "@/types/serviceTypes";
 import {
     Paper,
     Table,
@@ -15,6 +13,8 @@ import {
     Chip,
 } from "@mui/material";
 import { Trash2 } from "lucide-react";
+import type { Sale } from "@/modules/sales/types/salesTypes";
+import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 
 export default function ServicesTable() {
     const { control } = useFormContext<Sale>();
@@ -24,7 +24,7 @@ export default function ServicesTable() {
         name: "serviceItems",
     });
 
-    const calculateServiceProfit = (service: Service) => {
+    const calculateServiceProfit = (service: OpticalService) => {
         return service.price - service.cost;
     };
 
