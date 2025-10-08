@@ -10,7 +10,7 @@ const SignInPage = lazy(() => import('@/modules/auth/pages/login'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const BrandPage = lazy(() => import('@/modules/brands/BrandsPage'));
 const ProductPage = lazy(() => import('@/modules/products/ProductsPage'));
-const ServicePage = lazy(() => import('@/pages/ServicePage'));
+const OpticalServicePage = lazy(() => import('@/modules/opticalservices/OpticalServicesPage'));
 const ClientsPage = lazy(() => import('@/modules/clients/pages/ClientsPage'));
 const ClientPrescriptionsPage = lazy(() => import('@/modules/clients/pages/ClientPrescriptionsPage'));
 
@@ -50,7 +50,7 @@ export function PrivateRouter() {
                 { index: true, element: <DashboardPage /> },
                 { path: 'brands', element: <BrandPage /> },
                 { path: 'products', element: <ProductPage /> },
-                { path: 'services', element: <ServicePage /> },
+                { path: 'services', element: <OpticalServicePage /> },
                 { path: 'clients', element: <ClientsPage /> },
                 { path: 'clients/:id/prescriptions', element: <ClientPrescriptionsPage /> },
 
