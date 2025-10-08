@@ -1,6 +1,6 @@
 import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
 import { ArrowLeft, RefreshCw, Plus } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedSearch";
 import { useRouter } from "@/routes/hooks";
 
@@ -11,6 +11,9 @@ type PFTopToolbarProps = {
     onAdd?: () => void;
     addLabel?: string;
     backUrl?: string;
+
+    /** 🆕 Permite ações extras, como “Excluir selecionados” */
+    actionsExtra?: ReactNode;
 };
 
 export default function PFTopToolbar({
@@ -20,6 +23,7 @@ export default function PFTopToolbar({
     onAdd,
     addLabel = "Adicionar novo",
     backUrl,
+    actionsExtra, // 🆕
 }: PFTopToolbarProps) {
     const router = useRouter();
     const [search, setSearch] = useState("");
@@ -35,7 +39,7 @@ export default function PFTopToolbar({
         <Box
             sx={{
                 display: "flex",
-                flexDirection: { xs: "column", sm: "row" }, // empilha só no mobile
+                flexDirection: { xs: "column", sm: "row" },
                 alignItems: { xs: "stretch", sm: "center" },
                 justifyContent: "space-between",
                 gap: { xs: 2, sm: 0 },
@@ -53,7 +57,7 @@ export default function PFTopToolbar({
                 <Typography variant="h6">{title}</Typography>
             </Box>
 
-            {/* Direita: search + refresh + add */}
+            {/* Direita: search + refresh + add + extras */}
             <Box
                 sx={{
                     display: "flex",
@@ -70,7 +74,7 @@ export default function PFTopToolbar({
                         placeholder="Pesquisar..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        fullWidth={false} // não expande no desktop
+                        fullWidth={false}
                         sx={{
                             width: { xs: "100%", sm: "auto" },
                             minWidth: { sm: 200 },
@@ -91,6 +95,9 @@ export default function PFTopToolbar({
                         Atualizar
                     </Button>
                 )}
+
+                {/* 🆕 Ações extras (ex: Excluir selecionados) */}
+                {actionsExtra}
 
                 {onAdd && (
                     <Button

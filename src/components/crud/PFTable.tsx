@@ -13,6 +13,7 @@ import {
     Card,
     CardContent,
     Divider,
+    Checkbox, // 🆕
 } from "@mui/material";
 import { Inbox } from "lucide-react";
 import PFRowActionsMenu from "./PFRowActionsMenu";
@@ -44,6 +45,13 @@ type PFTableProps<T extends object> = {
     onRowClick?: (id: string | number, row: T) => void;
     customActionsMenu?: ReactNode;
     getRowId?: (row: T, index: number) => string | number;
+
+    // 🆕 Novas props
+    selectable?: boolean;
+    selectedRows?: (string | number)[];
+    onSelectRow?: (id: string | number, checked: boolean) => void;
+    onSelectAll?: (checked: boolean, currentPageIds: (string | number)[]) => void;
+    isRowDisabled?: (row: T) => boolean;
 };
 
 // ==========================
@@ -64,7 +72,21 @@ export default function PFTable<T extends object>({
     onRowClick,
     customActionsMenu,
     getRowId,
+
+    // 🆕 Novas props
+    selectable = false,
+    selectedRows = [],
+    onSelectRow,
+    onSelectAll,
+    isRowDisabled,
 }: PFTableProps<T>) {
+    // ==========================
+    // 🧮 Seleção (página atual)
+    // ==========================
+    const pageRowIds = rows.map((r, i) => (getRowId ? getRowId(r, i) : i));
+    const allSelected = pageRowIds.length > 0 && pageRowIds.every((id) => selectedRows.includes(id));
+    const someSelected = pageRowIds.some((id) => selectedRows.includes(id));
+
     // ==========================
     // 🔹 Render
     // ==========================
@@ -100,6 +122,19 @@ export default function PFTable<T extends object>({
                     {/* Cabeçalho */}
                     <TableHead>
                         <TableRow sx={{ backgroundColor: "grey.100" }}>
+                            {/* 🆕 Checkbox geral */}
+                            {selectable && (
+                                <TableCell padding="checkbox">
+                                    <Checkbox
+                                        checked={allSelected}
+                                        indeterminate={someSelected && !allSelected}
+                                        onChange={(e) =>
+                                            onSelectAll?.(e.target.checked, pageRowIds)
+                                        }
+                                    />
+                                </TableCell>
+                            )}
+
                             {columns.map((col) => (
                                 <TableCell
                                     key={String(col.key)}
@@ -139,6 +174,11 @@ export default function PFTable<T extends object>({
                         {loading &&
                             Array.from({ length: pageSize }).map((_, i) => (
                                 <TableRow key={`skeleton-${i}`}>
+                                    {selectable && (
+                                        <TableCell padding="checkbox">
+                                            <Skeleton variant="circular" width={24} height={24} />
+                                        </TableCell>
+                                    )}
                                     {columns.map((col) => (
                                         <TableCell key={String(col.key)}>
                                             <Skeleton variant="text" />
@@ -157,7 +197,7 @@ export default function PFTable<T extends object>({
                         {/* ========================== */}
                         {!loading && rows.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={columns.length + 1}>
+                                <TableCell colSpan={columns.length + (selectable ? 2 : 1)}>
                                     <Box
                                         sx={{
                                             textAlign: "center",
@@ -180,6 +220,8 @@ export default function PFTable<T extends object>({
                         {!loading &&
                             rows.map((row, rowIndex) => {
                                 const rowId = getRowId ? getRowId(row, rowIndex) : rowIndex;
+                                const isSelected = selectedRows.includes(rowId);
+                                const disabled = isRowDisabled?.(row) ?? false;
 
                                 return (
                                     <TableRow
@@ -188,9 +230,25 @@ export default function PFTable<T extends object>({
                                         onClick={() => onRowClick?.(rowId, row)}
                                         sx={{
                                             cursor: onRowClick ? "pointer" : "default",
+                                            opacity: disabled ? 0.5 : 1, // 🆕
                                             "&:last-child td": { borderBottom: 0 },
                                         }}
                                     >
+                                        {/* 🆕 Checkbox por linha */}
+                                        {selectable && (
+                                            <TableCell
+                                                padding="checkbox"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    onChange={(e) =>
+                                                        onSelectRow?.(rowId, e.target.checked)
+                                                    }
+                                                />
+                                            </TableCell>
+                                        )}
+
                                         {columns.map((col) => (
                                             <TableCell
                                                 key={String(col.key)}
@@ -220,7 +278,11 @@ export default function PFTable<T extends object>({
                                                     <PFRowActionsMenu
                                                         onView={onView ? () => onView(row) : undefined}
                                                         onEdit={onEdit ? () => onEdit(row) : undefined}
-                                                        onDelete={onDelete ? () => onDelete(row) : undefined}
+                                                        onDelete={
+                                                            onDelete
+                                                                ? () => onDelete(row)
+                                                                : undefined
+                                                        }
                                                     />
                                                 )}
                                             </TableCell>
@@ -270,6 +332,8 @@ export default function PFTable<T extends object>({
                 {!loading &&
                     rows.map((row, rowIndex) => {
                         const rowId = getRowId ? getRowId(row, rowIndex) : rowIndex;
+                        const isSelected = selectedRows.includes(rowId);
+                        const disabled = isRowDisabled?.(row) ?? false;
 
                         return (
                             <Card
@@ -278,9 +342,27 @@ export default function PFTable<T extends object>({
                                 onClick={() => onRowClick?.(rowId, row)}
                                 sx={{
                                     cursor: onRowClick ? "pointer" : "default",
+                                    opacity: disabled ? 0.5 : 1, // 🆕
                                 }}
                             >
                                 <CardContent>
+                                    {/* 🆕 Checkbox no topo */}
+                                    {selectable && (
+                                        <Box
+                                            display="flex"
+                                            justifyContent="flex-start"
+                                            mb={1}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <Checkbox
+                                                checked={isSelected}
+                                                onChange={(e) =>
+                                                    onSelectRow?.(rowId, e.target.checked)
+                                                }
+                                            />
+                                        </Box>
+                                    )}
+
                                     {columns.map((col, j) => (
                                         <Box key={j} sx={{ mb: 1 }}>
                                             <Typography
@@ -313,7 +395,11 @@ export default function PFTable<T extends object>({
                                                     <PFRowActionsMenu
                                                         onView={onView ? () => onView(row) : undefined}
                                                         onEdit={onEdit ? () => onEdit(row) : undefined}
-                                                        onDelete={onDelete ? () => onDelete(row) : undefined}
+                                                        onDelete={
+                                                            onDelete
+                                                                ? () => onDelete(row)
+                                                                : undefined
+                                                        }
                                                     />
                                                 )}
                                             </Box>
