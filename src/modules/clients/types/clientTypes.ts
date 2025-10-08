@@ -1,6 +1,17 @@
 import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 
+// ===========================
+// 🔹 ENUM / CATEGORIAS
+// ===========================
+export type Gender = "MALE" | "FEMALE" | "OTHER";
+
+export const GenderLabels: Record<Gender, string> = {
+  MALE: "Masculino",
+  FEMALE: "Feminino",
+  OTHER: "Outro",
+};
+
 // ==============================
 // 🔹 ENTIDADE: CLIENT
 // ==============================

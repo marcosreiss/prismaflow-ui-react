@@ -10,6 +10,7 @@ import type {
   CreateClientPayload,
   UpdateClientPayload,
 } from "../types/clientTypes";
+import type { Gender } from "../types/clientTypes"; // ✅ novo tipo
 
 // ==========================
 // 🔹 Tipagem local
@@ -51,7 +52,7 @@ export function useClientDrawerController({
       cpf: "",
       rg: "",
       bornDate: "",
-      gender: "",
+      gender: "OTHER" as Gender, // ✅ valor padrão
       fatherName: "",
       motherName: "",
       spouse: "",
@@ -88,7 +89,7 @@ export function useClientDrawerController({
   // 🔹 Efeitos
   // ==========================
 
-  // foca no input nome em modo create/edit
+  // foco automático no input nome
   useEffect(() => {
     if ((isCreate || isEdit) && open) {
       inputRef.current?.focus();
@@ -109,7 +110,7 @@ export function useClientDrawerController({
         cpf: client.cpf ?? "",
         rg: client.rg ?? "",
         bornDate: client.bornDate ?? "",
-        gender: client.gender ?? "",
+        gender: (client.gender as Gender) ?? "OTHER", // ✅ novo campo
         fatherName: client.fatherName ?? "",
         motherName: client.motherName ?? "",
         spouse: client.spouse ?? "",
@@ -139,7 +140,7 @@ export function useClientDrawerController({
         cpf: "",
         rg: "",
         bornDate: "",
-        gender: "",
+        gender: "OTHER" as Gender, // ✅ padrão também no reset inicial
         fatherName: "",
         motherName: "",
         spouse: "",

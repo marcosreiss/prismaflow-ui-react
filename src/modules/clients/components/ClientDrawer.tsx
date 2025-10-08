@@ -8,6 +8,10 @@ import {
     TextField,
     CircularProgress,
     Stack,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
 } from "@mui/material";
 import { X, Pencil, Trash2, Eye } from "lucide-react";
 import { FormProvider } from "react-hook-form";
@@ -15,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useClientDrawerController } from "../hooks/useClientDrawerController";
 import type { Client } from "../types/clientTypes";
+import { GenderLabels, type Gender } from "../types/clientTypes"; // ✅ importado
 
 // ==========================
 // 🔹 Tipagens e Props
@@ -126,7 +131,6 @@ export default function ClientDrawer({
                 {/* ========================== */}
                 {isView && client && (
                     <Box>
-                        {/* Ações */}
                         <Stack direction="row" spacing={1} mb={2}>
                             <Button
                                 size="small"
@@ -157,17 +161,28 @@ export default function ClientDrawer({
 
                         <Divider sx={{ mb: 2 }} />
 
-                        {/* Dados */}
                         <Stack spacing={1}>
                             <Row label="Nome" value={client.name} />
                             <Row label="Apelido" value={client.nickname} />
                             <Row label="CPF" value={client.cpf} />
                             <Row label="RG" value={client.rg} />
-                            <Row label="Nascimento" value={client.bornDate} />
+                            <Row label="Data de nascimento" value={client.bornDate} />
+                            {/* ✅ Novo campo: gênero */}
+                            <Row
+                                label="Gênero"
+                                value={
+                                    client.gender
+                                        ? GenderLabels[client.gender as Gender]
+                                        : null
+                                }
+                            />
                             <Row label="E-mail" value={client.email} />
                             <Row label="Telefone 1" value={client.phone01} />
                             <Row label="Telefone 2" value={client.phone02} />
-                            <Row label="Endereço" value={`${client.street ?? ""} ${client.number ?? ""}`} />
+                            <Row
+                                label="Endereço"
+                                value={`${client.street ?? ""} ${client.number ?? ""}`}
+                            />
                             <Row label="Cidade" value={client.city} />
                             <Row label="UF" value={client.uf} />
                             <Row label="Observações" value={client.obs} />
@@ -218,6 +233,38 @@ export default function ClientDrawer({
                                             size="small"
                                             {...methods.register("cpf")}
                                         />
+                                        <TextField
+                                            label="RG"
+                                            fullWidth
+                                            size="small"
+                                            {...methods.register("rg")}
+                                        />
+                                    </Box>
+
+                                    <Box sx={{ display: "flex", gap: 2 }}>
+                                        <TextField
+                                            label="Data de nascimento"
+                                            type="date"
+                                            fullWidth
+                                            size="small"
+                                            InputLabelProps={{ shrink: true }}
+                                            {...methods.register("bornDate")}
+                                        />
+                                        {/* ✅ Novo campo: gênero */}
+                                        <FormControl fullWidth size="small">
+                                            <InputLabel>Gênero</InputLabel>
+                                            <Select
+                                                label="Gênero"
+                                                defaultValue="OTHER"
+                                                {...methods.register("gender")}
+                                            >
+                                                {Object.entries(GenderLabels).map(([key, label]) => (
+                                                    <MenuItem key={key} value={key}>
+                                                        {label}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
                                     </Box>
                                 </Stack>
 
@@ -291,7 +338,6 @@ export default function ClientDrawer({
 
                                 <Divider />
 
-                                {/* Botão */}
                                 <Button
                                     type="submit"
                                     variant="contained"
