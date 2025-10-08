@@ -1,44 +1,51 @@
-import { useState } from "react";
-import { Button, Paper } from "@mui/material";
-import { useNotification } from "@/context/NotificationContext";
-import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
+"use client";
+
+import { Paper, Button } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
+import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import BrandDrawer from "./BrandDrawer";
-import type { ApiResponse } from "@/types/apiResponse";
-import type { AxiosError } from "axios";
 import type { Brand } from "./brandTypes";
-import { useGetBrands, useDeleteBrand } from "./hooks/useBrand";
+import { useBrandPageController } from "./hooks/useBrandPageController";
 
 export default function BrandsPage() {
     // ==========================
-    // 🔹 Estados locais
+    // 🔹 Controller da página
     // ==========================
-    const [page, setPage] = useState(0);
-    const [limit, setLimit] = useState(5);
-    const [search, setSearch] = useState("");
-    const [drawerOpen, setDrawerOpen] = useState(false);
-    const [drawerMode, setDrawerMode] = useState<"create" | "edit" | "view">("view");
-    const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-    const [confirmDelete, setConfirmDelete] = useState(false);
+    const controller = useBrandPageController();
 
-    // 🆕 Novos estados para seleção e exclusão em massa
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
-    const [deletingIds, setDeletingIds] = useState<number[]>([]);
-
-    const { addNotification } = useNotification();
-
-    // ==========================
-    // 🔹 Hooks de dados
-    // ==========================
-    const { data, isLoading, isFetching, refetch } = useGetBrands({
-        page: page + 1, // API é base-1
+    const {
+        // dados e estados
+        brands,
+        total,
+        isLoading,
+        isFetching,
+        page,
         limit,
-        search,
-    });
+        drawerOpen,
+        drawerMode,
+        selectedBrand,
+        confirmDelete,
+        selectedIds,
+        confirmDeleteSelected,
+        deletingIds,
 
-    const deleteBrand = useDeleteBrand();
+        // mutações e ações
+        setPage,
+        setLimit,
+        setSearch,
+        setConfirmDelete,
+        setConfirmDeleteSelected,
+        handleOpenDrawer,
+        handleCloseDrawer,
+        handleDelete,
+        handleSelectRow,
+        handleSelectAll,
+        handleDeleteSelected,
+        refetch,
+        deleteBrand,
+        addNotification,
+    } = controller;
 
     // ==========================
     // 🔹 Colunas da tabela
@@ -52,80 +59,6 @@ export default function BrandsPage() {
             render: (row) => row.createdBy?.name ?? "-",
         },
     ];
-
-    // ==========================
-    // 🔹 Handlers de drawer e exclusão individual
-    // ==========================
-    const handleOpenDrawer = (
-        mode: "create" | "edit" | "view",
-        brand?: Brand | null
-    ) => {
-        setDrawerMode(mode);
-        setSelectedBrand(brand ?? null);
-        setDrawerOpen(true);
-    };
-
-    const handleCloseDrawer = () => {
-        setDrawerOpen(false);
-        setSelectedBrand(null);
-    };
-
-    const handleDelete = async () => {
-        if (!selectedBrand) return;
-
-        try {
-            const res = await deleteBrand.mutateAsync(selectedBrand.id);
-            addNotification(res.message, "success");
-            setConfirmDelete(false);
-            handleCloseDrawer();
-            refetch();
-        } catch (err) {
-            const axiosErr = err as AxiosError<ApiResponse<null>>;
-            const message =
-                axiosErr.response?.data?.message ?? "Erro ao excluir marca.";
-            addNotification(message, "error");
-        }
-    };
-
-    // ==========================
-    // 🆕 Handlers de seleção
-    // ==========================
-    const handleSelectRow = (id: string | number, checked: boolean) => {
-        setSelectedIds((prev) =>
-            checked ? [...prev, id as number] : prev.filter((i) => i !== id)
-        );
-    };
-
-    const handleSelectAll = (checked: boolean, currentPageIds: (string | number)[]) => {
-        setSelectedIds(checked ? (currentPageIds as number[]) : []);
-    };
-
-    // ==========================
-    // 🆕 Exclusão em massa
-    // ==========================
-    const handleDeleteSelected = async () => {
-        setConfirmDeleteSelected(false);
-        setDeletingIds(selectedIds);
-
-        for (const id of selectedIds) {
-            try {
-                const res = await deleteBrand.mutateAsync(id);
-                addNotification(res.message, "success");
-            } catch {
-                addNotification(`Erro ao excluir marca ${id}`, "error");
-            }
-        }
-
-        setDeletingIds([]);
-        setSelectedIds([]);
-        refetch();
-    };
-
-    // ==========================
-    // 🔹 Dados de tabela
-    // ==========================
-    const brands = data?.data?.content ?? [];
-    const total = data?.data?.totalElements ?? 0;
 
     // ==========================
     // 🔹 Render
@@ -147,21 +80,18 @@ export default function BrandsPage() {
                 onRefresh={() => refetch()}
                 onAdd={() => handleOpenDrawer("create")}
                 addLabel="Nova marca"
-                // 🆕 Botão de exclusão em massa estilizado com MUI
                 actionsExtra={
                     selectedIds.length > 0 && (
                         <Button
-                            variant="outlined" // usa o estilo padrão dos outros botões
-                            color="error" // vermelho do tema (suporte a dark mode)
+                            variant="outlined"
+                            color="error"
                             onClick={() => setConfirmDeleteSelected(true)}
                             sx={{
                                 whiteSpace: "nowrap",
                                 fontWeight: 500,
                                 textTransform: "none",
                                 borderWidth: 1.5,
-                                "&:hover": {
-                                    borderWidth: 1.5,
-                                },
+                                "&:hover": { borderWidth: 1.5 },
                             }}
                         >
                             Excluir selecionados ({selectedIds.length})
@@ -184,10 +114,9 @@ export default function BrandsPage() {
                 onRowClick={(_, row) => handleOpenDrawer("view", row)}
                 onEdit={(row) => handleOpenDrawer("edit", row)}
                 onDelete={(row) => {
-                    setSelectedBrand(row);
+                    controller.setSelectedBrand(row);
                     setConfirmDelete(true);
                 }}
-                // ✅ Seleção
                 selectable
                 selectedRows={selectedIds}
                 onSelectRow={handleSelectRow}
@@ -203,7 +132,7 @@ export default function BrandsPage() {
                 onClose={handleCloseDrawer}
                 onEdit={() => handleOpenDrawer("edit", selectedBrand)}
                 onDelete={(brand) => {
-                    setSelectedBrand(brand);
+                    controller.setSelectedBrand(brand);
                     setConfirmDelete(true);
                 }}
                 onCreated={(brand) => {
@@ -217,8 +146,8 @@ export default function BrandsPage() {
                     refetch();
                 }}
                 onCreateNew={() => {
-                    setSelectedBrand(null);
-                    setDrawerMode("create");
+                    controller.setSelectedBrand(null);
+                    controller.setDrawerMode("create");
                 }}
             />
 
@@ -232,7 +161,7 @@ export default function BrandsPage() {
                 loading={deleteBrand.isPending}
             />
 
-            {/* 🆕 Confirmação de exclusão em massa */}
+            {/* Confirmação de exclusão em massa */}
             <PFConfirmDialog
                 open={confirmDeleteSelected}
                 title="Excluir marcas selecionadas"
