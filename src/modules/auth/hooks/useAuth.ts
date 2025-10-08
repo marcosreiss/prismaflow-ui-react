@@ -1,4 +1,3 @@
-// src/hooks/useAuth.ts
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import type {
@@ -6,6 +5,7 @@ import type {
   LoginResponse,
   UserRegisterRequest,
   UserRegisterResponse,
+  AdminBranchSelectionResponse,
 } from "@/modules/auth/types/auth";
 import { registerService } from "@/services/authService";
 import baseApi from "@/services/config/api";
@@ -15,17 +15,39 @@ import type { ApiResponse } from "@/types/apiResponse";
  * 🔐 Hook para autenticação (login) do usuário
  */
 export const useLogin = () => {
-  return useMutation<LoginResponse, AxiosError<ApiResponse<null>>, LoginRequest>({
+  return useMutation<
+    LoginResponse | AdminBranchSelectionResponse, // 👈 aceita ambos os tipos de resposta
+    AxiosError<ApiResponse<null>>,
+    LoginRequest
+  >({
     mutationFn: async (payload) => {
-      const { data } = await baseApi.post<LoginResponse>(
-        "/api/auth/login",
-        payload
-      );
+      const { data } = await baseApi.post<
+        LoginResponse | AdminBranchSelectionResponse
+      >("/api/auth/login", payload);
       return data;
     },
     onSuccess: (data) => {
-      localStorage.setItem("authToken", data.token ?? "");
-      console.log("✅ Login efetuado com sucesso:", data.data?.name);
+      // Detecta se é fluxo de seleção de filial
+      if (
+        "data" in data &&
+        data.data !== undefined &&
+        "branches" in data.data &&
+        "tempToken" in data.data
+      ) {
+        console.log("⚙️ Admin com múltiplas filiais — seleção necessária");
+        // Guarda temporariamente no storage para próxima etapa
+        localStorage.setItem("tempAuthToken", data.data.tempToken);
+        localStorage.setItem(
+          "availableBranches",
+          JSON.stringify(data.data.branches)
+        );
+        return; // o frontend (UI) exibirá a seleção de filiais
+      }
+
+      // 🔹 Caso normal (login direto)
+      const typedData = data as LoginResponse;
+      localStorage.setItem("authToken", typedData.token ?? "");
+      console.log("✅ Login efetuado com sucesso:", typedData.data?.name);
     },
     onError: (error) => {
       const errData = error.response?.data;
@@ -35,7 +57,7 @@ export const useLogin = () => {
 };
 
 /**
- * Hook para registro de novo usuário
+ * 🧑‍💻 Hook para registro de novo usuário
  */
 export const useRegister = () => {
   return useMutation<UserRegisterResponse, AxiosError, UserRegisterRequest>({

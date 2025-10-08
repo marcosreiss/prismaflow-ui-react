@@ -7,13 +7,23 @@ import {
     Typography,
     FormControlLabel,
     Checkbox,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    MenuItem,
+    Select,
+    InputAdornment,
+    IconButton,
 } from "@mui/material";
+import { Eye, EyeOff } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LoginRequest } from "@/modules/auth/types/auth";
 import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLogin } from "@/modules/auth/hooks/useAuth";
+import baseApi from "@/services/config/api";
 
 /** ================== util de "criptografia" (ofuscação) ================== */
 const APP_KDF_SALT = "prismaflow::rememberme::v1";
@@ -47,7 +57,7 @@ function b64encode(buf: ArrayBuffer) {
 }
 
 function b64decode(b64: string) {
-    return Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+    return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
 }
 
 async function encryptJSON<T>(data: T) {
@@ -89,6 +99,10 @@ type StoredCredentials = {
 export default function Login() {
     const { addNotification } = useNotification();
     const { setToken } = useAuth();
+    const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
+    const [selectedBranch, setSelectedBranch] = useState<string>("");
+    const [openBranchModal, setOpenBranchModal] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const { control, handleSubmit, setValue, getValues } = useForm<LoginForm>({
         defaultValues: {
@@ -121,25 +135,65 @@ export default function Login() {
                     setValue("password", password);
                     setValue("rememberMe", true);
                 } catch {
-                    // se falhar decriptação, limpa
                     localStorage.removeItem(LS_KEY_CREDS);
                     localStorage.removeItem(LS_KEY_REMEMBER);
                 }
             })();
         } catch {
-            // storage inacessível (Private mode restrito etc). Ignora.
+            // storage inacessível
         }
     }, [setValue]);
 
     const { mutate: login, isPending } = useLogin();
 
+    const handleBranchSelection = async () => {
+        const tempToken = localStorage.getItem("tempAuthToken");
+        if (!tempToken || !selectedBranch) {
+            addNotification("Selecione uma filial antes de continuar.", "warning");
+            return;
+        }
+
+        try {
+            const { data } = await baseApi.post(
+                "/api/auth/branch-selection",
+                { branchId: selectedBranch },
+                { headers: { Authorization: `Bearer ${tempToken}` } }
+            );
+
+            const token = data.token;
+            const user = data.data;
+
+            if (token && user) {
+                setToken(token, {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    tenantId: user.tenantId,
+                    tenantName: user.tenant?.name ?? "",
+                    branchId: user.branchId,
+                    branchName: user.branch?.name ?? "",
+                });
+
+                localStorage.removeItem("tempAuthToken");
+                localStorage.removeItem("availableBranches");
+                addNotification("Login completado com sucesso!", "success");
+                setOpenBranchModal(false);
+            } else {
+                addNotification("Erro: resposta inválida do servidor.", "error");
+            }
+        } catch (err) {
+            console.log(err);
+            addNotification("Erro ao completar o login. Tente novamente.", "error");
+        }
+    };
+
     const onSubmit = async (data: LoginForm) => {
-        // Persiste/limpa antes de chamar a API
         try {
             if (data.rememberMe) {
                 const credentials: StoredCredentials = {
                     email: data.email,
-                    password: data.password
+                    password: data.password,
                 };
                 const enc = await encryptJSON(credentials);
                 localStorage.setItem(LS_KEY_CREDS, JSON.stringify(enc));
@@ -148,18 +202,22 @@ export default function Login() {
                 localStorage.removeItem(LS_KEY_CREDS);
                 localStorage.removeItem(LS_KEY_REMEMBER);
             }
-        } catch {
-            // Se falhar salvar, segue o fluxo de login normalmente
-        }
+        } catch { /* empty */ }
 
-        // Prepara payload para a API
         const payload: LoginRequest = {
             email: data.email,
-            password: data.password
+            password: data.password,
         };
 
         login(payload, {
             onSuccess: (res) => {
+                if ("data" in res && res.data !== undefined && "branches" in res.data && "tempToken" in res.data) {
+                    // Admin precisa escolher a filial
+                    setBranches(res.data.branches);
+                    setOpenBranchModal(true);
+                    return;
+                }
+
                 const user = res.data;
                 const token = res.token;
 
@@ -181,14 +239,11 @@ export default function Login() {
                 }
             },
             onError: (err) => {
-                // Tenta obter a mensagem padronizada da API
                 const apiMessage =
                     err.response?.data?.message || "Erro ao fazer login. Tente novamente.";
-
                 addNotification(apiMessage, "error");
                 console.error("❌", apiMessage);
 
-                // Limpeza condicional do storage se 'rememberMe' estiver desativado
                 const remember = getValues("rememberMe");
                 if (!remember) {
                     try {
@@ -203,171 +258,218 @@ export default function Login() {
     };
 
     return (
-        <Paper
-            elevation={4}
-            sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                width: { xs: "100%", sm: "90%", md: 800 },
-                maxWidth: "95%",
-                height: { xs: "auto", md: 460 },
-                borderRadius: 4,
-                overflow: "hidden",
-                mx: "auto",
-            }}
-        >
-            {/* Lado Esquerdo */}
-            <Box
+        <>
+            {/* ================= Modal Seleção de Filial ================= */}
+            <Dialog open={openBranchModal} onClose={() => setOpenBranchModal(false)}>
+                <DialogTitle>Selecione a filial para continuar</DialogTitle>
+                <DialogContent>
+                    <Select
+                        value={selectedBranch}
+                        onChange={(e) => setSelectedBranch(e.target.value)}
+                        fullWidth
+                        displayEmpty
+                        sx={{ mt: 2 }}
+                    >
+                        <MenuItem disabled value="">
+                            Escolha uma filial
+                        </MenuItem>
+                        {branches.map((b) => (
+                            <MenuItem key={b.id} value={b.id}>
+                                {b.name}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenBranchModal(false)}>Cancelar</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleBranchSelection}
+                        disabled={!selectedBranch}
+                    >
+                        Confirmar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* ================= Layout de Login ================= */}
+            <Paper
+                elevation={4}
                 sx={{
-                    flex: 1,
-                    backgroundImage: 'url("/images/bg_black_layout_dark.webp")',
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    color: "#fff",
                     display: "flex",
-                    flexDirection: "column",
-                    justifyContent: { xs: "center", md: "flex-start" },
-                    alignItems: { xs: "center", md: "flex-start" },
-                    textAlign: { xs: "center", md: "left" },
-                    gap: 4,
-                    px: { xs: 3, md: 4 },
-                    py: { xs: 4, md: 5 },
+                    flexDirection: { xs: "column", md: "row" },
+                    width: { xs: "100%", sm: "90%", md: 800 },
+                    maxWidth: "95%",
+                    height: { xs: "auto", md: 460 },
+                    borderRadius: 4,
+                    overflow: "hidden",
+                    mx: "auto",
                 }}
             >
-                <Box>
-                    <img
-                        src="/images/logo_prismaflow_dark.webp"
-                        alt="Logo PrismaFlow"
-                        style={{ height: 55 }}
-                    />
-                </Box>
-
-                <Box>
-                    <Typography
-                        variant="h4"
-                        fontWeight="bold"
-                        color="white"
-                        sx={{ fontSize: { xs: 22, sm: 28, md: 40 } }}
-                    >
-                        Olá, bem-vindo ao PrismaFlow!
-                    </Typography>
-                    <Typography
-                        sx={{
-                            mt: 2,
-                            fontSize: { xs: 14, sm: 15 },
-                            lineHeight: 1.4,
-                            color: "white",
-                        }}
-                    >
-                        Organize sua ótica com clareza e fluidez. <br />
-                        Faça login para acessar sua gestão integrada.
-                    </Typography>
-                </Box>
-            </Box>
-
-            {/* Lado Direito (Formulário) */}
-            <Box
-                sx={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    px: { xs: 3, md: 4 },
-                    py: { xs: 4, md: 0 },
-                    backgroundColor: { xs: "rgba(255,255,255,0.9)", md: "background.paper" },
-                }}
-            >
-                <Paper
-                    elevation={0}
+                {/* Lado Esquerdo */}
+                <Box
                     sx={{
-                        p: { xs: 3, sm: 4 },
-                        borderRadius: 3,
-                        width: "100%",
-                        maxWidth: 320,
-                        boxShadow: { xs: 3, md: "none" },
+                        flex: 1,
+                        backgroundImage: 'url("/images/bg_black_layout_dark.webp")',
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        color: "#fff",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: { xs: "center", md: "flex-start" },
+                        alignItems: { xs: "center", md: "flex-start" },
+                        textAlign: { xs: "center", md: "left" },
+                        gap: 4,
+                        px: { xs: 3, md: 4 },
+                        py: { xs: 4, md: 5 },
                     }}
                 >
-                    <form onSubmit={handleSubmit(onSubmit)}>
-                        <Stack spacing={2} width="100%">
-                            <Controller
-                                name="email"
-                                control={control}
-                                rules={{
-                                    required: "E-mail é obrigatório",
-                                    pattern: {
-                                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                        message: "E-mail inválido"
-                                    }
-                                }}
-                                render={({ field, fieldState }) => (
-                                    <TextField
-                                        {...field}
-                                        fullWidth
-                                        label="E-mail:"
-                                        variant="outlined"
-                                        size="small"
-                                        autoComplete="email"
-                                        error={!!fieldState.error}
-                                        helperText={fieldState.error?.message}
-                                    />
-                                )}
-                            />
+                    <Box>
+                        <img
+                            src="/images/logo_prismaflow_dark.webp"
+                            alt="Logo PrismaFlow"
+                            style={{ height: 55 }}
+                        />
+                    </Box>
 
-                            <Controller
-                                name="password"
-                                control={control}
-                                rules={{ required: "Senha é obrigatória" }}
-                                render={({ field, fieldState }) => (
-                                    <TextField
-                                        {...field}
-                                        fullWidth
-                                        label="Senha:"
-                                        type="password"
-                                        variant="outlined"
-                                        size="small"
-                                        autoComplete="current-password"
-                                        error={!!fieldState.error}
-                                        helperText={fieldState.error?.message}
-                                    />
-                                )}
-                            />
+                    <Box>
+                        <Typography
+                            variant="h4"
+                            fontWeight="bold"
+                            color="white"
+                            sx={{ fontSize: { xs: 22, sm: 28, md: 40 } }}
+                        >
+                            Olá, bem-vindo ao PrismaFlow!
+                        </Typography>
+                        <Typography
+                            sx={{
+                                mt: 2,
+                                fontSize: { xs: 14, sm: 15 },
+                                lineHeight: 1.4,
+                                color: "white",
+                            }}
+                        >
+                            Organize sua ótica com clareza e fluidez. <br />
+                            Faça login para acessar sua gestão integrada.
+                        </Typography>
+                    </Box>
+                </Box>
 
-                            {/* Checkbox Lembrar-me */}
-                            <Controller
-                                name="rememberMe"
-                                control={control}
-                                render={({ field }) => (
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={field.value}
-                                                onChange={(e) => field.onChange(e.target.checked)}
-                                            />
-                                        }
-                                        label="Lembrar-me neste dispositivo"
-                                    />
-                                )}
-                            />
+                {/* Lado Direito (Formulário) */}
+                <Box
+                    sx={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        px: { xs: 3, md: 4 },
+                        py: { xs: 4, md: 0 },
+                        backgroundColor: { xs: "rgba(255,255,255,0.9)", md: "background.paper" },
+                    }}
+                >
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: { xs: 3, sm: 4 },
+                            borderRadius: 3,
+                            width: "100%",
+                            maxWidth: 320,
+                            boxShadow: { xs: 3, md: "none" },
+                        }}
+                    >
+                        <form onSubmit={handleSubmit(onSubmit)}>
+                            <Stack spacing={2} width="100%">
+                                <Controller
+                                    name="email"
+                                    control={control}
+                                    rules={{
+                                        required: "E-mail é obrigatório",
+                                        pattern: {
+                                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                            message: "E-mail inválido",
+                                        },
+                                    }}
+                                    render={({ field, fieldState }) => (
+                                        <TextField
+                                            {...field}
+                                            fullWidth
+                                            label="E-mail:"
+                                            variant="outlined"
+                                            size="small"
+                                            autoComplete="email"
+                                            error={!!fieldState.error}
+                                            helperText={fieldState.error?.message}
+                                        />
+                                    )}
+                                />
 
-                            <Button
-                                type="submit"
-                                fullWidth
-                                variant="contained"
-                                disabled={isPending}
-                                sx={{
-                                    backgroundColor: "#1f344a",
-                                    color: "#fff",
-                                    fontWeight: "bold",
-                                    mt: 1,
-                                    "&:hover": { backgroundColor: "#172b3f" },
-                                }}
-                            >
-                                {isPending ? "Entrando..." : "AVANÇAR"}
-                            </Button>
-                        </Stack>
-                    </form>
-                </Paper>
-            </Box>
-        </Paper>
+                                <Controller
+                                    name="password"
+                                    control={control}
+                                    rules={{ required: "Senha é obrigatória" }}
+                                    render={({ field, fieldState }) => (
+                                        <TextField
+                                            {...field}
+                                            fullWidth
+                                            label="Senha:"
+                                            type={showPassword ? "text" : "password"}
+                                            variant="outlined"
+                                            size="small"
+                                            autoComplete="current-password"
+                                            error={!!fieldState.error}
+                                            helperText={fieldState.error?.message}
+                                            InputProps={{
+                                                endAdornment: (
+                                                    <InputAdornment position="end">
+                                                        <IconButton
+                                                            onClick={() => setShowPassword((v) => !v)}
+                                                            edge="end"
+                                                        >
+                                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                        </IconButton>
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                />
+
+                                <Controller
+                                    name="rememberMe"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={field.value}
+                                                    onChange={(e) => field.onChange(e.target.checked)}
+                                                />
+                                            }
+                                            label="Lembrar-me neste dispositivo"
+                                        />
+                                    )}
+                                />
+
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    variant="contained"
+                                    disabled={isPending}
+                                    sx={{
+                                        backgroundColor: "#1f344a",
+                                        color: "#fff",
+                                        fontWeight: "bold",
+                                        mt: 1,
+                                        "&:hover": { backgroundColor: "#172b3f" },
+                                    }}
+                                >
+                                    {isPending ? "Entrando..." : "AVANÇAR"}
+                                </Button>
+                            </Stack>
+                        </form>
+                    </Paper>
+                </Box>
+            </Paper>
+        </>
     );
 }
