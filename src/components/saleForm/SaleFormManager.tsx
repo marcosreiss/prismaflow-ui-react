@@ -14,10 +14,10 @@ import { useProduct } from "@/hooks/useProduct";
 import { useService } from "@/hooks/useService";
 import { useSaleForm } from "@/hooks/useSaleForm";
 
-import SaleFormHeader from "./ui/SaleFormHeader";
-import StepperNavigation from "./ui/StepperNavigation";
-import SaleSummary from "./ui/SaleSummary";
-import SaleFormActions from "./ui/SaleFormActions";
+import SaleFormHeader from "../../modules/sales/components/SaleFormHeader";
+import StepperNavigation from "../../modules/sales/components/StepperNavigation";
+import SaleSummary from "../../modules/sales/components/SaleSummary";
+import SaleFormActions from "../../modules/sales/components/SaleFormActions";
 
 // ⚠️ usando seus componentes atuais
 import ClientStep from "./steps/ClientStep";

@@ -1,6 +1,6 @@
+import type { Sale } from "@/modules/sales/types/salesTypes";
 import { Box, Typography, IconButton } from "@mui/material";
 import { ArrowLeft } from "lucide-react";
-import type { Sale } from "@/types/saleTypes";
 
 interface SaleFormHeaderProps {
     isEditMode: boolean;
@@ -8,19 +8,24 @@ interface SaleFormHeaderProps {
     onBack: () => void;
 }
 
-export default function SaleFormHeader({ isEditMode, existingSale, onBack }: SaleFormHeaderProps) {
+export default function SaleFormHeader({
+    isEditMode,
+    existingSale,
+    onBack,
+}: SaleFormHeaderProps) {
     return (
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
             {/* Botão voltar */}
             <IconButton
                 onClick={onBack}
+                aria-label="Voltar"
                 sx={{ width: { xs: 40, sm: 36 }, height: { xs: 40, sm: 36 } }}
             >
                 <ArrowLeft size={20} />
             </IconButton>
 
             {/* Título */}
-            <Typography variant="h5" fontWeight="bold">
+            <Typography component="div" variant="h5" fontWeight="bold">
                 {isEditMode ? "Editar Venda" : "Nova Venda"}
                 {isEditMode && existingSale && (
                     <Typography

@@ -1,6 +1,5 @@
 import { useFormContext } from "react-hook-form";
 import { Controller } from "react-hook-form";
-import type { Sale } from "@/types/saleTypes";
 import CurrencyInput from "@/components/imask/CurrencyInput";
 import {
     Paper,
@@ -9,6 +8,7 @@ import {
     Divider,
     Box,
 } from "@mui/material";
+import type { Sale } from "../types/salesTypes";
 
 interface SaleSummaryProps {
     subtotal: number;
