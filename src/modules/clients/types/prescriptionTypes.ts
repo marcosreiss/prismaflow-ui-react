@@ -6,6 +6,7 @@ import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
 export type Prescription = {
   id: number;
   clientId: number;
+  prescriptionId: number;
   prescriptionDate: string;
 
   doctorName?: string | null;
@@ -37,6 +38,7 @@ export type Prescription = {
 // ==============================
 export type CreatePrescriptionPayload = {
   clientId: number;
+  prescriptionId: number;
   prescriptionDate: string;
   doctorName?: string;
   crm?: string;
