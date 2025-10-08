@@ -1,5 +1,5 @@
 // Define a "forma" da entidade Cliente (Customer), com base no JSON da API.
-export type Customer = {
+export type Client = {
     id: number;
     name: string;
     nickname: string | null;

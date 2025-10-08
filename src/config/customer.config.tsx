@@ -1,12 +1,12 @@
 import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import type { ColumnDef } from "@/components/crud/PFTable";
-import type { Customer } from "@/types/customerTypes";
+import type { Client } from "@/types/clientTypes";
 import { TextField } from "@mui/material";
 
 // ----------------------
 // Tabela
 // ----------------------
-export const customerColumns: ColumnDef<Customer>[] = [
+export const customerColumns: ColumnDef<Client>[] = [
     { key: "id", label: "ID", width: 80 },
     { key: "name", label: "Nome" },
     { key: "cpf", label: "CPF" },
@@ -17,7 +17,7 @@ export const customerColumns: ColumnDef<Customer>[] = [
 // ----------------------
 // Formulário
 // ----------------------
-export const customerFields: FieldDef<Customer>[] = [
+export const customerFields: FieldDef<Client>[] = [
     {
         name: "name",
         label: "Nome Completo",

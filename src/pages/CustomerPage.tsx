@@ -2,13 +2,13 @@
 
 import { customerColumns, customerFields } from "@/config/customer.config";
 import { useCustomer } from "@/hooks/useCustomer";
-import type { Customer } from "@/types/customerTypes";
+import type { Client } from "@/types/clientTypes";
 import { Box, Typography, Chip, Divider } from "@mui/material";
 import { CrudPage } from "./CrudPage";
 
 export default function CustomersPage() {
     return (
-        <CrudPage<Customer>
+        <CrudPage<Client>
             title="Clientes"
             addLabel="Adicionar novo cliente"
             columns={customerColumns}

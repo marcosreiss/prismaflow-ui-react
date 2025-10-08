@@ -1,8 +1,8 @@
 import type { EntityService } from "@/services/entityService";
-import type { Customer } from "@/types/customerTypes";
+import type { Client } from "@/types/clientTypes";
 import api from "./config/api";
 
-export const customerService: EntityService<Customer> = {
+export const customerService: EntityService<Client> = {
     getAll: async ({ page, size, search }) => {
         const res = await api.get("/api/clients", {
             params: { page, size, search },
