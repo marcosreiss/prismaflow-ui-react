@@ -18,25 +18,28 @@ import type { ApiResponse } from "@/types/apiResponse";
 // ==============================
 export type ProductDrawerMode = "create" | "edit" | "view";
 
-// Valores usados no FORM (UI). Aqui o markup é PERCENTUAL.
+interface UseProductDrawerControllerProps {
+  mode: ProductDrawerMode;
+  product?: Product | null;
+  onCreated: (product: Product) => void;
+  onUpdated: (product: Product) => void;
+  onEdit: () => void;
+  onDelete: (product: Product) => void;
+  onCreateNew: () => void;
+}
+
+// Valores usados no FORM (UI). markupPercent em %.
 type ProductFormValues = {
   name: string;
   description: string;
   costPrice: number;
-  markupPercent: number; // UI em %
+  markupPercent: number;
   salePrice: number;
   stockQuantity: number;
   minimumStock: number;
   category: ProductCategory;
   brandId?: number | null;
 };
-
-interface UseProductDrawerControllerProps {
-  mode: ProductDrawerMode;
-  product?: Product | null;
-  onCreated: (product: Product) => void;
-  onUpdated: (product: Product) => void;
-}
 
 // ==============================
 // 🔹 Hook principal
@@ -46,6 +49,9 @@ export function useProductDrawerController({
   product,
   onCreated,
   onUpdated,
+  onEdit,
+  onDelete,
+  onCreateNew,
 }: UseProductDrawerControllerProps) {
   const { addNotification } = useNotification();
 
@@ -58,14 +64,14 @@ export function useProductDrawerController({
     useUpdateProduct();
 
   // ==========================
-  // 🔹 Formulário (markup em % na UI)
+  // 🔹 Formulário (markup em %)
   // ==========================
   const methods = useForm<ProductFormValues>({
     defaultValues: {
       name: "",
       description: "",
       costPrice: 0,
-      markupPercent: 0, // 0% por padrão
+      markupPercent: 0,
       salePrice: 0,
       stockQuantity: 0,
       minimumStock: 0,
@@ -90,7 +96,7 @@ export function useProductDrawerController({
   );
 
   // ==========================
-  // 🔹 Efeitos (carregar/editar + cálculos)
+  // 🔹 Efeitos (carregar produto e cálculos)
   // ==========================
   useEffect(() => {
     if ((mode === "edit" || mode === "view") && product) {
@@ -98,7 +104,7 @@ export function useProductDrawerController({
         name: product.name,
         description: product.description,
         costPrice: product.costPrice,
-        markupPercent: Number(((product.markup ?? 1) - 1) * 100), // multip. -> %
+        markupPercent: Number(((product.markup ?? 1) - 1) * 100),
         salePrice: product.salePrice,
         stockQuantity: product.stockQuantity,
         minimumStock: product.minimumStock,
@@ -133,7 +139,7 @@ export function useProductDrawerController({
     if (mode === "view") return;
     if (typeof costPrice !== "number" || typeof markupPercent !== "number")
       return;
-    if (costPrice <= 0) return; // evita cálculo sem base
+    if (costPrice <= 0) return;
     const computed = round2(costPrice * (1 + markupPercent / 100));
     if (Math.abs((salePrice ?? 0) - computed) > 0.01) {
       setValue("salePrice", computed, { shouldDirty: true });
@@ -163,8 +169,7 @@ export function useProductDrawerController({
         return;
       }
 
-      // Converte % -> multiplicador para a API
-      const payloadBase = {
+      const payload = {
         name: values.name,
         description: values.description,
         costPrice: values.costPrice,
@@ -174,10 +179,11 @@ export function useProductDrawerController({
         minimumStock: values.minimumStock,
         category: values.category,
         brandId: values.brandId ?? undefined,
+        isActive: true,
       };
 
       if (mode === "create") {
-        const res = await createProduct(payloadBase as CreateProductPayload);
+        const res = await createProduct(payload as CreateProductPayload);
         if (res?.data) {
           onCreated(res.data);
           addNotification("Produto criado com sucesso!", "success");
@@ -185,7 +191,7 @@ export function useProductDrawerController({
       } else if (mode === "edit" && product) {
         const res = await updateProduct({
           id: product.id,
-          data: payloadBase as UpdateProductPayload,
+          data: payload as UpdateProductPayload,
         });
         if (res?.data) {
           onUpdated(res.data);
@@ -218,6 +224,9 @@ export function useProductDrawerController({
     setValue("brandId", brand?.id ?? undefined);
   };
 
+  // ==========================
+  // 🔹 Retorno
+  // ==========================
   return {
     // form
     methods,
@@ -231,6 +240,13 @@ export function useProductDrawerController({
 
     // dados
     brandOptions,
+    mode,
+    product,
+
+    // callbacks vindos do drawer/pai
+    onEdit,
+    onDelete,
+    onCreateNew,
 
     // handlers
     handleBrandChange,
