@@ -12,6 +12,7 @@ const BrandPage = lazy(() => import('@/modules/brands/BrandsPage'));
 const ProductPage = lazy(() => import('@/modules/products/ProductsPage'));
 const ServicePage = lazy(() => import('@/pages/ServicePage'));
 const CustomerPage = lazy(() => import('@/pages/CustomerPage'));
+const ClientPrescriptionsPage = lazy(() => import('@/modules/clients/pages/ClientPrescriptionsPage'));
 
 
 const SalesPage = lazy(() => import('@/pages/SalePage'));
@@ -51,6 +52,7 @@ export function PrivateRouter() {
                 { path: 'products', element: <ProductPage /> },
                 { path: 'services', element: <ServicePage /> },
                 { path: 'customers', element: <CustomerPage /> },
+                { path: 'clients/:id/prescriptions', element: <ClientPrescriptionsPage /> },
 
                 { path: 'sales', element: <SalesPage /> },
                 { path: 'sales/new', element: <SalesForm /> }, // ✅ CRIAÇÃO
