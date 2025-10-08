@@ -4,9 +4,9 @@ import { Paper, Button } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
-import BrandDrawer from "./BrandDrawer";
-import type { Brand } from "./brandTypes";
+import type { Brand } from "./types/brandTypes";
 import { useBrandPageController } from "./hooks/useBrandPageController";
+import BrandDrawer from "./components/BrandDrawer";
 
 export default function BrandsPage() {
     // ==========================

@@ -3,7 +3,7 @@ import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/types/apiResponse";
 import { useNotification } from "@/context/NotificationContext";
 import { useGetBrands, useDeleteBrand } from "./useBrand";
-import type { Brand } from "../brandTypes";
+import type { Brand } from "../types/brandTypes";
 
 export function useBrandPageController() {
   // ==========================
