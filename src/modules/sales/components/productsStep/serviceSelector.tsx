@@ -8,6 +8,7 @@ import {
     Box,
     Chip,
     Paper,
+    CircularProgress,
 } from "@mui/material";
 import { Plus, Settings } from "lucide-react";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
@@ -23,7 +24,7 @@ export default function ServiceSelector({
     services,
     isLoading,
     onAddService,
-    disabled = false
+    disabled = false,
 }: ServiceSelectorProps) {
     const [selectedService, setSelectedService] = useState<OpticalService | null>(null);
 
@@ -35,95 +36,57 @@ export default function ServiceSelector({
     };
 
     const handleKeyPress = (event: React.KeyboardEvent) => {
-        if (event.key === 'Enter' && selectedService) {
+        if (event.key === "Enter" && selectedService) {
             event.preventDefault();
             handleAddService();
         }
     };
 
-    // ✅ CORREÇÃO: Funções com verificação de null
-    const calculateProfit = (service: OpticalService) => {
-        const price = service.price || 0;
-        const cost = service.price || 0;
-        return price - cost;
-    };
-
-    const calculateProfitMargin = (service: OpticalService) => {
-        const price = service.price || 0;
-        const cost = service.price || 0;
-        if (cost === 0) return 0;
-        return ((price - cost) / cost) * 100;
-    };
-
-    // ✅ CORREÇÃO: Função para formatar preço com fallback
-    const formatPrice = (price: number | null | undefined): string => {
-        if (price == null) return 'R$ 0,00';
-        return price.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
+    const formatPrice = (price?: number | null): string => {
+        if (price == null) return "R$ 0,00";
+        return price.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
         });
     };
 
-    // ✅ CORREÇÃO: Render option corrigida
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const renderOption = (props: any, service: OpticalService) => {
-        // ✅ Extrair key das props e passar diretamente
-        const { key, ...otherProps } = props;
-
-        return (
-            <li key={key} {...otherProps}>
-                <Box sx={{ width: '100%' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <Typography variant="body2" fontWeight="medium">
-                            {service.name || 'Serviço sem nome'}
-                        </Typography>
-                        <Chip
-                            label={formatPrice(service.price)}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                        />
-                    </Box>
-
-                    {service.description && (
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                            {service.description}
-                        </Typography>
-                    )}
-
-                    <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                        <Chip
-                            label={`Custo: ${formatPrice(service.price)}`}
-                            size="small"
-                            variant="outlined"
-                        />
-                        <Chip
-                            label={`Lucro: ${formatPrice(calculateProfit(service))}`}
-                            size="small"
-                            color="success"
-                            variant="outlined"
-                        />
-                        <Chip
-                            label={`Margem: ${calculateProfitMargin(service).toFixed(1)}%`}
-                            size="small"
-                            color="success"
-                        />
-                    </Box>
+    const renderOption = (
+        props: React.HTMLAttributes<HTMLLIElement>,
+        service: OpticalService
+    ) => (
+        <li {...props}>
+            <Box sx={{ width: "100%" }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <Typography variant="body2" fontWeight="medium">
+                        {service.name || "Serviço sem nome"}
+                    </Typography>
+                    <Chip
+                        label={formatPrice(service.price)}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                    />
                 </Box>
-            </li>
-        );
-    };
 
-    // ✅ CORREÇÃO: Get option label com verificação
+                {service.description && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                        {service.description}
+                    </Typography>
+                )}
+            </Box>
+        </li>
+    );
+
+
     const getOptionLabel = (service: OpticalService): string => {
-        const name = service.name || 'Serviço sem nome';
+        const name = service.name || "Serviço sem nome";
         const price = formatPrice(service.price);
         return `${name} - ${price}`;
     };
 
     return (
         <Box>
-            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
                 <Settings size={24} />
                 Adicionar Serviços
             </Typography>
@@ -139,18 +102,28 @@ export default function ServiceSelector({
                         onChange={(_, newValue) => setSelectedService(newValue)}
                         onKeyPress={handleKeyPress}
                         disabled={disabled}
+                        noOptionsText="Nenhum serviço encontrado"
                         renderInput={(params) => (
                             <TextField
                                 {...params}
                                 label="Buscar serviço"
                                 placeholder="Digite o nome do serviço..."
                                 fullWidth
+                                InputProps={{
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {isLoading ? <CircularProgress color="inherit" size={18} /> : null}
+                                            {params.InputProps.endAdornment}
+                                        </>
+                                    ),
+                                }}
                             />
                         )}
                         renderOption={renderOption}
                     />
                     <Button
-                        variant={selectedService ? "contained" : "outlined"} // ✅ Muda para contained quando há serviço selecionado
+                        variant={selectedService ? "contained" : "outlined"}
                         onClick={handleAddService}
                         disabled={!selectedService || disabled}
                         startIcon={<Plus size={18} />}
@@ -161,46 +134,44 @@ export default function ServiceSelector({
                 </Stack>
             </Paper>
 
-            {/* Informações do Serviço Selecionado */}
+            {/* Exibição do serviço selecionado */}
             {selectedService && (
-                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'action.hover' }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Paper variant="outlined" sx={{ p: 2, bgcolor: "action.hover" }}>
+                    <Typography
+                        variant="subtitle2"
+                        sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
+                    >
                         <Settings size={16} />
                         Serviço Selecionado
                     </Typography>
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={3}>
                         <Stack spacing={1} sx={{ flex: 1 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="body2" fontWeight="medium">Nome:</Typography>
-                                <Typography variant="body2">{selectedService.name || 'Serviço sem nome'}</Typography>
+                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                                <Typography variant="body2" fontWeight="medium">
+                                    Nome:
+                                </Typography>
+                                <Typography variant="body2">{selectedService.name}</Typography>
                             </Box>
                             {selectedService.description && (
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2" fontWeight="medium">Descrição:</Typography>
-                                    <Typography variant="body2">{selectedService.description}</Typography>
+                                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                                    <Typography variant="body2" fontWeight="medium">
+                                        Descrição:
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {selectedService.description}
+                                    </Typography>
                                 </Box>
                             )}
                         </Stack>
 
                         <Stack spacing={1} sx={{ flex: 1 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="body2" fontWeight="medium">Preço de Venda:</Typography>
+                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                                <Typography variant="body2" fontWeight="medium">
+                                    Preço:
+                                </Typography>
                                 <Typography variant="body2" fontWeight="bold" color="primary.main">
                                     {formatPrice(selectedService.price)}
-                                </Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="body2" fontWeight="medium">Custo:</Typography>
-                                <Typography variant="body2">
-                                    {formatPrice(selectedService.price)}
-                                </Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="body2" fontWeight="medium">Lucro:</Typography>
-                                <Typography variant="body2" color="success.main" fontWeight="bold">
-                                    {formatPrice(calculateProfit(selectedService))}
-                                    ({calculateProfitMargin(selectedService).toFixed(1)}%)
                                 </Typography>
                             </Box>
                         </Stack>
