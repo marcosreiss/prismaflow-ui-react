@@ -297,7 +297,7 @@ export default function OpticalServiceDrawer({
                                         render={({ field }) => (
                                             <CurrencyInput
                                                 {...field}
-                                                label="Preço (R$)"
+                                                label=""
                                                 fullWidth
                                                 size="small"
                                             />
