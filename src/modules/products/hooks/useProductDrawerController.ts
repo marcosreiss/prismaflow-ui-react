@@ -179,7 +179,6 @@ export function useProductDrawerController({
         minimumStock: values.minimumStock,
         category: values.category,
         brandId: values.brandId ?? undefined,
-        isActive: true,
       };
 
       if (mode === "create") {
