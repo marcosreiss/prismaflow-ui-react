@@ -22,7 +22,7 @@ export default function PFToast() {
                 display: "flex",
                 flexDirection: "column",
                 gap: 1.5,
-                zIndex: 1300,
+                zIndex: 1400,
             }}
         >
             {notifications.map(({ id, message, type }: Notification) => {
