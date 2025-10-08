@@ -104,7 +104,9 @@ export function usePrescriptionModalController({
     if ((isEdit || isView) && prescription) {
       methods.reset({
         clientId: prescription.clientId,
-        prescriptionDate: prescription.prescriptionDate,
+        prescriptionDate: prescription.prescriptionDate
+          ? new Date(prescription.prescriptionDate).toISOString().split("T")[0]
+          : "",
         doctorName: prescription.doctorName ?? "",
         crm: prescription.crm ?? "",
         odSpherical: prescription.odSpherical ?? "",
