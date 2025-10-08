@@ -19,7 +19,7 @@ import {
 import { Eye, EyeOff } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useEffect, useRef, useState } from "react";
-import type { LoginRequest } from "@/modules/auth/types/auth";
+import type { AdminBranchSelectionResponse, LoginRequest, LoginResponse } from "@/modules/auth/types/auth";
 import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLogin } from "@/modules/auth/hooks/useAuth";
@@ -211,15 +211,19 @@ export default function Login() {
 
         login(payload, {
             onSuccess: (res) => {
-                if ("data" in res && res.data !== undefined && "branches" in res.data && "tempToken" in res.data) {
-                    // Admin precisa escolher a filial
-                    setBranches(res.data.branches);
+                // 🔹 Caso especial: admin com múltiplas filiais
+                if ("data" in res && res.data != undefined && "branches" in res.data && "tempToken" in res.data) {
+                    const selection = res as AdminBranchSelectionResponse;
+                    setBranches(selection!.data!.branches);
+                    localStorage.setItem("tempAuthToken", selection!.data!.tempToken);
                     setOpenBranchModal(true);
                     return;
                 }
 
-                const user = res.data;
-                const token = res.token;
+                // 🔹 Caso normal (login direto)
+                const success = res as LoginResponse;
+                const user = success.data;
+                const token = success.token;
 
                 if (token && user) {
                     setToken(token, {
@@ -233,11 +237,12 @@ export default function Login() {
                         branchName: user.branch?.name ?? "",
                     });
 
-                    addNotification(res.message || "Login realizado com sucesso!", "success");
+                    addNotification(success.message || "Login realizado com sucesso!", "success");
                 } else {
                     addNotification("Erro: resposta inválida do servidor.", "error");
                 }
             },
+
             onError: (err) => {
                 const apiMessage =
                     err.response?.data?.message || "Erro ao fazer login. Tente novamente.";
