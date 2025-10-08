@@ -32,7 +32,7 @@ export default function BrandsPage() {
     // ==========================
     // 🔹 Hooks de dados
     // ==========================
-    const { data, isLoading, refetch } = useGetBrands({
+    const { data, isLoading, isFetching, refetch } = useGetBrands({
         page: page + 1, // API é base-1
         limit,
         search,
@@ -177,7 +177,7 @@ export default function BrandsPage() {
                 total={total}
                 page={page}
                 pageSize={limit}
-                loading={isLoading}
+                loading={isLoading || isFetching}
                 onPageChange={(newPage) => setPage(newPage)}
                 onPageSizeChange={(newLimit) => setLimit(newLimit)}
                 getRowId={(row) => row.id}
