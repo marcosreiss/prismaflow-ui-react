@@ -5,7 +5,7 @@ import ProductSelector from "../ProductSelector";
 import SaleItemsTable from "../OldSaleItemsTable";
 import ServicesTable from "../serviceTable";
 import type { Product } from "@/modules/products/types/productTypes";
-import ServiceSelector from "../serviceSelector";
+import ServiceSelector from "../../../modules/sales/components/productsStep/serviceSelector";
 import type { OpticalService } from "@/types/opticalServiceTypes";
 import type { Sale } from "@/types/saleTypes";
 

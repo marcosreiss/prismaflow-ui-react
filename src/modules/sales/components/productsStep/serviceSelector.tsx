@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { Service } from "@/types/serviceTypes";
 import {
     Autocomplete,
     TextField,
@@ -11,11 +10,12 @@ import {
     Paper,
 } from "@mui/material";
 import { Plus, Settings } from "lucide-react";
+import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 
 interface ServiceSelectorProps {
-    services: Service[];
+    services: OpticalService[];
     isLoading: boolean;
-    onAddService: (service: Service) => void;
+    onAddService: (service: OpticalService) => void;
     disabled?: boolean;
 }
 
@@ -25,7 +25,7 @@ export default function ServiceSelector({
     onAddService,
     disabled = false
 }: ServiceSelectorProps) {
-    const [selectedService, setSelectedService] = useState<Service | null>(null);
+    const [selectedService, setSelectedService] = useState<OpticalService | null>(null);
 
     const handleAddService = () => {
         if (selectedService) {
@@ -42,15 +42,15 @@ export default function ServiceSelector({
     };
 
     // ✅ CORREÇÃO: Funções com verificação de null
-    const calculateProfit = (service: Service) => {
+    const calculateProfit = (service: OpticalService) => {
         const price = service.price || 0;
-        const cost = service.cost || 0;
+        const cost = service.price || 0;
         return price - cost;
     };
 
-    const calculateProfitMargin = (service: Service) => {
+    const calculateProfitMargin = (service: OpticalService) => {
         const price = service.price || 0;
-        const cost = service.cost || 0;
+        const cost = service.price || 0;
         if (cost === 0) return 0;
         return ((price - cost) / cost) * 100;
     };
@@ -66,7 +66,7 @@ export default function ServiceSelector({
 
     // ✅ CORREÇÃO: Render option corrigida
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const renderOption = (props: any, service: Service) => {
+    const renderOption = (props: any, service: OpticalService) => {
         // ✅ Extrair key das props e passar diretamente
         const { key, ...otherProps } = props;
 
@@ -93,7 +93,7 @@ export default function ServiceSelector({
 
                     <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
                         <Chip
-                            label={`Custo: ${formatPrice(service.cost)}`}
+                            label={`Custo: ${formatPrice(service.price)}`}
                             size="small"
                             variant="outlined"
                         />
@@ -115,7 +115,7 @@ export default function ServiceSelector({
     };
 
     // ✅ CORREÇÃO: Get option label com verificação
-    const getOptionLabel = (service: Service): string => {
+    const getOptionLabel = (service: OpticalService): string => {
         const name = service.name || 'Serviço sem nome';
         const price = formatPrice(service.price);
         return `${name} - ${price}`;
@@ -193,7 +193,7 @@ export default function ServiceSelector({
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" fontWeight="medium">Custo:</Typography>
                                 <Typography variant="body2">
-                                    {formatPrice(selectedService.cost)}
+                                    {formatPrice(selectedService.price)}
                                 </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
