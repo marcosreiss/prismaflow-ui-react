@@ -12,6 +12,7 @@ import type {
   ClientResponse,
   CreateClientPayload,
   UpdateClientPayload,
+  ClientSelectResponse,
 } from "../types/clientTypes";
 import type { ApiResponse } from "@/types/apiResponse";
 
@@ -129,5 +130,23 @@ export const useGetClientById = (id?: number) => {
       return data;
     },
     enabled: !!id,
+  });
+};
+
+// =============================
+// 🔹 HOOK: SELECT CLIENTS (autocomplete)
+// =============================
+export const useSelectClients = (name: string) => {
+  return useQuery<ClientSelectResponse, AxiosError<ApiResponse<null>>>({
+    queryKey: ["clients", "select", name],
+    queryFn: async () => {
+      const { data } = await baseApi.get<ClientSelectResponse>(
+        "/api/clients/select",
+        { params: { name } }
+      );
+      return data;
+    },
+    enabled: !!name && name.length >= 2, // só busca se tiver pelo menos 2 letras
+    staleTime: 1000 * 60 * 5, // cache por 5 minutos
   });
 };
