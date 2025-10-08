@@ -98,9 +98,11 @@ export default function PrescriptionModal({
             <Divider sx={{ mb: 2 }} />
 
             <DialogContent dividers sx={{ px: 1.5, py: 2 }}>
+                {/* ==============================
+            🔹 Modo de Visualização
+        ============================== */}
                 {isView && prescription && (
                     <Stack spacing={2}>
-                        {/* Ações no modo View */}
                         <Stack direction="row" spacing={1} mb={1}>
                             <Button
                                 size="small"
@@ -123,9 +125,10 @@ export default function PrescriptionModal({
 
                         <Divider sx={{ mb: 2 }} />
 
-                        {/* Dados da receita */}
                         <Row label="Médico" value={prescription.doctorName} />
                         <Row label="CRM" value={prescription.crm} />
+                        <Row label="Data da Receita" value={prescription.prescriptionDate} />
+
                         <Divider sx={{ my: 2 }} />
                         <Typography fontWeight={600} fontSize={14}>
                             Olho Direito (OD)
@@ -135,6 +138,11 @@ export default function PrescriptionModal({
                             <Row label="Cilíndrico" value={prescription.odCylindrical} />
                             <Row label="Eixo" value={prescription.odAxis} />
                             <Row label="DNP" value={prescription.odDnp} />
+                            <Row label="Adição" value={prescription.additionRight} />
+                            <Row
+                                label="Centro Óptico"
+                                value={prescription.opticalCenterRight}
+                            />
                         </GridBlock>
 
                         <Divider sx={{ my: 2 }} />
@@ -146,11 +154,12 @@ export default function PrescriptionModal({
                             <Row label="Cilíndrico" value={prescription.oeCylindrical} />
                             <Row label="Eixo" value={prescription.oeAxis} />
                             <Row label="DNP" value={prescription.oeDnp} />
+                            <Row label="Adição" value={prescription.additionLeft} />
+                            <Row
+                                label="Centro Óptico"
+                                value={prescription.opticalCenterLeft}
+                            />
                         </GridBlock>
-
-                        <Divider sx={{ my: 2 }} />
-                        <Row label="Adição" value={prescription.addition} />
-                        <Row label="Centro Óptico" value={prescription.opticalCenter} />
 
                         <Divider sx={{ my: 3 }} />
                         <Button fullWidth variant="contained" onClick={onCreateNew}>
@@ -159,25 +168,44 @@ export default function PrescriptionModal({
                     </Stack>
                 )}
 
+                {/* ==============================
+            🔹 Formulário de Criação/Edição
+        ============================== */}
                 {(isCreate || isEdit) && (
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit}>
                             <Stack spacing={2}>
-                                {/* Médico / CRM */}
+                                {/* Profissional */}
                                 <Section title="Profissional">
-                                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                                    <Stack
+                                        direction={{ xs: "column", sm: "row" }}
+                                        spacing={2}
+                                    >
                                         <TextField
                                             fullWidth
                                             inputRef={inputRef}
                                             size="small"
                                             label="Nome do médico"
-                                            {...methods.register("doctorName", { required: true })}
+                                            {...methods.register("doctorName")}
                                         />
                                         <TextField
                                             fullWidth
                                             size="small"
                                             label="CRM"
                                             {...methods.register("crm")}
+                                        />
+                                    </Stack>
+                                </Section>
+
+                                <Section title="Data da Receita">
+                                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            label=""
+                                            type="date"
+                                            InputLabelProps={{ shrink: true }}
+                                            {...methods.register("prescriptionDate", { required: true })}
                                         />
                                     </Stack>
                                 </Section>
@@ -205,6 +233,16 @@ export default function PrescriptionModal({
                                             label="DNP"
                                             {...methods.register("odDnp")}
                                         />
+                                        <TextField
+                                            size="small"
+                                            label="Adição"
+                                            {...methods.register("additionRight")}
+                                        />
+                                        <TextField
+                                            size="small"
+                                            label="Centro Óptico"
+                                            {...methods.register("opticalCenterRight")}
+                                        />
                                     </GridBlock>
                                 </Section>
 
@@ -231,23 +269,17 @@ export default function PrescriptionModal({
                                             label="DNP"
                                             {...methods.register("oeDnp")}
                                         />
-                                    </GridBlock>
-                                </Section>
-
-                                {/* Campos adicionais */}
-                                <Section title="Outros">
-                                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                                         <TextField
                                             size="small"
                                             label="Adição"
-                                            {...methods.register("addition")}
+                                            {...methods.register("additionLeft")}
                                         />
                                         <TextField
                                             size="small"
                                             label="Centro Óptico"
-                                            {...methods.register("opticalCenter")}
+                                            {...methods.register("opticalCenterLeft")}
                                         />
-                                    </Stack>
+                                    </GridBlock>
                                 </Section>
                             </Stack>
 
@@ -260,7 +292,9 @@ export default function PrescriptionModal({
                                     variant="contained"
                                     disabled={creating || updating}
                                     startIcon={
-                                        creating || updating ? <CircularProgress size={18} /> : undefined
+                                        creating || updating ? (
+                                            <CircularProgress size={18} />
+                                        ) : undefined
                                     }
                                 >
                                     {isCreate
@@ -283,7 +317,13 @@ export default function PrescriptionModal({
 // ==============================
 // 🔹 Subcomponentes auxiliares
 // ==============================
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+    title,
+    children,
+}: {
+    title: string;
+    children: React.ReactNode;
+}) {
     return (
         <Box>
             <Typography variant="subtitle2" fontWeight={600} mb={1}>
@@ -300,7 +340,7 @@ function GridBlock({ children }: { children: React.ReactNode }) {
         <Box
             sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "repeat(4, 1fr)" },
+                gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
                 gap: 2,
             }}
         >
@@ -309,7 +349,13 @@ function GridBlock({ children }: { children: React.ReactNode }) {
     );
 }
 
-function Row({ label, value }: { label: string; value: string | number | null | undefined }) {
+function Row({
+    label,
+    value,
+}: {
+    label: string;
+    value: string | number | null | undefined;
+}) {
     if (!value && value !== 0) return null;
 
     return (

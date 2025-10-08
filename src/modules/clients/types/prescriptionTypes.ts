@@ -6,18 +6,28 @@ import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
 export type Prescription = {
   id: number;
   clientId: number;
-  doctorName: string;
-  crm: string;
-  odSpherical: string;
-  odCylindrical: string;
-  odAxis: string;
-  odDnp: string;
-  oeSpherical: string;
-  oeCylindrical: string;
-  oeAxis: string;
-  oeDnp: string;
-  addition: string;
-  opticalCenter: string;
+  prescriptionDate: string;
+
+  doctorName?: string | null;
+  crm?: string | null;
+
+  // Olho Direito (OD)
+  odSpherical?: string | null;
+  odCylindrical?: string | null;
+  odAxis?: string | null;
+  odDnp?: string | null;
+  additionRight?: string | null;
+  opticalCenterRight?: string | null;
+
+  // Olho Esquerdo (OE)
+  oeSpherical?: string | null;
+  oeCylindrical?: string | null;
+  oeAxis?: string | null;
+  oeDnp?: string | null;
+  additionLeft?: string | null;
+  opticalCenterLeft?: string | null;
+
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -27,19 +37,25 @@ export type Prescription = {
 // ==============================
 export type CreatePrescriptionPayload = {
   clientId: number;
-  prescriptionDate?: string;
-  doctorName: string;
-  crm: string;
+  prescriptionDate: string;
+  doctorName?: string;
+  crm?: string;
+
   odSpherical?: string;
   odCylindrical?: string;
   odAxis?: string;
   odDnp?: string;
+  additionRight?: string;
+  opticalCenterRight?: string;
+
   oeSpherical?: string;
   oeCylindrical?: string;
   oeAxis?: string;
   oeDnp?: string;
-  addition?: string;
-  opticalCenter?: string;
+  additionLeft?: string;
+  opticalCenterLeft?: string;
+
+  isActive?: boolean;
 };
 
 export type UpdatePrescriptionPayload = Partial<CreatePrescriptionPayload>;
