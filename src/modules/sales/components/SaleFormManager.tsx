@@ -14,18 +14,18 @@ import { useProduct } from "@/hooks/useProduct";
 import { useService } from "@/hooks/useService";
 import { useSaleForm } from "@/hooks/useSaleForm";
 
-import SaleFormHeader from "../../modules/sales/components/SaleFormHeader";
-import StepperNavigation from "../../modules/sales/components/StepperNavigation";
-import SaleSummary from "../../modules/sales/components/SaleSummary";
-import SaleFormActions from "../../modules/sales/components/SaleFormActions";
+import SaleFormHeader from "./SaleFormHeader";
+import StepperNavigation from "./StepperNavigation";
+import SaleSummary from "./SaleSummary";
+import SaleFormActions from "./SaleFormActions";
 
 // ⚠️ usando seus componentes atuais
-import ClientStep from "./steps/ClientStep";
-import ProductsStep from "./steps/ProductsStep";
-import ReviewStep from "./steps/ReviewStep";
+import ClientStep from "../../../components/saleForm/steps/ClientStep";
+import ProductsStep from "../../../components/saleForm/steps/ProductsStep";
+import ReviewStep from "../../../components/saleForm/steps/ReviewStep";
 
 import type { Sale } from "@/types/saleTypes";
-import ProtocolForm from "./protocol/ProtocolForm";
+import ProtocolForm from "../../../components/saleForm/protocol/ProtocolForm";
 
 const steps = ["Cliente", "Produtos", "Protocolo", "Revisão"];
 
