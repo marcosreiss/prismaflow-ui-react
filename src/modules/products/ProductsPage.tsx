@@ -7,7 +7,6 @@ import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 
 import ProductDrawer from "./components/ProductDrawer";
 import { useProductPageController } from "./hooks/useProductPageController";
-
 import type { Product } from "./types/productTypes";
 
 // ==============================
@@ -48,6 +47,11 @@ export default function ProductsPage() {
         refetch,
         deleteProduct,
         addNotification,
+
+        // 🔹 Novos handlers para Drawer
+        handleDrawerEdit,
+        handleDrawerDelete,
+        handleDrawerCreateNew,
     } = controller;
 
     // ==============================
@@ -149,6 +153,9 @@ export default function ProductsPage() {
                 mode={drawerMode}
                 product={selectedProduct}
                 onClose={handleCloseDrawer}
+                onEdit={handleDrawerEdit}
+                onDelete={handleDrawerDelete}
+                onCreateNew={handleDrawerCreateNew}
                 onCreated={(product) => {
                     addNotification("Produto criado com sucesso!", "success");
                     handleOpenDrawer("view", product);

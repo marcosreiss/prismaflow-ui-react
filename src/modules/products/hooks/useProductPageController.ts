@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/types/apiResponse";
 import { useNotification } from "@/context/NotificationContext";
-
 import { useGetProducts, useDeleteProduct } from "./useProduct";
 import type { Product } from "../types/productTypes";
 
@@ -34,7 +33,7 @@ export function useProductPageController() {
   // 🔹 Hooks de dados
   // ==========================
   const { data, isLoading, isFetching, refetch } = useGetProducts({
-    page: page + 1, // API é base-1
+    page: page + 1,
     limit,
     search,
   });
@@ -42,7 +41,7 @@ export function useProductPageController() {
   const deleteProduct = useDeleteProduct();
 
   // ==========================
-  // 🔹 Handlers de Drawer
+  // 🔹 Drawer handlers
   // ==========================
   const handleOpenDrawer = (
     mode: "create" | "edit" | "view",
@@ -59,11 +58,28 @@ export function useProductPageController() {
   };
 
   // ==========================
+  // 🔹 Drawer: ações internas
+  // ==========================
+  const handleDrawerEdit = () => {
+    if (!selectedProduct) return;
+    handleOpenDrawer("edit", selectedProduct);
+  };
+
+  const handleDrawerDelete = (product: Product) => {
+    setSelectedProduct(product);
+    setConfirmDelete(true);
+  };
+
+  const handleDrawerCreateNew = () => {
+    setSelectedProduct(null);
+    handleOpenDrawer("create");
+  };
+
+  // ==========================
   // 🔹 Exclusão individual
   // ==========================
   const handleDelete = async () => {
     if (!selectedProduct) return;
-
     try {
       const res = await deleteProduct.mutateAsync(selectedProduct.id);
       addNotification(res.message, "success");
@@ -161,5 +177,10 @@ export function useProductPageController() {
     refetch,
     deleteProduct,
     addNotification,
+
+    // 🔹 Ações passadas ao Drawer
+    handleDrawerEdit,
+    handleDrawerDelete,
+    handleDrawerCreateNew,
   };
 }
