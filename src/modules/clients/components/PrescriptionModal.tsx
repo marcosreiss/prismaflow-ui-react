@@ -13,9 +13,15 @@ import {
     IconButton,
 } from "@mui/material";
 import { X, Pencil, Trash2 } from "lucide-react";
-import { FormProvider } from "react-hook-form";
+import { FormProvider, Controller } from "react-hook-form"; // <--- ALTERADO: Importa o Controller
 import { usePrescriptionModalController } from "../hooks/usePrescriptionModalController";
 import type { Prescription } from "../types/prescriptionTypes";
+
+// --- Importando os novos componentes de input com máscara ---
+import AdditionInput from "@/components/imask/protocolo/AdditionInput";
+import CylindricalInput from "@/components/imask/protocolo/CylindricalInput";
+import DnpInput from "@/components/imask/protocolo/DnpInput";
+import SphericalInput from "@/components/imask/protocolo/SphericalInput";
 
 type PrescriptionModalProps = {
     open: boolean;
@@ -98,9 +104,7 @@ export default function PrescriptionModal({
             <Divider sx={{ mb: 2 }} />
 
             <DialogContent dividers sx={{ px: 1.5, py: 2 }}>
-                {/* ==============================
-                    🔹 Modo de Visualização
-                    ============================== */}
+
                 {isView && prescription && (
                     <Stack spacing={2}>
                         <Stack direction="row" spacing={1} mb={1}>
@@ -168,9 +172,8 @@ export default function PrescriptionModal({
                     </Stack>
                 )}
 
-                {/* ==============================
-                🔹 Formulário de Criação/Edição
-                ============================== */}
+
+
                 {(isCreate || isEdit) && (
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit}>
@@ -211,32 +214,61 @@ export default function PrescriptionModal({
                                 </Section>
 
                                 {/* Olho Direito */}
+                                {/* Olho Direito */}
                                 <Section title="Olho Direito (OD)">
                                     <GridBlock>
-                                        <TextField
-                                            size="small"
-                                            label="Esférico"
-                                            {...methods.register("odSpherical")}
+                                        <Controller
+                                            name="odSpherical"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <SphericalInput
+                                                    label="Esférico"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                />
+                                            )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Cilíndrico"
-                                            {...methods.register("odCylindrical")}
+                                        <Controller
+                                            name="odCylindrical"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <CylindricalInput
+                                                    label="Cilíndrico"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                />
+                                            )}
                                         />
                                         <TextField
                                             size="small"
                                             label="Eixo"
                                             {...methods.register("odAxis")}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="DNP"
-                                            {...methods.register("odDnp")}
+                                        <Controller
+                                            name="odDnp"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <DnpInput
+                                                    label="DNP"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                />
+                                            )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Adição"
-                                            {...methods.register("additionRight")}
+                                        <Controller
+                                            name="additionRight"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <AdditionInput
+                                                    label="Adição"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                />
+                                            )}
                                         />
                                         <TextField
                                             size="small"
@@ -247,32 +279,61 @@ export default function PrescriptionModal({
                                 </Section>
 
                                 {/* Olho Esquerdo */}
+                                {/* Olho Esquerdo */}
                                 <Section title="Olho Esquerdo (OE)">
                                     <GridBlock>
-                                        <TextField
-                                            size="small"
-                                            label="Esférico"
-                                            {...methods.register("oeSpherical")}
+                                        <Controller
+                                            name="oeSpherical"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <SphericalInput
+                                                    label="Esférico"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                />
+                                            )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Cilíndrico"
-                                            {...methods.register("oeCylindrical")}
+                                        <Controller
+                                            name="oeCylindrical"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <CylindricalInput
+                                                    label="Cilíndrico"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                />
+                                            )}
                                         />
                                         <TextField
                                             size="small"
                                             label="Eixo"
                                             {...methods.register("oeAxis")}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="DNP"
-                                            {...methods.register("oeDnp")}
+                                        <Controller
+                                            name="oeDnp"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <DnpInput
+                                                    label="DNP"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                />
+                                            )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Adição"
-                                            {...methods.register("additionLeft")}
+                                        <Controller
+                                            name="additionLeft"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <AdditionInput
+                                                    label="Adição"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                />
+                                            )}
                                         />
                                         <TextField
                                             size="small"

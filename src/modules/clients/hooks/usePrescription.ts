@@ -71,7 +71,7 @@ export const useCreatePrescription = () => {
 };
 
 // =============================
-// 🔹 HOOK: UPDATE PRESCRIPTION
+// 🔹 HOOK: UPDATE PRESCRIPTION (CORRIGIDO E TYPE-SAFE)
 // =============================
 export const useUpdatePrescription = () => {
   const queryClient = useQueryClient();
@@ -82,9 +82,18 @@ export const useUpdatePrescription = () => {
     { id: number; data: UpdatePrescriptionPayload }
   >({
     mutationFn: async ({ id, data }) => {
+      // AQUI ESTÁ A CORREÇÃO TYPE-SAFE (sem 'any'):
+      // Definimos que 'data' é do tipo UpdatePrescriptionPayload E (&) também
+      // possui uma propriedade opcional 'clientId' do tipo number.
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { clientId, ...dataToSend } = data as UpdatePrescriptionPayload & {
+        clientId?: number;
+      };
+
       const res = await baseApi.put<PrescriptionResponse>(
         `/api/prescriptions/${id}`,
-        data
+        dataToSend // Agora 'dataToSend' é 100% compatível com UpdatePrescriptionPayload
       );
       return res.data;
     },

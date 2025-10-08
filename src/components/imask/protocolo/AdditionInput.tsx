@@ -32,7 +32,7 @@ function formatFinalValue(value: string): string {
 
     // Garante que o valor seja tratado como número para evitar erros com "+." etc.
     const numValue = parseFloat(value);
-    if (isNaN(numValue)) return value; // Retorna o valor inválido para que o erro apareça
+    if (isNaN(numValue)) return ''; // Se não for um número válido, retorna vazio
 
     // Adição é sempre positiva
     const sign = '+';
@@ -52,12 +52,13 @@ type Props = Omit<TextFieldProps, "value" | "onChange"> & {
 };
 
 export default function AdditionInput({ value, onChange, ...rest }: Props) {
-    const [display, setDisplay] = React.useState(() => value || '');
+    // <--- CORRIGIDO: Formata o valor na inicialização do estado de exibição.
+    const [display, setDisplay] = React.useState(() => formatFinalValue(value));
     const [error, setError] = React.useState('');
 
-    // Sincroniza o estado de exibição se o valor externo mudar
+    // <--- CORRIGIDO: Garante que a formatação seja aplicada sempre que o valor externo mudar.
     React.useEffect(() => {
-        setDisplay(value || '');
+        setDisplay(formatFinalValue(value));
     }, [value]);
 
     /**

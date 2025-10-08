@@ -8,12 +8,13 @@ type Props = Omit<TextFieldProps, "value" | "onChange"> & {
 };
 
 export default function CylindricalInput({ value, onChange, ...rest }: Props) {
-    const [display, setDisplay] = React.useState(() => value || '');
+    // <--- CORRIGIDO: Formata o valor na inicialização.
+    const [display, setDisplay] = React.useState(() => formatFinalValue(value));
     const [error, setError] = React.useState('');
 
+    // <--- CORRIGIDO: Aplica a formatação sempre que o valor externo mudar.
     React.useEffect(() => {
-        // Garante que o estado interno 'display' reflita o 'value' externo
-        setDisplay(value || '');
+        setDisplay(formatFinalValue(value));
     }, [value]);
 
     const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -76,7 +77,7 @@ export default function CylindricalInput({ value, onChange, ...rest }: Props) {
 }
 
 // ==========================================================
-// Funções Auxiliares
+// Funções Auxiliares (sem alterações)
 // ==========================================================
 
 function isPartialValue(value: string, isCylindrical: boolean = false): boolean {
@@ -153,50 +154,25 @@ function validateCylindrical(value: string, isTyping: boolean): string {
 }
 
 
+// <--- FUNÇÃO CORRIGIDA (da minha resposta anterior) ---
+
 function formatFinalValue(value: string): string {
-    if (!value || isPartialValue(value, true)) return '';
+    if (!value || isPartialValue(value)) return '';
 
-    const match = value.match(/^(-?)(\d*)(\.?)(\d*)$/);
-    if (match) {
-        const [, , integer, , decimal] = match;
+    const num = parseFloat(value);
 
-        if (!integer && !decimal) return '';
-
-        let finalInteger = integer || '0';
-        let finalDecimal = decimal || '00';
-
-        // Garante 2 casas decimais e trunca
-        finalDecimal = finalDecimal.padEnd(2, '0').slice(0, 2);
-
-        // Remove zeros à esquerda (exceto se for '0')
-        finalInteger = finalInteger.replace(/^0+(?=\d)/, '');
-        if (!finalInteger) finalInteger = '0';
-
-        // Garante o sinal NEGATIVO no valor que será parseado
-        const parsedValue = `-${finalInteger}.${finalDecimal}`;
-        let numValue = parseFloat(parsedValue);
-
-        // Limita e garante que não é positivo
-        if (!isNaN(numValue)) {
-            // Se o valor for 0, deve ser formatado como '' (vazio)
-            if (numValue === 0) {
-                return '';
-            }
-            // Não permite positivo (já tratado no parse, mas para segurança)
-            if (numValue > 0) {
-                numValue = 0;
-            }
-            // Limita a -6.00
-            if (numValue < -6.00) {
-                numValue = -6.00;
-            }
-        } else {
-            return '';
-        }
-
-        // Retorna o valor fixado com 2 casas decimais e o sinal '-' (já garantido por ser negativo)
-        return '-' + Math.abs(numValue).toFixed(2);
+    if (isNaN(num) || num === 0) {
+        return '';
     }
 
-    return '';
+    // 1. Pega o valor ABSOLUTO. Isso trata "1.5" e "-1.5" da mesma forma.
+    let finalValue = Math.abs(num);
+
+    // Aplica o limite
+    if (finalValue > 6.00) {
+        finalValue = 6.00;
+    }
+
+    // 2. SEMPRE retorna o valor formatado com o sinal de "-" na frente.
+    return `-${finalValue.toFixed(2)}`;
 }

@@ -149,6 +149,9 @@ export function usePrescriptionModalController({
   // ==============================
   // 🔹 Submissão do formulário
   // ==============================
+  // ==============================
+  // 🔹 Submissão do formulário (VERSÃO CORRIGIDA)
+  // ==============================
   const handleSubmit = methods.handleSubmit(async (values) => {
     try {
       if (!clientId) {
@@ -156,9 +159,22 @@ export function usePrescriptionModalController({
         return;
       }
 
+      // AQUI ESTÁ A CORREÇÃO:
+      // 1. Criamos uma cópia dos dados do formulário para poder modificá-la.
+      const dataToSend = { ...values };
+
+      // 2. Verificamos se a data foi preenchida e a convertemos para o formato ISO.
+      if (dataToSend.prescriptionDate) {
+        // NOTA: Usamos T12:00:00 para evitar problemas de fuso horário (timezone)
+        // que poderiam fazer a data ser salva como o dia anterior.
+        // Esta é uma forma segura de lidar com datas sem hora específica.
+        dataToSend.prescriptionDate = new Date(`${dataToSend.prescriptionDate}T12:00:00.000Z`).toISOString();
+      }
+
+      // 3. Usamos o objeto 'dataToSend' com a data corrigida nas chamadas da API.
       if (isCreate) {
         const res = await createPrescription({
-          ...values,
+          ...dataToSend,
           clientId,
         } as CreatePrescriptionPayload);
 
@@ -166,7 +182,7 @@ export function usePrescriptionModalController({
       } else if (isEdit && prescription) {
         const res = await updatePrescription({
           id: prescription.id,
-          data: values as UpdatePrescriptionPayload,
+          data: dataToSend as UpdatePrescriptionPayload,
         });
 
         if (res?.data) onUpdated(res.data);

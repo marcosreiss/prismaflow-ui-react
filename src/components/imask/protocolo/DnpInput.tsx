@@ -28,7 +28,8 @@ function formatFinalValue(value: string): string {
     if (!value) return '';
 
     const numValue = parseFloat(value);
-    if (isNaN(numValue)) return value;
+    // Se não for um número válido (ex: o usuário digita algo inválido), retorna vazio.
+    if (isNaN(numValue)) return '';
 
     // Garante duas casas decimais
     return numValue.toFixed(2);
@@ -42,12 +43,13 @@ type Props = Omit<TextFieldProps, "value" | "onChange"> & {
 };
 
 export default function DnpInput({ value, onChange, ...rest }: Props) {
-    const [display, setDisplay] = React.useState(() => value || '');
+    // <--- CORRIGIDO: Formata o valor na inicialização do estado.
+    const [display, setDisplay] = React.useState(() => formatFinalValue(value));
     const [error, setError] = React.useState('');
 
-    // Sincroniza o estado de exibição se o valor externo mudar
+    // <--- CORRIGIDO: Aplica a formatação sempre que o valor externo mudar.
     React.useEffect(() => {
-        setDisplay(value || '');
+        setDisplay(formatFinalValue(value));
     }, [value]);
 
     /**
@@ -130,7 +132,7 @@ export default function DnpInput({ value, onChange, ...rest }: Props) {
             inputProps={{
                 inputMode: "decimal",
                 placeholder: "62.00",
-                maxLength: 6, // Ex: "99.99"
+                maxLength: 5, // Ex: "99.99"
             }}
         />
     );
