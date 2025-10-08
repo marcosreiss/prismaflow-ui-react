@@ -8,7 +8,7 @@ import BrandDrawer from "./BrandDrawer";
 import type { ApiResponse } from "@/types/apiResponse";
 import type { AxiosError } from "axios";
 import type { Brand } from "./brandTypes";
-import { useGetBrands, useDeleteBrand } from "./useBrand";
+import { useGetBrands, useDeleteBrand } from "./hooks/useBrand";
 
 export default function BrandsPage() {
     // ==========================
