@@ -1,4 +1,4 @@
-import type { Prescription } from "./prescriptionTypes";
+import type { Prescription } from "../modules/clients/types/prescriptionTypes";
 import type { Sale } from "./saleTypes";
 
 export type Protocol = {

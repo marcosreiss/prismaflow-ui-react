@@ -2,7 +2,7 @@
 
 import { customerColumns, customerFields } from "@/config/customer.config";
 import { useCustomer } from "@/hooks/useCustomer";
-import type { Client } from "@/types/clientTypes";
+import type { Client } from "@/modules/clients/types/clientTypes";
 import { Box, Typography, Chip, Divider } from "@mui/material";
 import { CrudPage } from "./CrudPage";
 

@@ -1,5 +1,5 @@
 import { useForm, Controller } from "react-hook-form";
-import type { Prescription } from "@/types/prescriptionTypes";
+import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import {
     Dialog,
     DialogTitle,

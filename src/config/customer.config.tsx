@@ -1,6 +1,6 @@
 import type { FieldDef } from "@/components/crud/PFDrawerModal";
 import type { ColumnDef } from "@/components/crud/PFTable";
-import type { Client } from "@/types/clientTypes";
+import type { Client } from "@/modules/clients/types/clientTypes";
 import { TextField } from "@mui/material";
 
 // ----------------------

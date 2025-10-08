@@ -1,6 +1,6 @@
 import { useEntity } from "@/hooks/useEntity";
 import { customerService } from "@/services/customerService";
-import type { Client } from "@/types/clientTypes";
+import type { Client } from "@/modules/clients/types/clientTypes";
 
 export function useCustomer(detailId?: number | string | null) {
     return useEntity<Client>({
