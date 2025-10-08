@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Sale } from "@/types/saleTypes";
-import type { Product } from "@/types/productTypes";
+import type { Product } from "@/modules/products/types/productTypes";
 type ValidatorOptions = { isEditMode?: boolean };
 /**
  * Validações para o formulário de venda

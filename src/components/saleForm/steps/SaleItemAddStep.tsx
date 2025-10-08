@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { useProduct } from "@/hooks/useProduct";
-import type { Product } from "@/types/productTypes";
+import type { Product } from "@/modules/products/types/productTypes";
 import {
     Box,
     Typography,

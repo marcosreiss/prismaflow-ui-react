@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import type { DeepPartial } from "react-hook-form";
 import type { Sale } from "@/types/saleTypes";
-import type { Product } from "@/types/productTypes";
+import type { Product } from "@/modules/products/types/productTypes";
 import type { ItemProduct } from "@/types/itemProductTypes";
 import type { ProtocolCreate } from "@/types/protocolTypes";
 

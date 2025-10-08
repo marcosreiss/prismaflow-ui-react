@@ -1,5 +1,5 @@
 import type { FrameDetails } from "./frameDetailsTypes";
-import type { Product } from "./productTypes";
+import type { Product } from "../modules/products/types/productTypes";
 import type { Sale } from "./saleTypes";
 
 export type ItemProduct = {

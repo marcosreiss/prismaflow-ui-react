@@ -3,7 +3,7 @@ import type { ColumnDef } from "@/components/crud/PFTable";
 import CurrencyInput from "@/components/imask/CurrencyInput";
 import PercentInput from "@/components/imask/PercentInput";
 import type { Brand } from "@/modules/brands/types/brandTypes";
-import { type Product, type ProductCategory, ProductCategoryLabels } from "@/types/productTypes";
+import { type Product, type ProductCategory, ProductCategoryLabels } from "@/modules/products/types/productTypes";
 import { MenuItem, TextField } from "@mui/material";
 
 // ----------------------

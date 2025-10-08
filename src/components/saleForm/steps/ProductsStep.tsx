@@ -6,7 +6,7 @@ import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import ProductSelector from "../ProductSelector";
 import SaleItemsTable from "../SaleItemsTable";
 import ServicesTable from "../serviceTable";
-import type { Product } from "@/types/productTypes";
+import type { Product } from "@/modules/products/types/productTypes";
 import type { Service } from "@/types/serviceTypes";
 import ServiceSelector from "../serviceSelector";
 

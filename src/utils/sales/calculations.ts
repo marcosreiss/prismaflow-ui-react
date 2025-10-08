@@ -1,5 +1,5 @@
 import type { Sale } from "@/types/saleTypes";
-import type { Product } from "@/types/productTypes";
+import type { Product } from "@/modules/products/types/productTypes";
 
 /**
  * Cálculos financeiros e utilitários para vendas

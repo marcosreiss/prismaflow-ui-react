@@ -1,5 +1,5 @@
 import type { EntityService } from "@/services/entityService";
-import type { Product } from "@/types/productTypes";
+import type { Product } from "@/modules/products/types/productTypes";
 import api from "./config/api";
 
 export const productService: EntityService<Product> = {

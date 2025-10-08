@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { Product, ProductCategory } from "@/types/productTypes";
-import { ProductCategoryLabels } from "@/types/productTypes";
+import type { Product, ProductCategory } from "@/modules/products/types/productTypes";
+import { ProductCategoryLabels } from "@/modules/products/types/productTypes";
 import {
     Autocomplete,
     TextField,
