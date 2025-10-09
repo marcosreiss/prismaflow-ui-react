@@ -8,10 +8,17 @@ import {
     Stack,
 } from "@mui/material";
 import { FileText } from "lucide-react";
-import type { CreateSalePayload } from "../types/salesTypes";
+import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
+import { useEffect } from "react";
 
 export default function ProtocolStep() {
-    const { control } = useFormContext<CreateSalePayload>();
+    const { control, setValue, watch } = useFormContext<CreateSalePayload>();
+    const protocol = watch("protocol");
+
+    useEffect(() => {
+        if (!protocol) setValue("protocol", { recordNumber: "", book: "", page: null, os: "" });
+    }, [protocol, setValue]);
+
 
     return (
         <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
