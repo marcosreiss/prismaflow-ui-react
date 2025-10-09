@@ -1,6 +1,7 @@
 // components/ProductAccordion.tsx
 import { Accordion, AccordionSummary, AccordionDetails, Paper, Typography, Box, Chip, Stack } from "@mui/material";
 import { Inventory, ExpandMore } from "@mui/icons-material";
+import type { SaleProductItem } from "../../types/salesTypes";
 
 // Interface para EmptyState
 interface EmptyStateProps {
@@ -24,19 +25,10 @@ function EmptyState({ icon, title, description }: EmptyStateProps) {
     );
 }
 
-interface Product {
-    id: number;
-    name: string;
-    quantity: number;
-    unitPrice: number;
-    total: number;
-    frameDetailsResponse?: object;
-}
-
 interface ProductAccordionProps {
-    products: Product[];
+    products: SaleProductItem[];
     expanded: boolean;
-    onChange: (isExpanded: boolean) => void; // ← ASSIM
+    onChange: (expanded: boolean) => void;
 }
 
 function ProductAccordion({ products, expanded, onChange }: ProductAccordionProps) {
@@ -54,39 +46,63 @@ function ProductAccordion({ products, expanded, onChange }: ProductAccordionProp
                 <AccordionDetails>
                     {products && products.length > 0 ? (
                         <Stack spacing={2}>
-                            {products.map((product) => (
-                                <Paper key={product.id} variant="outlined" sx={{ p: 2 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <Box sx={{ flex: 1 }}>
-                                            <Typography variant="body1" fontWeight="medium">
-                                                {product.name}
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
-                                                <Chip
-                                                    label={`Qtd: ${product.quantity}`}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                                <Chip
-                                                    label={`R$ ${product.unitPrice?.toFixed(2)} un.`}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                                {product.frameDetailsResponse && (
+                            {products.map((item) => {
+                                // ✅ CALCULA os valores baseado no SaleProductItem
+                                const unitPrice = item.product?.salePrice || 0;
+                                const total = unitPrice * (item.quantity || 1);
+
+                                return (
+                                    <Paper key={item.id} variant="outlined" sx={{ p: 2 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <Box sx={{ flex: 1 }}>
+                                                <Typography variant="body1" fontWeight="medium">
+                                                    {item.product?.name || "Produto não encontrado"}
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
                                                     <Chip
-                                                        label="Armação"
+                                                        label={`Qtd: ${item.quantity || 1}`}
                                                         size="small"
-                                                        color="primary"
+                                                        variant="outlined"
                                                     />
+                                                    <Chip
+                                                        label={`R$ ${unitPrice.toFixed(2)} un.`}
+                                                        size="small"
+                                                        variant="outlined"
+                                                    />
+                                                    {item.frameDetails && (
+                                                        <Chip
+                                                            label="Armação"
+                                                            size="small"
+                                                            color="primary"
+                                                        />
+                                                    )}
+                                                    {item.product?.category && (
+                                                        <Chip
+                                                            label={item.product.category}
+                                                            size="small"
+                                                            variant="outlined"
+                                                            color="secondary"
+                                                        />
+                                                    )}
+                                                </Box>
+                                                {/* Mostrar detalhes da armação se existir */}
+                                                {item.frameDetails && (
+                                                    <Box sx={{ mt: 1 }}>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            Material: {item.frameDetails.material}
+                                                            {item.frameDetails.color && ` • Cor: ${item.frameDetails.color}`}
+                                                            {item.frameDetails.reference && ` • Ref: ${item.frameDetails.reference}`}
+                                                        </Typography>
+                                                    </Box>
                                                 )}
                                             </Box>
+                                            <Typography variant="body1" fontWeight="bold" color="primary.main">
+                                                R$ {total.toFixed(2)}
+                                            </Typography>
                                         </Box>
-                                        <Typography variant="body1" fontWeight="bold" color="primary.main">
-                                            R$ {product.total?.toFixed(2)}
-                                        </Typography>
-                                    </Box>
-                                </Paper>
-                            ))}
+                                    </Paper>
+                                );
+                            })}
                         </Stack>
                     ) : (
                         <EmptyState

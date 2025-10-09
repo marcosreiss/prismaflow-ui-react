@@ -1,15 +1,16 @@
 // components/ServiceAccordion.tsx
 import { Accordion, AccordionSummary, AccordionDetails, Paper, Typography, Box, Stack } from "@mui/material";
 import { Build, ExpandMore } from "@mui/icons-material";
+// 1. IMPORTAR o tipo SaleServiceItem, assim como no ProductAccordion
+import type { SaleServiceItem } from "../../types/salesTypes";
 
-// Interface para EmptyState
+// Interface para EmptyState (sem alterações)
 interface EmptyStateProps {
     icon: React.ReactNode;
     title: string;
     description: string;
 }
 
-// EmptyState interno com tipos definidos
 function EmptyState({ icon, title, description }: EmptyStateProps) {
     return (
         <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
@@ -24,17 +25,14 @@ function EmptyState({ icon, title, description }: EmptyStateProps) {
     );
 }
 
-interface Service {
-    id: number;
-    description: string;
-    opticalServiceId: number;
-    price: number;
-}
+// 2. REMOVER a interface local 'Service'
+// interface Service { ... }
 
+// 3. ATUALIZAR a interface de props para usar SaleServiceItem[]
 interface ServiceAccordionProps {
-    services: Service[];
+    services: SaleServiceItem[];
     expanded: boolean;
-    onChange: (isExpanded: boolean) => void; // ← NOVA LINHA
+    onChange: (isExpanded: boolean) => void;
 }
 
 function ServiceAccordion({ services, expanded, onChange }: ServiceAccordionProps) {
@@ -52,19 +50,23 @@ function ServiceAccordion({ services, expanded, onChange }: ServiceAccordionProp
                 <AccordionDetails>
                     {services && services.length > 0 ? (
                         <Stack spacing={2}>
-                            {services.map((service) => (
-                                <Paper key={service.id} variant="outlined" sx={{ p: 2 }}>
+                            {/* 4. AJUSTAR o map para usar as propriedades de SaleServiceItem */}
+                            {services.map((item) => (
+                                <Paper key={item.id} variant="outlined" sx={{ p: 2 }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <Box sx={{ flex: 1 }}>
                                             <Typography variant="body1" fontWeight="medium">
-                                                {service.description}
+                                                {/* Acessa o nome dentro do objeto aninhado 'service' */}
+                                                {item.service?.name || "Serviço não encontrado"}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                                ID: {service.opticalServiceId}
+                                                {/* Acessa o ID dentro do objeto aninhado 'service' */}
+                                                ID: {item.service?.id || "N/A"}
                                             </Typography>
                                         </Box>
                                         <Typography variant="body1" fontWeight="bold" color="primary.main">
-                                            R$ {service.price?.toFixed(2)}
+                                            {/* Usa o preço diretamente do item */}
+                                            R$ {item.service?.price?.toFixed(2)}
                                         </Typography>
                                     </Box>
                                 </Paper>

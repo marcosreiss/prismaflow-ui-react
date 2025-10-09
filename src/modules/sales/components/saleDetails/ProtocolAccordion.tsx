@@ -1,91 +1,71 @@
 // components/ProtocolAccordion.tsx
-import { Accordion, AccordionSummary, AccordionDetails, Paper, Typography, Box, Chip, Stack, Divider, Card, CardContent } from "@mui/material";
-import { Assignment, ExpandMore, MedicalServices } from "@mui/icons-material";
+import { Accordion, AccordionSummary, AccordionDetails, Paper, Typography, Box, Chip, Stack, Card, CardContent } from "@mui/material";
+import { Assignment, ExpandMore, MedicalServices, Visibility, VisibilityOff } from "@mui/icons-material";
 
-// Interface para EmptyState
+// 1. IMPORTAR os tipos de uma fonte de verdade única
+import type { Protocol } from '../../types/salesTypes'; // <-- Ajuste o caminho se necessário
+import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
+
+// ===================================================================
+// SUBCOMPONENTES
+// ===================================================================
+
+// EmptyState: Exibido quando não há dados
 interface EmptyStateProps {
     icon: React.ReactNode;
     title: string;
     description: string;
 }
 
-// Interface para Prescription com a estrutura real
-interface Prescription {
-    id?: number;
-    doctorName?: string;
-    crm?: string;
-    addition?: string;
-    opticalCenter?: string;
-    odSpherical?: string;
-    odCylindrical?: string;
-    odAxis?: string;
-    odDnp?: string;
-    oeSpherical?: string;
-    oeCylindrical?: string;
-    oeAxis?: string;
-    oeDnp?: string;
-    [key: string]: string | number | undefined;
-}
-
-// Interface para Protocol
-interface Protocol {
-    id?: number;
-    recordNumber?: string | null;
-    book?: string | null;
-    page?: string | null;
-    os?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
-    prescription?: Prescription | null;
-}
-
-interface ProtocolAccordionProps {
-    protocol: Protocol | null;
-    expanded: boolean;
-    onChange: (isExpanded: boolean) => void;
-}
-
-// EmptyState interno com tipos definidos
 function EmptyState({ icon, title, description }: EmptyStateProps) {
     return (
         <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
             {icon}
-            <Typography variant="body1" sx={{ mt: 1, fontWeight: 'medium' }}>
-                {title}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {description}
-            </Typography>
+            <Typography variant="body1" sx={{ mt: 1, fontWeight: 'medium' }}>{title}</Typography>
+            <Typography variant="body2" sx={{ mt: 0.5 }}>{description}</Typography>
         </Box>
     );
 }
 
-// Componente para exibir dados dos olhos com a estrutura real
-function EyePrescriptionData({ title, data, prefix }: { title: string; data?: Prescription; prefix: string }) {
-    if (!data) return null;
-
-    const eyeFields = [
-        { key: `${prefix}Spherical`, label: 'Esférico' },
-        { key: `${prefix}Cylindrical`, label: 'Cilíndrico' },
-        { key: `${prefix}Axis`, label: 'Eixo' },
-        { key: `${prefix}Dnp`, label: 'DNP' },
+// EyePrescriptionData: Exibe os detalhes da prescrição para um olho (Direito ou Esquerdo)
+function EyePrescriptionData({ title, data, eyePrefix }: { title: string; data: Prescription; eyePrefix: 'od' | 'oe' }) {
+    const fields = [
+        { key: `${eyePrefix}Spherical`, label: 'Esférico' },
+        { key: `${eyePrefix}Cylindrical`, label: 'Cilíndrico' },
+        { key: `${eyePrefix}Axis`, label: 'Eixo' },
+        { key: `${eyePrefix}Dnp`, label: 'DNP' },
     ];
 
-    const validFields = eyeFields.filter(field => data[field.key]);
+    // Mapeamento para campos de adição e centro óptico
+    const additionalFields = eyePrefix === 'od'
+        ? [
+            { key: 'additionRight', label: 'Adição' },
+            { key: 'opticalCenterRight', label: 'Centro Óptico' },
+        ]
+        : [
+            { key: 'additionLeft', label: 'Adição' },
+            { key: 'opticalCenterLeft', label: 'Centro Óptico' },
+        ];
+
+    const allFields = [...fields, ...additionalFields];
+
+    // Filtra para mostrar apenas os campos que têm valor
+    const validFields = allFields.filter(field => data[field.key as keyof Prescription]);
 
     if (validFields.length === 0) return null;
 
     return (
-        <Card variant="outlined" sx={{ height: '100%' }}>
+        <Card variant="outlined" sx={{ flex: 1, minWidth: '250px' }}>
             <CardContent>
-                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 1 }}>
+                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
                     {title}
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
-                    {validFields.map((field) => (
-                        <Typography key={field.key} variant="body2">
-                            <strong>{field.label}:</strong> {data[field.key]}
-                        </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 2 }}>
+                    {validFields.map(({ key, label }) => (
+                        <Box key={key}>
+                            <Typography variant="body2" color="text.secondary">{label}</Typography>
+                            <Typography variant="body1">{data[key as keyof Prescription]}</Typography>
+                        </Box>
                     ))}
                 </Box>
             </CardContent>
@@ -93,92 +73,22 @@ function EyePrescriptionData({ title, data, prefix }: { title: string; data?: Pr
     );
 }
 
-// Interface para a função renderAllFields
-interface RenderableObject {
-    [key: string]: string | number | null | undefined;
+
+// ===================================================================
+// COMPONENTE PRINCIPAL
+// ===================================================================
+
+// 2. ATUALIZAR as props para aceitar Protocol e Prescription separadamente
+interface ProtocolAccordionProps {
+    protocol: Protocol | null;
+    prescription: Prescription | null;
+    expanded: boolean;
+    onChange: (isExpanded: boolean) => void;
 }
 
-function ProtocolAccordion({ protocol, expanded, onChange }: ProtocolAccordionProps) {
-
-    // Verifica se protocol existe e tem dados válidos
-    const hasValidProtocol = protocol && (
-        protocol.id ||
-        protocol.recordNumber ||
-        protocol.book ||
-        protocol.page ||
-        protocol.os ||
-        protocol.prescription
-    );
-
-    const hasPrescription = protocol?.prescription;
-
-    // Converte prescription null para undefined para compatibilidade
-    const prescriptionData = protocol?.prescription || undefined;
-
-    // Função para mostrar todos os campos disponíveis de um objeto
-    const renderAllFields = (obj: RenderableObject | null, title: string, excludeFields: string[] = []) => {
-        if (!obj) return null;
-
-        const validFields = Object.entries(obj).filter(([key, value]) =>
-            value !== null &&
-            value !== undefined &&
-            value !== '' &&
-            !excludeFields.includes(key)
-        );
-
-        if (validFields.length === 0) return null;
-
-        return (
-            <Card variant="outlined">
-                <CardContent>
-                    <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-                        {title}
-                    </Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
-                        {validFields.map(([key, value]) => {
-                            let displayKey = key;
-                            let displayValue = value;
-
-                            // Formatações específicas para datas
-                            if (key.includes('Date') || key.includes('date') || key === 'createdAt' || key === 'updatedAt') {
-                                try {
-                                    displayValue = new Date(value as string).toLocaleString('pt-BR');
-                                } catch {
-                                    displayValue = value;
-                                }
-                            }
-
-                            // Traduz as chaves para português
-                            const translations: { [key: string]: string } = {
-                                'doctorName': 'Nome do Médico',
-                                'crm': 'CRM',
-                                'addition': 'Adição',
-                                'opticalCenter': 'Centro Óptico',
-                                'recordNumber': 'Número do Registro',
-                                'os': 'Ordem de Serviço',
-                                'id': 'ID',
-                                'book': 'Livro',
-                                'page': 'Página',
-                            };
-
-                            displayKey = translations[key] || key.charAt(0).toUpperCase() + key.slice(1);
-
-                            return (
-                                <Box key={key}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {displayKey}
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight={key === 'id' || key === 'doctorName' ? 'medium' : 'normal'}>
-                                        {displayValue as string}
-                                    </Typography>
-                                </Box>
-                            );
-                        })}
-                    </Box>
-                </CardContent>
-            </Card>
-        );
-    };
+function ProtocolAccordion({ protocol, prescription, expanded, onChange }: ProtocolAccordionProps) {
+    const hasProtocol = protocol && Object.values(protocol).some(v => v != null && v !== '');
+    const hasPrescription = !!prescription;
 
     return (
         <Paper sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
@@ -187,187 +97,79 @@ function ProtocolAccordion({ protocol, expanded, onChange }: ProtocolAccordionPr
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Assignment />
                         <Typography variant="h6" fontWeight="medium">
-                            Protocolo ({hasValidProtocol ? 1 : 0})
-                            {hasPrescription && (
-                                <Chip
-                                    icon={<MedicalServices />}
-                                    label="Com prescrição"
-                                    color="info"
-                                    size="small"
-                                    sx={{ ml: 1 }}
-                                />
-                            )}
+                            Protocolo e Prescrição
                         </Typography>
+                        {hasPrescription && (
+                            <Chip
+                                icon={<MedicalServices />}
+                                label="Com prescrição"
+                                color="info"
+                                size="small"
+                                sx={{ ml: 1 }}
+                            />
+                        )}
                     </Box>
                 </AccordionSummary>
                 <AccordionDetails>
-                    {hasValidProtocol ? (
+                    {!hasProtocol && !hasPrescription ? (
+                        <EmptyState
+                            icon={<Assignment sx={{ fontSize: 48, opacity: 0.3 }} />}
+                            title="Nenhum dado"
+                            description="Esta venda não possui protocolo ou prescrição associada."
+                        />
+                    ) : (
                         <Stack spacing={3}>
                             {/* Seção do Protocolo */}
-                            <Box>
-                                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Assignment />
-                                    Informações do Protocolo
-                                </Typography>
-
-                                {/* Chips com informações principais */}
-                                <Card variant="outlined" sx={{ mb: 2 }}>
+                            {hasProtocol && (
+                                <Card variant="outlined">
                                     <CardContent>
-                                        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                                            {protocol.id && (
-                                                <Chip
-                                                    label={`ID: ${protocol.id}`}
-                                                    size="small"
-                                                    variant="outlined"
-                                                    color="primary"
-                                                />
-                                            )}
-                                            {protocol.recordNumber && (
-                                                <Chip
-                                                    label={`Registro: ${protocol.recordNumber}`}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                            )}
-                                            {protocol.book && (
-                                                <Chip
-                                                    label={`Livro: ${protocol.book}`}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                            )}
-                                            {protocol.page && (
-                                                <Chip
-                                                    label={`Página: ${protocol.page}`}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                            )}
-                                            {protocol.os && (
-                                                <Chip
-                                                    label={`OS: ${protocol.os}`}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                            )}
+                                        <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+                                            Informações do Protocolo
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mt: 2 }}>
+                                            {protocol.recordNumber && <Box><Typography variant="caption" color="text.secondary">Registro</Typography><Typography>{protocol.recordNumber}</Typography></Box>}
+                                            {protocol.book && <Box><Typography variant="caption" color="text.secondary">Livro</Typography><Typography>{protocol.book}</Typography></Box>}
+                                            {protocol.page && <Box><Typography variant="caption" color="text.secondary">Página</Typography><Typography>{protocol.page}</Typography></Box>}
+                                            {protocol.os && <Box><Typography variant="caption" color="text.secondary">Ordem de Serviço</Typography><Typography>{protocol.os}</Typography></Box>}
                                         </Box>
                                     </CardContent>
                                 </Card>
+                            )}
 
-                                {/* Mostra TODOS os campos do protocolo */}
-                                {renderAllFields(protocol as RenderableObject, 'Detalhes do Protocolo', ['prescription'])}
-                            </Box>
-
-                            {/* Seção da Prescrição Médica */}
+                            {/* Seção da Prescrição */}
                             {hasPrescription && (
-                                <>
-                                    <Divider />
-
-                                    <Box>
-                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <MedicalServices />
-                                            Prescrição Médica
-                                        </Typography>
-
-                                        {/* Dados do Médico */}
-                                        <Card variant="outlined" sx={{ mb: 3 }}>
-                                            <CardContent>
-                                                <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-                                                    Dados do Médico
-                                                </Typography>
-                                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
-                                                    {prescriptionData?.doctorName && (
-                                                        <Box>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                Nome do Médico
-                                                            </Typography>
-                                                            <Typography variant="body1" fontWeight="medium">
-                                                                {prescriptionData.doctorName}
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                    {prescriptionData?.crm && (
-                                                        <Box>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                CRM
-                                                            </Typography>
-                                                            <Typography variant="body1">
-                                                                {prescriptionData.crm}
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-
-                                        {/* Dados da Prescrição */}
-                                        <Card variant="outlined" sx={{ mb: 3 }}>
-                                            <CardContent>
-                                                <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-                                                    Dados da Prescrição
-                                                </Typography>
-                                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-                                                    <EyePrescriptionData
-                                                        title="Olho Direito (OD)"
-                                                        data={prescriptionData}
-                                                        prefix="od"
-                                                    />
-                                                    <EyePrescriptionData
-                                                        title="Olho Esquerdo (OE)"
-                                                        data={prescriptionData}
-                                                        prefix="oe"
-                                                    />
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-
-                                        {/* Dados Adicionais */}
-                                        <Card variant="outlined" sx={{ mb: 3 }}>
-                                            <CardContent>
-                                                <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-                                                    Dados Adicionais
-                                                </Typography>
-                                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
-                                                    {prescriptionData?.addition && (
-                                                        <Box>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                Adição
-                                                            </Typography>
-                                                            <Typography variant="body1">
-                                                                {prescriptionData.addition}
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                    {prescriptionData?.opticalCenter && (
-                                                        <Box>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                Centro Óptico
-                                                            </Typography>
-                                                            <Typography variant="body1">
-                                                                {prescriptionData.opticalCenter}
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-
-                                        {/* Mostra outros campos da prescrição que não foram exibidos */}
-                                        {renderAllFields(
-                                            prescriptionData as RenderableObject,
-                                            'Outras Informações da Prescrição',
-                                            ['doctorName', 'crm', 'addition', 'opticalCenter', 'odSpherical', 'odCylindrical', 'odAxis', 'odDnp', 'oeSpherical', 'oeCylindrical', 'oeAxis', 'oeDnp']
+                                <Box>
+                                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                        <MedicalServices />
+                                        Prescrição Médica
+                                    </Typography>
+                                    <Stack spacing={2}>
+                                        {(prescription.doctorName || prescription.crm) && (
+                                            <Card variant="outlined">
+                                                <CardContent>
+                                                    <Typography variant="subtitle1" fontWeight="medium" gutterBottom>Dados do Médico</Typography>
+                                                    <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mt: 2 }}>
+                                                        {prescription.doctorName && <Box><Typography variant="caption" color="text.secondary">Nome</Typography><Typography>{prescription.doctorName}</Typography></Box>}
+                                                        {prescription.crm && <Box><Typography variant="caption" color="text.secondary">CRM</Typography><Typography>{prescription.crm}</Typography></Box>}
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
                                         )}
-                                    </Box>
-                                </>
+                                        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                            <EyePrescriptionData title="Olho Direito (OD)" data={prescription} eyePrefix="od" />
+                                            <EyePrescriptionData title="Olho Esquerdo (OE)" data={prescription} eyePrefix="oe" />
+                                        </Box>
+                                        <Chip
+                                            icon={prescription.isActive ? <Visibility /> : <VisibilityOff />}
+                                            label={prescription.isActive ? "Prescrição Ativa" : "Prescrição Inativa"}
+                                            color={prescription.isActive ? "success" : "default"}
+                                            variant="outlined"
+                                            sx={{ maxWidth: 'fit-content' }}
+                                        />
+                                    </Stack>
+                                </Box>
                             )}
                         </Stack>
-                    ) : (
-                        <EmptyState
-                            icon={<Assignment sx={{ fontSize: 48, opacity: 0.3 }} />}
-                            title="Nenhum protocolo"
-                            description="Esta venda não possui protocolo associado"
-                        />
                     )}
                 </AccordionDetails>
             </Accordion>

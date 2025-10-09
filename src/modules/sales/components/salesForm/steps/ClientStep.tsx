@@ -18,10 +18,13 @@ import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import { useGetClients } from "@/modules/clients/hooks/useClient";
 import { useGetPrescriptionsByClientId } from "@/modules/clients/hooks/usePrescription";
 import type { SalePayload } from "../../../types/salesTypes";
+import { useSaleFormContext } from '@/modules/sales/context/useSaleFormContext'; // ← IMPORT ADICIONADO
 
 type PrescriptionOption = Prescription & { label: string };
 
 export default function ClientStep() {
+    const { existingSale } = useSaleFormContext(); // ← HOOK ADICIONADO
+
     const {
         control,
         setValue,
@@ -36,6 +39,18 @@ export default function ClientStep() {
     const [selectedClient, setSelectedClient] = useState<ClientSelectItem | null>(null);
     const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionOption | null>(null);
     const [openPrescriptionModal, setOpenPrescriptionModal] = useState(false);
+
+    // ============ 🚀 MELHORIA: Hidratação automática do cliente ============
+    useEffect(() => {
+        // Se tem existingSale com cliente, selecione automaticamente
+        if (existingSale?.client && !selectedClient) {
+            const clientFromSale: ClientSelectItem = {
+                id: existingSale.client.id,
+                name: existingSale.client.name || ""
+            };
+            setSelectedClient(clientFromSale);
+        }
+    }, [existingSale, selectedClient]);
 
     // ============ 🔁 Debounce da busca ============
     useEffect(() => {
@@ -52,7 +67,7 @@ export default function ClientStep() {
     const clientOptions = useMemo(() => clientData?.data?.content || [], [clientData]);
 
     // ============ 🔹 Buscar receitas do cliente selecionado ============
-    const { data: prescriptionsData, isFetching: isLoadingPrescriptions } =
+    const { data: prescriptionsData } = // ← REMOVIDA variável não usada
         useGetPrescriptionsByClientId({
             clientId: selectedClient?.id ?? 0,
             page: 1,
@@ -60,7 +75,7 @@ export default function ClientStep() {
         });
 
     const prescriptionOptions: PrescriptionOption[] =
-        prescriptionsData?.data?.content.map((p) => ({
+        prescriptionsData?.data?.content?.map((p) => ({ // ← ADICIONADO ? opcional
             ...p,
             label: `${p.doctorName || "Médico não informado"} - ${dayjs(
                 p.prescriptionDate
@@ -74,7 +89,7 @@ export default function ClientStep() {
         const clientId = getValues("clientId");
         const prescriptionId = getValues("prescriptionId");
 
-        // 🔹 Cliente
+        // 🔹 Cliente - MANTIDO como fallback
         if (clientId && !selectedClient) {
             const foundClient = clientOptions.find((c) => c.id === clientId);
             if (foundClient) setSelectedClient(foundClient);
@@ -146,7 +161,7 @@ export default function ClientStep() {
                         getOptionLabel={(option) => option.name || ""}
                         value={selectedClient}
                         onInputChange={(_, value) => setSearchValue(value)}
-                        onChange={(e, val) => handleClientChange(e, val, (v) => field.onChange(v))}
+                        onChange={(e, val) => handleClientChange(e, val, field.onChange)} // ← SIMPLIFICADO
                         noOptionsText="Digite para buscar clientes."
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                         renderInput={(params) => (
@@ -204,8 +219,7 @@ export default function ClientStep() {
                     <Autocomplete<PrescriptionOption>
                         fullWidth
                         options={prescriptionOptions}
-                        loading={isLoadingPrescriptions}
-                        getOptionLabel={(option) => option.label}
+                        getOptionLabel={(option) => option.label} // ← REMOVIDO loading não usado
                         value={selectedPrescription}
                         onChange={handlePrescriptionChange}
                         isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -222,14 +236,6 @@ export default function ClientStep() {
                                 }}
                                 InputProps={{
                                     ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {isLoadingPrescriptions ? (
-                                                <CircularProgress color="inherit" size={18} />
-                                            ) : null}
-                                            {params.InputProps.endAdornment}
-                                        </>
-                                    ),
                                 }}
                             />
                         )}

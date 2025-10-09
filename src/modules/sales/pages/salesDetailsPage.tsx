@@ -67,6 +67,7 @@ export default function SalesDetailsPage() {
 
     const sale = apiResponse?.data;
 
+
     useEffect(() => {
         if (error) {
             addNotification("Erro ao carregar detalhes da venda.", "error");
@@ -110,11 +111,11 @@ export default function SalesDetailsPage() {
                             Voltar
                         </Button>
                         <Typography variant="h4">Venda #{sale.id}</Typography>
-                        {/* <Chip
+                        {<Chip
                             label={sale.isActive ? "Ativa" : "Cancelada"}
                             color={sale.isActive ? "success" : "error"}
                             variant="filled"
-                        /> */}
+                        />}
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -123,21 +124,21 @@ export default function SalesDetailsPage() {
                             label={`${sale.productItems?.length || 0} produtos`}
                             variant="outlined"
                             size="small"
-                            sx={{px: 1, py: 1.6}}
+                            sx={{ px: 1, py: 1.6 }}
                         />
                         <Chip
                             icon={<Build />}
                             label={`${sale.serviceItems?.length || 0} serviços`}
                             variant="outlined"
                             size="small"
-                            sx={{px: 1, py: 1.6}}
+                            sx={{ px: 1, py: 1.6 }}
                         />
                         <Chip
                             icon={<Assignment />}
                             label={`${sale.protocol ? 1 : 0} protocolo`}
                             variant="outlined"
                             size="small"
-                            sx={{px: 1, py: 1.6}}
+                            sx={{ px: 1, py: 1.6 }}
                         />
                         <Chip
                             icon={<AttachMoney />}
@@ -145,7 +146,7 @@ export default function SalesDetailsPage() {
                             color="primary"
                             variant="outlined"
                             size="small"
-                            sx={{px: 1, py: 1.6}}
+                            sx={{ px: 1, py: 1.6 }}
                         />
                     </Box>
                 </Box>
@@ -236,9 +237,9 @@ export default function SalesDetailsPage() {
 
                         {/* Accordion de Produtos */}
                         <ProductAccordion
-                            products={sale.productItems || []}
+                            products={sale?.productItems || []}
                             expanded={expandedAccordion === 'products'}
-                            onChange={(isExpanded) => setExpandedAccordion(isExpanded ? 'products' : false)} // ← ASSIM
+                            onChange={(isExpanded) => setExpandedAccordion(isExpanded ? 'products' : false)}
                         />
 
                         {/* Accordion de Serviços */}
@@ -250,6 +251,7 @@ export default function SalesDetailsPage() {
                         {/* Accordion de Protocolo */}
                         <ProtocolAccordion
                             protocol={sale.protocol || null}
+                            prescription={sale.prescription || null} // <-- ADICIONE ESTA LINHA
                             expanded={expandedAccordion === 'protocol'}
                             onChange={(isExpanded) => setExpandedAccordion(isExpanded ? 'protocol' : false)}
                         />
@@ -283,7 +285,7 @@ export default function SalesDetailsPage() {
                                         CPF
                                     </Typography>
                                     <Typography variant="body1">
-                                        {sale.client?.cpf || "-"}
+                                        {sale?.client?.cpf || "Não informado"} {/* ← Cliente pode não ter CPF */}
                                     </Typography>
                                 </Box>
                             </Stack>
