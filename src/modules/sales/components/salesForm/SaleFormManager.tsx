@@ -79,10 +79,7 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
 
     // watchers (para review/summary)
     const watchedProductItems = watch("productItems") ?? [];
-    const watchedServiceItems = watch("serviceItems") ?? [];
     const watchedDiscount = watch("discount") ?? 0;
-    const watchedClientId = watch("clientId") ?? null;
-    const watchedProtocol = watch("protocol") ?? undefined;
 
     // Hidratar o formulário no modo edição
     useEffect(() => {
@@ -170,15 +167,7 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
 
             case 3:
                 return (
-                    <ReviewStep
-                        clientId={watchedClientId ?? undefined}
-                        productItems={watchedProductItems}
-                        serviceItems={watchedServiceItems}
-                        protocol={watchedProtocol}
-                        subtotal={summaryCalculations.subtotal}
-                        discount={summaryCalculations.discount}
-                        total={summaryCalculations.total}
-                    />
+                    <ReviewStep />
                 );
 
             default:

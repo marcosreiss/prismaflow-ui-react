@@ -6,36 +6,27 @@ import {
     Divider,
 } from "@mui/material";
 import { CheckCircle } from "lucide-react";
+import { useFormContext } from "react-hook-form";
+import { useGetClientById } from "@/modules/clients/hooks/useClient";
 import type {
+    CreateSalePayload,
     SaleProductItem,
     SaleServiceItem,
-    Protocol,
 } from "@/modules/sales/types/salesTypes";
-import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
-import { useGetClientById } from "@/modules/clients/hooks/useClient";
 
-interface ReviewStepProps {
-    clientId?: number | null;
-    prescription?: Prescription | null;
-    productItems: SaleProductItem[];
-    serviceItems: SaleServiceItem[];
-    protocol?: Protocol | null;
-    subtotal: number;
-    discount: number;
-    total: number;
-}
+export default function ReviewStep() {
+    const { watch } = useFormContext<CreateSalePayload>();
 
+    // Dados observados do formulário
+    const clientId = watch("clientId");
+    const productItems = watch("productItems") || [];
+    const serviceItems = watch("serviceItems") || [];
+    const protocol = watch("protocol");
+    const subtotal = watch("subtotal") || 0;
+    const discount = watch("discount") || 0;
+    const total = watch("total") || 0;
 
-export default function ReviewStep({
-    clientId,
-    prescription,
-    productItems,
-    serviceItems,
-    protocol,
-    subtotal,
-    discount,
-    total,
-}: ReviewStepProps) {
+    // Busca do cliente
     const { data: clientResponse } = useGetClientById(clientId ?? undefined);
     const client = clientResponse?.data ?? null;
 
@@ -51,10 +42,7 @@ export default function ReviewStep({
 
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                 <Stack spacing={3}>
-
-                    {/* =======================
-              🔹 CLIENTE E RECEITA
-          ======================= */}
+                    {/* CLIENTE */}
                     <Box>
                         <Typography variant="subtitle2" color="text.secondary">
                             Cliente
@@ -67,27 +55,11 @@ export default function ReviewStep({
                                 {client.phone01}
                             </Typography>
                         )}
-
-                        {prescription && (
-                            <Box sx={{ mt: 1 }}>
-                                <Typography variant="subtitle2" color="text.secondary">
-                                    Receita
-                                </Typography>
-                                <Typography variant="body2">
-                                    {prescription.doctorName
-                                        ? `${prescription.doctorName} - `
-                                        : ""}
-                                    {new Date(prescription.prescriptionDate).toLocaleDateString("pt-BR")}
-                                </Typography>
-                            </Box>
-                        )}
                     </Box>
 
                     <Divider />
 
-                    {/* =======================
-              🔹 PRODUTOS
-          ======================= */}
+                    {/* PRODUTOS */}
                     <Box>
                         <Typography variant="subtitle2" color="text.secondary">
                             Produtos ({productItems.length})
@@ -99,8 +71,8 @@ export default function ReviewStep({
                             </Typography>
                         )}
 
-                        {productItems.map((item) => (
-                            <Box key={item.id} sx={{ ml: 1, mt: 0.5 }}>
+                        {productItems.map((item: SaleProductItem, index: number) => (
+                            <Box key={item.id ?? index} sx={{ ml: 1, mt: 0.5 }}>
                                 <Typography variant="body2" fontWeight="medium">
                                     • {item.product?.name || "Produto sem nome"} x {item.quantity}
                                 </Typography>
@@ -117,9 +89,7 @@ export default function ReviewStep({
 
                     <Divider />
 
-                    {/* =======================
-              🔹 SERVIÇOS
-          ======================= */}
+                    {/* SERVIÇOS */}
                     <Box>
                         <Typography variant="subtitle2" color="text.secondary">
                             Serviços ({serviceItems.length})
@@ -131,9 +101,9 @@ export default function ReviewStep({
                             </Typography>
                         )}
 
-                        {serviceItems.map((item) => (
+                        {serviceItems.map((item: SaleServiceItem, index: number) => (
                             <Typography
-                                key={item.id}
+                                key={item.id ?? index}
                                 variant="body2"
                                 color="text.secondary"
                                 sx={{ ml: 1, mt: 0.5 }}
@@ -147,40 +117,37 @@ export default function ReviewStep({
                         ))}
                     </Box>
 
-                    <Divider />
-
-                    {/* =======================
-              🔹 PROTOCOLO
-          ======================= */}
+                    {/* PROTOCOLO */}
                     {protocol && (
-                        <Box>
-                            <Typography variant="subtitle2" color="text.secondary">
-                                Protocolo
-                            </Typography>
-                            <Stack spacing={0.5} sx={{ ml: 1 }}>
-                                {protocol.recordNumber && (
-                                    <Typography variant="body2">
-                                        Nº Registro: {protocol.recordNumber}
-                                    </Typography>
-                                )}
-                                {protocol.book && (
-                                    <Typography variant="body2">Livro: {protocol.book}</Typography>
-                                )}
-                                {protocol.page != null && (
-                                    <Typography variant="body2">Página: {protocol.page}</Typography>
-                                )}
-                                {protocol.os && (
-                                    <Typography variant="body2">OS: {protocol.os}</Typography>
-                                )}
-                            </Stack>
-                        </Box>
+                        <>
+                            <Divider />
+                            <Box>
+                                <Typography variant="subtitle2" color="text.secondary">
+                                    Protocolo
+                                </Typography>
+                                <Stack spacing={0.5} sx={{ ml: 1 }}>
+                                    {protocol.recordNumber && (
+                                        <Typography variant="body2">
+                                            Nº Registro: {protocol.recordNumber}
+                                        </Typography>
+                                    )}
+                                    {protocol.book && (
+                                        <Typography variant="body2">Livro: {protocol.book}</Typography>
+                                    )}
+                                    {protocol.page != null && (
+                                        <Typography variant="body2">Página: {protocol.page}</Typography>
+                                    )}
+                                    {protocol.os && (
+                                        <Typography variant="body2">OS: {protocol.os}</Typography>
+                                    )}
+                                </Stack>
+                            </Box>
+                        </>
                     )}
 
                     <Divider />
 
-                    {/* =======================
-              🔹 RESUMO FINANCEIRO
-          ======================= */}
+                    {/* RESUMO FINANCEIRO */}
                     <Stack spacing={1}>
                         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                             <Typography variant="subtitle2" color="text.secondary">
