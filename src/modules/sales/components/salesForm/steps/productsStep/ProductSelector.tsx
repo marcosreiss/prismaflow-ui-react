@@ -14,9 +14,17 @@ import {
     InputLabel,
     Select,
     CircularProgress,
+    keyframes,
 } from "@mui/material";
 import { Plus, Package } from "lucide-react";
 import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
+
+// 🔹 Animação de erro (shake)
+const shake = keyframes`
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+`;
 
 interface ProductSelectorProps {
     products: Product[];
@@ -35,17 +43,34 @@ export default function ProductSelector({
     const { handleAddProduct } = useSaleFormContext();
 
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [quantity, setQuantity] = useState<number>(1);
+    const [quantity, setQuantity] = useState<string>("1");
+    const [quantityError, setQuantityError] = useState<string | null>(null);
     const [searchValue, setSearchValue] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "ALL">("ALL");
 
-    const handleAdd = async () => {
-        if (selectedProduct) {
-            await handleAddProduct({ ...selectedProduct, quantity });
-            setSelectedProduct(null);
-            setQuantity(1);
-            setSearchValue("");
+    const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        // Permite apagar campo
+        if (value === "" || /^[0-9]*$/.test(value)) {
+            setQuantity(value);
+            setQuantityError(null);
         }
+    };
+
+    const handleAdd = async () => {
+        const parsedQty = Number(quantity);
+
+        if (!selectedProduct) return;
+
+        if (!quantity || parsedQty <= 0) {
+            setQuantityError("*");
+            return;
+        }
+
+        await handleAddProduct({ ...selectedProduct, quantity: parsedQty });
+        setSelectedProduct(null);
+        setQuantity("1");
+        setSearchValue("");
     };
 
     const handleKeyPress = (event: React.KeyboardEvent) => {
@@ -75,12 +100,13 @@ export default function ProductSelector({
                 <Stack spacing={2}>
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="flex-end">
                         {/* Categoria */}
-                        <FormControl size="small" sx={{ minWidth: 150 }}>
+                        <FormControl size="small" sx={{ minWidth: 150, height: 40 }}>
                             <InputLabel>Categoria</InputLabel>
                             <Select
                                 value={selectedCategory}
                                 label="Categoria"
                                 onChange={(e) => setSelectedCategory(e.target.value as ProductCategory | "ALL")}
+                                sx={{ height: 40, display: "flex", alignItems: "center" }}
                             >
                                 <MenuItem value="ALL">Todas</MenuItem>
                                 {Object.entries(ProductCategoryLabels).map(([key, label]) => (
@@ -103,14 +129,17 @@ export default function ProductSelector({
                             onChange={(_, newValue) => setSelectedProduct(newValue)}
                             onKeyPress={handleKeyPress}
                             disabled={disabled}
+                            sx={{ flex: 1.5, height: 40 }}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
                                     label="Buscar produto"
                                     placeholder="Digite o nome ou descrição..."
                                     fullWidth
+                                    size="small"
                                     InputProps={{
                                         ...params.InputProps,
+                                        sx: { height: 40 },
                                         endAdornment: (
                                             <>
                                                 {isLoading ? <CircularProgress color="inherit" size={18} /> : null}
@@ -125,12 +154,22 @@ export default function ProductSelector({
                         {/* Quantidade */}
                         <TextField
                             label="Qtd."
-                            type="number"
+                            type="text" // permite apagar
                             size="small"
-                            inputProps={{ min: 1 }}
                             value={quantity}
-                            onChange={(e) => setQuantity(Number(e.target.value))}
-                            sx={{ width: 100 }}
+                            onChange={handleQuantityChange}
+                            error={!!quantityError}
+                            helperText={quantityError ?? ""}
+                            sx={{
+                                width: 100,
+                                height: 40,
+                                animation: quantityError ? `${shake} 0.3s ease` : "none",
+                            }}
+                            inputProps={{
+                                inputMode: "numeric",
+                                pattern: "[0-9]*",
+                            }}
+                            InputProps={{ sx: { height: 40 } }}
                         />
 
                         {/* Botão */}
