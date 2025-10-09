@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useMemo } from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import { FormProvider } from "react-hook-form";
 import { useSaleForm } from "../hooks/useSaleForm";
@@ -63,11 +63,17 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
     const updateSale = useUpdateSale();
 
     // ======= Hidratação inicial (modo edição ou rascunho) =======
+    const hydratedRef = useRef(false);
     useEffect(() => {
-        if (isEditMode && existingSale) {
-            resetForm(existingSale as unknown as CreateSalePayload);
-        }
-    }, [isEditMode, existingSale, resetForm]);
+        if (!isEditMode || !existingSale) return;
+
+        // Evita loop de reidratação
+        if (hydratedRef.current) return;
+        hydratedRef.current = true;
+
+        resetForm(existingSale as unknown as CreateSalePayload);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEditMode, existingSale]);
 
     // ======= Adicionar Produto (com validação de estoque) =======
     const handleValidatedAddProduct = useCallback(
