@@ -41,7 +41,7 @@ interface ProviderProps {
 
 export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps) => {
     const isEditMode = mode === "edit";
-    const { addNotification } = useNotification();    
+    const { addNotification } = useNotification();
 
     // ======= Form principal =======
     const {
@@ -67,13 +67,12 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
     useEffect(() => {
         if (!isEditMode || !existingSale) return;
 
-        // Evita loop de reidratação
-        if (hydratedRef.current) return;
-        hydratedRef.current = true;
+        if (!hydratedRef.current && existingSale?.id) {
+            resetForm(existingSale as unknown as SalePayload);
+            hydratedRef.current = true;
+        }
+    }, [isEditMode, existingSale, resetForm]);
 
-        resetForm(existingSale as unknown as SalePayload);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditMode, existingSale]);
 
     // ======= Adicionar Produto (com validação de estoque) =======
     const handleValidatedAddProduct = useCallback(

@@ -1,7 +1,13 @@
 import { useState, useMemo, useEffect, type SyntheticEvent } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import {
-    Box, Typography, Autocomplete, TextField, Button, Stack, CircularProgress,
+    Box,
+    Typography,
+    Autocomplete,
+    TextField,
+    Button,
+    Stack,
+    CircularProgress,
 } from "@mui/material";
 import { User, Plus, XCircle } from "lucide-react";
 import dayjs from "dayjs";
@@ -9,7 +15,7 @@ import dayjs from "dayjs";
 import PrescriptionModal from "@/modules/clients/components/PrescriptionModal";
 import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
-import { useSelectClients } from "@/modules/clients/hooks/useClient";
+import { useGetClients } from "@/modules/clients/hooks/useClient";
 import { useGetPrescriptionsByClientId } from "@/modules/clients/hooks/usePrescription";
 import type { SalePayload } from "../../../types/salesTypes";
 
@@ -19,6 +25,7 @@ export default function ClientStep() {
     const {
         control,
         setValue,
+        getValues,
         formState: { errors },
     } = useFormContext<SalePayload>();
 
@@ -27,19 +34,24 @@ export default function ClientStep() {
     const [debouncedSearch, setDebouncedSearch] = useState("");
 
     const [selectedClient, setSelectedClient] = useState<ClientSelectItem | null>(null);
-    const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
+    const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionOption | null>(null);
     const [openPrescriptionModal, setOpenPrescriptionModal] = useState(false);
 
+    // ============ 🔁 Debounce da busca ============
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(searchValue), 500);
         return () => clearTimeout(t);
     }, [searchValue]);
 
-    // Clientes
-    const { data: clientData, isFetching: isLoadingClients } = useSelectClients(debouncedSearch);
-    const clientOptions = useMemo(() => clientData?.data || [], [clientData]);
+    // ============ 🔹 Buscar clientes ============
+    const { data: clientData, isFetching: isLoadingClients } = useGetClients({
+        page: 1,
+        limit: 50,
+        search: debouncedSearch,
+    });
+    const clientOptions = useMemo(() => clientData?.data?.content || [], [clientData]);
 
-    // Receitas por cliente
+    // ============ 🔹 Buscar receitas do cliente selecionado ============
     const { data: prescriptionsData, isFetching: isLoadingPrescriptions } =
         useGetPrescriptionsByClientId({
             clientId: selectedClient?.id ?? 0,
@@ -50,9 +62,43 @@ export default function ClientStep() {
     const prescriptionOptions: PrescriptionOption[] =
         prescriptionsData?.data?.content.map((p) => ({
             ...p,
-            label: `${p.doctorName || "Médico não informado"} - ${dayjs(p.prescriptionDate).format("DD/MM/YYYY")}`,
+            label: `${p.doctorName || "Médico não informado"} - ${dayjs(
+                p.prescriptionDate
+            ).format("DD/MM/YYYY")}`,
         })) || [];
 
+    // ============================================================
+    // 🧩 Hidratar seleção inicial (modo edição ou ao voltar steps)
+    // ============================================================
+    useEffect(() => {
+        const clientId = getValues("clientId");
+        const prescriptionId = getValues("prescriptionId");
+
+        // 🔹 Cliente
+        if (clientId && !selectedClient) {
+            const foundClient = clientOptions.find((c) => c.id === clientId);
+            if (foundClient) setSelectedClient(foundClient);
+        }
+
+        // 🔹 Receita
+        if (prescriptionId && prescriptionsData?.data?.content) {
+            const foundPrescription = prescriptionsData.data.content.find(
+                (p) => p.id === prescriptionId
+            );
+            if (foundPrescription) {
+                setSelectedPrescription({
+                    ...foundPrescription,
+                    label: `${foundPrescription.doctorName || "Médico não informado"} - ${dayjs(
+                        foundPrescription.prescriptionDate
+                    ).format("DD/MM/YYYY")}`,
+                });
+            }
+        }
+    }, [clientOptions, prescriptionsData, getValues, selectedClient]);
+
+    // ============================================================
+    // 🔹 Manipuladores de seleção
+    // ============================================================
     const handleClientChange = (
         _: SyntheticEvent,
         newClient: ClientSelectItem | null,
@@ -60,11 +106,14 @@ export default function ClientStep() {
     ) => {
         setSelectedClient(newClient);
         setSelectedPrescription(null);
-        onChangeFormClientId(newClient?.id ?? null); // escreve no form
+        onChangeFormClientId(newClient?.id ?? null);
         setValue("prescriptionId", null);
     };
 
-    const handlePrescriptionChange = (_: SyntheticEvent, newPrescription: Prescription | null) => {
+    const handlePrescriptionChange = (
+        _: SyntheticEvent,
+        newPrescription: PrescriptionOption | null
+    ) => {
         setSelectedPrescription(newPrescription);
         setValue("prescriptionId", newPrescription?.id ?? null);
     };
@@ -74,6 +123,9 @@ export default function ClientStep() {
         setValue("prescriptionId", null);
     };
 
+    // ============================================================
+    // 🔹 Renderização
+    // ============================================================
     return (
         <Box>
             <Typography variant="h6" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
@@ -96,6 +148,7 @@ export default function ClientStep() {
                         onInputChange={(_, value) => setSearchValue(value)}
                         onChange={(e, val) => handleClientChange(e, val, (v) => field.onChange(v))}
                         noOptionsText="Digite para buscar clientes."
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -153,19 +206,27 @@ export default function ClientStep() {
                         options={prescriptionOptions}
                         loading={isLoadingPrescriptions}
                         getOptionLabel={(option) => option.label}
-                        value={selectedPrescription as PrescriptionOption | null}
+                        value={selectedPrescription}
                         onChange={handlePrescriptionChange}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                        freeSolo={false} // impede digitar livremente
                         renderInput={(params) => (
                             <TextField
                                 {...params}
                                 label="Selecionar receita existente"
                                 placeholder="Selecione uma receita vinculada"
                                 size="small"
+                                inputProps={{
+                                    ...params.inputProps,
+                                    readOnly: true, // impede digitar
+                                }}
                                 InputProps={{
                                     ...params.InputProps,
                                     endAdornment: (
                                         <>
-                                            {isLoadingPrescriptions ? <CircularProgress color="inherit" size={18} /> : null}
+                                            {isLoadingPrescriptions ? (
+                                                <CircularProgress color="inherit" size={18} />
+                                            ) : null}
                                             {params.InputProps.endAdornment}
                                         </>
                                     ),
@@ -176,6 +237,7 @@ export default function ClientStep() {
                 </Box>
             )}
 
+            {/* Modal de receita */}
             <PrescriptionModal
                 open={openPrescriptionModal}
                 mode="create"
@@ -183,7 +245,13 @@ export default function ClientStep() {
                 prescription={null}
                 onClose={() => setOpenPrescriptionModal(false)}
                 onCreated={(p) => {
-                    setSelectedPrescription(p);
+                    const newOption: PrescriptionOption = {
+                        ...p,
+                        label: `${p.doctorName || "Médico não informado"} - ${dayjs(p.prescriptionDate).format(
+                            "DD/MM/YYYY"
+                        )}`,
+                    };
+                    setSelectedPrescription(newOption);
                     setValue("prescriptionId", p.id);
                 }}
                 onUpdated={() => { }}
