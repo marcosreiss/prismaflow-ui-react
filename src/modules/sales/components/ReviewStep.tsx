@@ -11,11 +11,11 @@ import type {
     SaleServiceItem,
     Protocol,
 } from "@/modules/sales/types/salesTypes";
-import type { Client } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
+import { useGetClientById } from "@/modules/clients/hooks/useClient";
 
 interface ReviewStepProps {
-    client?: Client | null;
+    clientId?: number | null;
     prescription?: Prescription | null;
     productItems: SaleProductItem[];
     serviceItems: SaleServiceItem[];
@@ -25,8 +25,9 @@ interface ReviewStepProps {
     total: number;
 }
 
+
 export default function ReviewStep({
-    client,
+    clientId,
     prescription,
     productItems,
     serviceItems,
@@ -35,6 +36,9 @@ export default function ReviewStep({
     discount,
     total,
 }: ReviewStepProps) {
+    const { data: clientResponse } = useGetClientById(clientId ?? undefined);
+    const client = clientResponse?.data ?? null;
+
     return (
         <Box>
             <Typography

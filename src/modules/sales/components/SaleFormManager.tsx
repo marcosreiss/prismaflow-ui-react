@@ -94,7 +94,7 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
     const watchedProductItems = watch("productItems") ?? [];
     const watchedServiceItems = watch("serviceItems") ?? [];
     const watchedDiscount = watch("discount") ?? 0;
-    const watchedClient = watch("client") ?? null;
+    const watchedClientId = watch("clientId") ?? null;
     const watchedProtocol = watch("protocol") ?? undefined;
 
     // Hidratar o formulário no modo edição
@@ -115,10 +115,23 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
     // Adicionar serviço (mantendo padrão de itens no form)
     const handleAddService = (service: OpticalService) => {
         const current = getValues("serviceItems") || [];
-        setValue("serviceItems", [...current, { service }], {
-            shouldValidate: true,
-            shouldDirty: true,
-        });
+        setValue(
+            "serviceItems",
+            [
+                ...current,
+                {
+                    serviceId: service.id,
+                    service, // opcional, apenas para exibição no form
+                    id: 0,
+                    saleId: 0,
+                    branchId: "",
+                    tenantId: "",
+                    createdAt: "",
+                    updatedAt: "",
+                },
+            ],
+            { shouldValidate: true, shouldDirty: true }
+        );
     };
 
 
@@ -193,9 +206,7 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
             case 3:
                 return (
                     <ReviewStep
-                        client={watchedClient ?? undefined}
-                        // Se você guardar prescription object no form, passe aqui. Se guarda só o id, deixe sem.
-                        // prescription={watchedPrescription ?? null}
+                        clientId={watchedClientId ?? undefined}
                         productItems={watchedProductItems}
                         serviceItems={watchedServiceItems}
                         protocol={watchedProtocol}

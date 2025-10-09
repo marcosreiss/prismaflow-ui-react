@@ -16,11 +16,11 @@ import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import { useSelectClients } from "@/modules/clients/hooks/useClient";
 import { useGetPrescriptionsByClientId } from "@/modules/clients/hooks/usePrescription";
-import type { Sale } from "../types/salesTypes";
+import type { CreateSalePayload } from "../types/salesTypes";
 
 interface ClientStepProps {
-    control: Control<Sale>;
-    errors: FieldErrors<Sale>;
+    control: Control<CreateSalePayload>;
+    errors: FieldErrors<CreateSalePayload>;
 }
 type PrescriptionOption = Prescription & { label: string };
 
@@ -124,7 +124,7 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
                 🔹 Selecionar Cliente
                 ========================== */}
             <Controller
-                name="client"
+                name="clientId"
                 control={control}
                 rules={{ required: "O cliente é obrigatório" }}
                 render={({ field }) => (
@@ -147,8 +147,8 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
                                 {...params}
                                 label="Buscar cliente"
                                 required
-                                error={!!errors.client}
-                                helperText={errors.client?.message as string}
+                                error={!!errors.clientId}
+                                helperText={errors.clientId?.message as string}
                                 size="medium"
                                 InputProps={{
                                     ...params.InputProps,

@@ -9,16 +9,16 @@ import {
 import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import type { Product } from "@/modules/products/types/productTypes";
 import type { Control, FieldErrors } from "react-hook-form";
-import type { Sale } from "../../types/salesTypes";
 import ProductSelector from "./ProductSelector";
-import SaleItemsTable from "@/components/saleForm/OldSaleItemsTable";
 import ServiceSelector from "@/modules/sales/components/productsStep/serviceSelector";
 import ServicesTable from "@/modules/sales/components/productsStep/serviceTable";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
+import SaleItemsTable from "./SaleItemsTable";
+import type { CreateSalePayload } from "../../types/salesTypes";
 
 interface ProductsStepProps {
-    control: Control<Sale>;
-    errors: FieldErrors<Sale>;
+    control: Control<CreateSalePayload>;
+    errors: FieldErrors<CreateSalePayload>;
     products: Product[];
     services: OpticalService[];
     isLoadingProducts: boolean;

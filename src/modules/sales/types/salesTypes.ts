@@ -67,7 +67,7 @@ export type SaleServiceItem = {
 // 🔹 ENTIDADE: FrameDetails e Protocol
 // ======================================
 export type FrameDetails = {
-  id: number;
+  id?: number;
   material: string;
   reference?: string | null;
   color?: string | null;

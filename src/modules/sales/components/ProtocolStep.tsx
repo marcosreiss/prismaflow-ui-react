@@ -5,8 +5,6 @@ import {
     Typography,
     TextField,
     Divider,
-    FormControlLabel,
-    Checkbox,
     Stack,
 } from "@mui/material";
 import { FileText } from "lucide-react";
@@ -87,24 +85,6 @@ export default function ProtocolStep() {
                             size="small"
                             label="Ordem de Serviço (OS)"
                             placeholder="Ex: OS001"
-                        />
-                    )}
-                />
-
-                {/* Ativo (opcional) */}
-                <Controller
-                    name="protocol.isActive"
-                    control={control}
-                    defaultValue={true}
-                    render={({ field }) => (
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={!!field.value}
-                                    onChange={(e) => field.onChange(e.target.checked)}
-                                />
-                            }
-                            label="Protocolo ativo"
                         />
                     )}
                 />

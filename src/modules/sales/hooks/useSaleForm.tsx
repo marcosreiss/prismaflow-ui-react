@@ -2,8 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import type { DeepPartial } from "react-hook-form";
 import type { Product } from "@/modules/products/types/productTypes";
-import type { ItemProduct } from "@/types/itemProductTypes";
-import type { Protocol } from "@/modules/sales/types/salesTypes";
+import type { Protocol, SaleProductItem } from "@/modules/sales/types/salesTypes";
 import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
 
 const defaultValues: DeepPartial<CreateSalePayload> = {
@@ -23,7 +22,6 @@ const createDefaultProtocol = (): Protocol => ({
     book: "",
     page: null,
     os: "",
-    isActive: true,
 });
 
 export const useSaleForm = () => {
@@ -53,7 +51,7 @@ export const useSaleForm = () => {
     // 🔹 Cálculo automático de subtotal e total
     // ==============================
     useEffect(() => {
-        const calculatedSubtotal = watchedProductItems.reduce((acc: number, item: ItemProduct) => {
+        const calculatedSubtotal = watchedProductItems.reduce((acc: number, item: SaleProductItem) => {
             const price = item.product?.salePrice || 0;
             const quantity = item.quantity || 0;
             return acc + price * quantity;
@@ -80,7 +78,7 @@ export const useSaleForm = () => {
         // Se produto já existe e é agrupável, apenas incrementa
         if (isGroupable) {
             const existingIndex = currentItems.findIndex(
-                (item: ItemProduct) => item.product.id === product.id
+                (item: SaleProductItem) => item.product?.id === product.id
             );
             if (existingIndex !== -1) {
                 const updatedItems = [...currentItems];
@@ -102,19 +100,20 @@ export const useSaleForm = () => {
             }
             : null;
 
-        const newItem: Omit<ItemProduct, "id" | "saleId" | "tenantId" | "branchId" | "createdAt" | "updatedAt"> = {
+        const newItem: Omit<SaleProductItem, "id" | "saleId" | "tenantId" | "branchId" | "createdAt" | "updatedAt"> = {
             product,
             quantity: 1,
             frameDetails,
+            productId: 0
         };
 
-        setValue("productItems", [...currentItems, newItem as ItemProduct], {
+        setValue("productItems", [...currentItems, newItem as SaleProductItem], {
             shouldValidate: true,
         });
 
         // Se venda contém lentes → cria protocolo padrão se ainda não existir
-        const saleHasLens = [...currentItems, newItem as ItemProduct].some(
-            (item: ItemProduct) => item.product.category === "LENS"
+        const saleHasLens = [...currentItems, newItem as SaleProductItem].some(
+            (item: SaleProductItem) => item.product?.category === "LENS"
         );
         const hasProtocol = !!watch("protocol");
 
@@ -134,7 +133,7 @@ export const useSaleForm = () => {
 
         // Se não há mais lentes, remove protocolo
         const stillHasLens = currentItems.some(
-            (item: ItemProduct) => item.product.category === "LENS"
+            (item: SaleProductItem) => item.product?.category === "LENS"
         );
         if (!stillHasLens) {
             setValue("protocol", null);
