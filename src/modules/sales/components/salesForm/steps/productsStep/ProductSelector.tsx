@@ -15,29 +15,33 @@ import {
     Select,
     CircularProgress,
 } from "@mui/material";
-import { Plus, Package, } from "lucide-react";
+import { Plus, Package } from "lucide-react";
+import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
 
 interface ProductSelectorProps {
     products: Product[];
     isLoading: boolean;
-    onAddProduct: (product: Product & { quantity: number }) => void;
-    disabled: boolean;
+    disabled?: boolean;
 }
 
+/**
+ * 🔹 Seletor de produtos com filtro por categoria e busca
+ */
 export default function ProductSelector({
     products,
     isLoading,
-    onAddProduct,
-    disabled,
+    disabled = false,
 }: ProductSelectorProps) {
+    const { handleAddProduct } = useSaleFormContext();
+
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [quantity, setQuantity] = useState<number>(1);
     const [searchValue, setSearchValue] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "ALL">("ALL");
 
-    const handleAddProduct = () => {
+    const handleAdd = async () => {
         if (selectedProduct) {
-            onAddProduct({ ...selectedProduct, quantity });
+            await handleAddProduct({ ...selectedProduct, quantity });
             setSelectedProduct(null);
             setQuantity(1);
             setSearchValue("");
@@ -47,7 +51,7 @@ export default function ProductSelector({
     const handleKeyPress = (event: React.KeyboardEvent) => {
         if (event.key === "Enter" && selectedProduct) {
             event.preventDefault();
-            handleAddProduct();
+            handleAdd();
         }
     };
 
@@ -132,7 +136,7 @@ export default function ProductSelector({
                         {/* Botão */}
                         <Button
                             variant="contained"
-                            onClick={handleAddProduct}
+                            onClick={handleAdd}
                             disabled={!selectedProduct || disabled}
                             startIcon={<Plus size={18} />}
                             sx={{ height: 40, minWidth: 120 }}

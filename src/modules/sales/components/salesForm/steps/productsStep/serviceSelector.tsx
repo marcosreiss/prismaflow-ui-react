@@ -12,25 +12,28 @@ import {
 } from "@mui/material";
 import { Plus, Settings } from "lucide-react";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
+import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
 
 interface ServiceSelectorProps {
     services: OpticalService[];
     isLoading: boolean;
-    onAddService: (service: OpticalService) => void;
     disabled?: boolean;
 }
 
+/**
+ * 🔹 Seletor de serviços com preview e botão de adicionar
+ */
 export default function ServiceSelector({
     services,
     isLoading,
-    onAddService,
     disabled = false,
 }: ServiceSelectorProps) {
+    const { handleAddService } = useSaleFormContext();
     const [selectedService, setSelectedService] = useState<OpticalService | null>(null);
 
-    const handleAddService = () => {
+    const handleAdd = () => {
         if (selectedService) {
-            onAddService(selectedService);
+            handleAddService(selectedService);
             setSelectedService(null);
         }
     };
@@ -38,17 +41,12 @@ export default function ServiceSelector({
     const handleKeyPress = (event: React.KeyboardEvent) => {
         if (event.key === "Enter" && selectedService) {
             event.preventDefault();
-            handleAddService();
+            handleAdd();
         }
     };
 
-    const formatPrice = (price?: number | null): string => {
-        if (price == null) return "R$ 0,00";
-        return price.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-        });
-    };
+    const formatPrice = (price?: number | null): string =>
+        (price ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
     const renderOption = (
         props: React.HTMLAttributes<HTMLLIElement>,
@@ -60,23 +58,21 @@ export default function ServiceSelector({
                     <Typography variant="body2" fontWeight="medium">
                         {service.name || "Serviço sem nome"}
                     </Typography>
-                    <Chip
-                        label={formatPrice(service.price)}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                    />
+                    <Chip label={formatPrice(service.price)} size="small" color="primary" variant="outlined" />
                 </Box>
 
                 {service.description && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "block", mt: 0.5 }}
+                    >
                         {service.description}
                     </Typography>
                 )}
             </Box>
         </li>
     );
-
 
     const getOptionLabel = (service: OpticalService): string => {
         const name = service.name || "Serviço sem nome";
@@ -122,9 +118,10 @@ export default function ServiceSelector({
                         )}
                         renderOption={renderOption}
                     />
+
                     <Button
                         variant={selectedService ? "contained" : "outlined"}
-                        onClick={handleAddService}
+                        onClick={handleAdd}
                         disabled={!selectedService || disabled}
                         startIcon={<Plus size={18} />}
                         sx={{ height: 56, minWidth: 120 }}
@@ -134,7 +131,6 @@ export default function ServiceSelector({
                 </Stack>
             </Paper>
 
-            {/* Exibição do serviço selecionado */}
             {selectedService && (
                 <Paper variant="outlined" sx={{ p: 2, bgcolor: "action.hover" }}>
                     <Typography

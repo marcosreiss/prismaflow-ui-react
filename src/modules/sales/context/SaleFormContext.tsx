@@ -19,7 +19,7 @@ interface SaleFormContextValue {
     activeStep: number;
     handleNext: () => void;
     handleBack: () => void;
-    handleAddProduct: (product: Product) => Promise<void>;
+    handleAddProduct: (product: Product & { quantity?: number }) => Promise<void>;
     handleRemoveProduct: (index: number) => void;
     handleAddService: (service: OpticalService) => void;
     handleRemoveService: (index: number) => void;
@@ -69,13 +69,13 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
 
     // ======= Adicionar Produto (com validação de estoque) =======
     const handleValidatedAddProduct = useCallback(
-        async (product: Product) => {
+        async (product: Product & { quantity?: number }) => {
             if (!product?.id) {
                 addNotification("Produto inválido.", "error");
                 return;
             }
 
-            const ok = await validateStock(product.id, product.stockQuantity ?? 1);
+            const ok = await validateStock(product.id, product.quantity ?? 1);
             if (!ok) return;
 
             await handleAddProduct(product);

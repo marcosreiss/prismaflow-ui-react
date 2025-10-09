@@ -12,15 +12,11 @@ import {
     Box,
 } from "@mui/material";
 import { Trash2 } from "lucide-react";
-import type { Sale } from "@/modules/sales/types/salesTypes";
+import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 
-type ServiceItem = {
-    service: OpticalService;
-};
-
 export default function ServicesTable() {
-    const { control } = useFormContext<Sale>();
+    const { control } = useFormContext<CreateSalePayload>();
 
     const { fields, remove } = useFieldArray({
         control,
@@ -42,7 +38,7 @@ export default function ServicesTable() {
 
     // Total geral de serviços
     const servicesTotal = fields.reduce((acc, item) => {
-        const { service } = item as unknown as ServiceItem;
+        const service = item.service as OpticalService;
         return acc + (service?.price ?? 0);
     }, 0);
 
@@ -63,10 +59,10 @@ export default function ServicesTable() {
                     </TableHead>
                     <TableBody>
                         {fields.map((item, index) => {
-                            const service = (item as unknown as ServiceItem).service as OpticalService;
+                            const service = item.service as OpticalService;
 
                             return (
-                                <TableRow key={item.id}>
+                                <TableRow key={item.id ?? index}>
                                     <TableCell>
                                         <Box>
                                             <Typography variant="body2" fontWeight="medium">
@@ -88,11 +84,7 @@ export default function ServicesTable() {
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
-                                        <IconButton
-                                            size="small"
-                                            onClick={() => remove(index)}
-                                            color="error"
-                                        >
+                                        <IconButton size="small" onClick={() => remove(index)} color="error">
                                             <Trash2 size={18} />
                                         </IconButton>
                                     </TableCell>

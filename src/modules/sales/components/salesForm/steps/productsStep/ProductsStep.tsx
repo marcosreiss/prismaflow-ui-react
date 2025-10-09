@@ -1,4 +1,4 @@
-import { Controller } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import {
     Box,
     Typography,
@@ -8,36 +8,33 @@ import {
 } from "@mui/material";
 import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import type { Product } from "@/modules/products/types/productTypes";
-import type { Control, FieldErrors } from "react-hook-form";
-import ProductSelector from "./ProductSelector";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
+import ProductSelector from "./ProductSelector";
 import SaleItemsTable from "./SaleItemsTable";
-import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
 import ServiceSelector from "./serviceSelector";
 import ServicesTable from "./serviceTable";
+import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
 
 interface ProductsStepProps {
-    control: Control<CreateSalePayload>;
-    errors: FieldErrors<CreateSalePayload>;
     products: Product[];
     services: OpticalService[];
     isLoadingProducts: boolean;
     isLoadingServices: boolean;
-    onAddProduct: (product: Product) => void;
-    onAddService: (service: OpticalService) => void;
     isLoading: boolean;
 }
 
+/**
+ * 🔹 Etapa de seleção de produtos, serviços e observações
+ */
 export default function ProductsStep({
-    control,
     products,
     services,
     isLoadingProducts,
     isLoadingServices,
-    onAddProduct,
-    onAddService,
     isLoading,
 }: ProductsStepProps) {
+    const { control } = useFormContext<CreateSalePayload>();
+
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {/* Produtos */}
@@ -51,7 +48,6 @@ export default function ProductsStep({
                 <ProductSelector
                     products={products}
                     isLoading={isLoadingProducts}
-                    onAddProduct={onAddProduct}
                     disabled={isLoading}
                 />
 
@@ -76,7 +72,6 @@ export default function ProductsStep({
                 <ServiceSelector
                     services={services}
                     isLoading={isLoadingServices}
-                    onAddService={onAddService}
                     disabled={isLoading}
                 />
 

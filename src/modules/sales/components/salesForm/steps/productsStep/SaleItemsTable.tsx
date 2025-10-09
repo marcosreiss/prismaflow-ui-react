@@ -19,46 +19,27 @@ import {
     Collapse,
 } from "@mui/material";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import type { Sale, SaleProductItem } from "@/modules/sales/types/salesTypes";
+import type { CreateSalePayload, SaleProductItem } from "@/modules/sales/types/salesTypes";
 import FrameDetailsForm from "./FrameDetailsForm";
 
 export default function SaleItemsTable() {
-    const formContext = useFormContext<Sale>();
-    const { control } = formContext;
+    const { control } = useFormContext<CreateSalePayload>();
     const [expandedRows, setExpandedRows] = useState<number[]>([]);
 
-    const { fields, remove } = useFieldArray<Sale, "productItems", "id">({
+    const { fields, remove } = useFieldArray({
         control,
         name: "productItems",
     });
 
-    if (!formContext) {
-        return (
-            <Paper
-                variant="outlined"
-                sx={{ p: 4, textAlign: "center", borderStyle: "dashed" }}
-            >
-                <Typography color="text.secondary" variant="body1">
-                    Erro: Formulário não encontrado
-                </Typography>
-            </Paper>
-        );
-    }
-
     const toggleRowExpansion = (index: number) => {
         setExpandedRows((prev) =>
-            prev.includes(index)
-                ? prev.filter((i) => i !== index)
-                : [...prev, index]
+            prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
         );
     };
 
     if (fields.length === 0) {
         return (
-            <Paper
-                variant="outlined"
-                sx={{ p: 4, textAlign: "center", borderStyle: "dashed" }}
-            >
+            <Paper variant="outlined" sx={{ p: 4, textAlign: "center", borderStyle: "dashed" }}>
                 <Typography color="text.secondary" variant="body1">
                     Nenhum produto adicionado à venda
                 </Typography>
@@ -98,19 +79,12 @@ export default function SaleItemsTable() {
                         const hasFrameDetails = product?.category === "FRAME";
 
                         return (
-                            <React.Fragment key={item.id}>
+                            <React.Fragment key={item.id ?? index}>
                                 <TableRow>
                                     <TableCell>
                                         {hasFrameDetails && (
-                                            <IconButton
-                                                size="small"
-                                                onClick={() => toggleRowExpansion(index)}
-                                            >
-                                                {isExpanded ? (
-                                                    <ChevronUp size={16} />
-                                                ) : (
-                                                    <ChevronDown size={16} />
-                                                )}
+                                            <IconButton size="small" onClick={() => toggleRowExpansion(index)}>
+                                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                             </IconButton>
                                         )}
                                     </TableCell>
@@ -168,11 +142,7 @@ export default function SaleItemsTable() {
                                     </TableCell>
 
                                     <TableCell align="right">
-                                        <Typography
-                                            variant="body2"
-                                            fontWeight="medium"
-                                            color="primary"
-                                        >
+                                        <Typography variant="body2" fontWeight="medium" color="primary">
                                             {subtotal.toLocaleString("pt-BR", {
                                                 style: "currency",
                                                 currency: "BRL",
@@ -181,11 +151,7 @@ export default function SaleItemsTable() {
                                     </TableCell>
 
                                     <TableCell align="center">
-                                        <IconButton
-                                            size="small"
-                                            onClick={() => remove(index)}
-                                            color="error"
-                                        >
+                                        <IconButton size="small" onClick={() => remove(index)} color="error">
                                             <Trash2 size={18} />
                                         </IconButton>
                                     </TableCell>

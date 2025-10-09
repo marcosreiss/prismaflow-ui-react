@@ -15,7 +15,6 @@ import SaleFormActions from "./SaleFormActions";
 import type { Sale, CreateSalePayload } from "../../types/salesTypes";
 import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
 import { useGetProducts } from "@/modules/products/hooks/useProduct";
-import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 import ClientStep from "./steps/ClientStep";
 import ProductsStep from "./steps/productsStep/ProductsStep";
 import ReviewStep from "./steps/ReviewStep";
@@ -67,7 +66,6 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
         control,
         activeStep,
         setActiveStep,
-        handleAddProduct,
         handleNext,
         handleBack,
         resetForm,
@@ -77,8 +75,6 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
         handleSubmit,
         formState: { errors },
         watch,
-        setValue,
-        getValues,
     } = methods;
 
     // watchers (para review/summary)
@@ -102,24 +98,6 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
     // Navegação entre steps
     const handleStepNext = () => handleNext();
     const handleStepChange = (newStep: number) => setActiveStep(newStep);
-
-    // Adicionar serviço (mantendo padrão de itens no form)
-    const handleAddService = (service: OpticalService) => {
-        const current = getValues("serviceItems") || [];
-        setValue(
-            "serviceItems",
-            [
-                ...current,
-                {
-                    serviceId: service.id,
-                    service, // opcional, apenas para exibição no form
-                    id: 0,
-                    saleId: 0,
-                },
-            ],
-            { shouldValidate: true, shouldDirty: true }
-        );
-    };
 
 
     // Rascunho
@@ -183,8 +161,6 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
                         services={services || []}
                         isLoadingProducts={isLoadingProducts}
                         isLoadingServices={isLoadingServices}
-                        onAddProduct={handleAddProduct}
-                        onAddService={handleAddService}
                         isLoading={isSubmitting}
                     />
                 );
