@@ -22,7 +22,7 @@ export const validateSaleForm = (
 
   switch (step) {
     case 0: // Cliente
-      if (!data.client?.id) {
+      if (!data.clientId) {
         errors.push("Por favor, selecione um cliente.");
       }
       break;
@@ -79,9 +79,6 @@ export const validateProductItems = (
       item?._original &&
       Number(item?._original?.quantity) === quantity &&
       String(item?._original?.productId) === String(product?.id);
-
-    // só valida estoque quando NÃO for inalterado
-    console.log("product esetoque:", product.stockQuantity);
 
     if (!unchanged) {
       const available = Number((product as Product)?.stockQuantity ?? 0);

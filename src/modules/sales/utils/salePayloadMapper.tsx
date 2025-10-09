@@ -1,113 +1,148 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Sale } from "@/types/saleTypes";
-import type { ProtocolCreate, PrescriptionCreate } from "@/types/protocolTypes";
+import type { Product } from "@/modules/products/types/productTypes";
+import type { CreateSalePayload, Protocol } from "../types/salesTypes";
 
-export const mapSaleToPayload = (data: Sale, isEdit: boolean = false) => {
-    // Verifica se há lentes para determinar se precisa de protocolo
-    const hasLenses = data.productItems?.some(item => item.product?.category === "LENS") || false;
 
-    const payload = {
-        // Dados básicos da venda
-        clientId: data.client?.id,
-        subtotal: data.subtotal || 0,
-        discount: data.discount || 0,
-        total: data.total || 0,
-        notes: data.notes?.trim() || null,
-        isActive: data.isActive !== false,
+/**
+ * Remove strings vazias e normaliza valores nulos
+ */
+const normalizeString = (value?: string | null): string | undefined =>
+    value && value.trim().length > 0 ? value.trim() : undefined;
 
-        // Itens de produto - ✅ CORREÇÃO: Tratamento seguro do id
-        productItems: data.productItems?.map(item => ({
-            id: isEdit && item.id ? item.id : undefined, // ✅ Só inclui ID se existir e for edição
-            productId: item.product.id,
-            quantity: item.quantity || 1,
-            frameDetails: item.product?.category === "FRAME" && item.frameDetails ? {
-                // ✅ CORREÇÃO: Verifica se frameDetails tem id antes de usar
-                id: isEdit && 'id' in item.frameDetails ? item.frameDetails.id : undefined,
-                frameMaterialType: item.frameDetails.material || "ACETATE",
-                reference: item.frameDetails.reference?.trim() || null,
-                color: item.frameDetails.color?.trim() || null,
-            } : null
-        })) || [],
+/**
+ * Mapeia o estado do formulário de venda (front)
+ * para o payload esperado pela API no fluxo de criação.
+ */
+export function mapSaleToPayload(
+    data: CreateSalePayload
+): CreateSalePayload {
+    // --- Produtos
+    const productItems =
+        data.productItems
+            ?.map((item): { productId: number; quantity: number; } | undefined => {
+                const productId =
+                    item.productId ??
+                    (item.product ? (item.product as Product).id : undefined);
 
-        // Itens de serviço - ✅ CORREÇÃO: Tratamento seguro do id
-        serviceItems: data.serviceItems?.map(item => ({
-            id: isEdit && item.service.id ? item.service.id : undefined, // ✅ Só inclui ID se existir
-            serviceId: item.service?.id,
-        })) || [],
+                if (!productId) return undefined;
 
-        // Protocolo (só envia se houver lentes) - ✅ CORREÇÃO: Tratamento seguro do id
-        protocol: hasLenses && data.protocol ? mapProtocolToPayload(data.protocol, isEdit) : null
+                const productPayload: {
+                    productId: number;
+                    quantity: number;
+                    frameDetails?: {
+                        material: string;
+                        reference?: string;
+                        color?: string;
+                    };
+                } = {
+                    productId,
+                    quantity: item.quantity ?? 1,
+                };
+
+                if (item.frameDetails) {
+                    productPayload.frameDetails = {
+                        material: item.frameDetails.material,
+                        reference: normalizeString(item.frameDetails.reference),
+                        color: normalizeString(item.frameDetails.color),
+                    };
+                }
+
+                return productPayload;
+            })
+            .filter(
+                (item): item is {
+                    productId: number;
+                    quantity: number;
+                    frameDetails?: {
+                        material: string;
+                        reference?: string;
+                        color?: string;
+                    };
+                } => item !== undefined
+            ) ?? [];
+
+    // --- Serviços
+    const serviceItems =
+        data.serviceItems
+            ?.map((item): { serviceId: number } | undefined => {
+                const serviceId = item.serviceId ?? item.service?.id;
+                if (!serviceId) return undefined;
+                return { serviceId };
+            })
+            .filter((item): item is { serviceId: number } => item !== undefined) ?? [];
+
+    // --- Protocolo (opcional)
+    const hasProtocolFields =
+        data.protocol &&
+        (normalizeString(data.protocol.recordNumber) ||
+            normalizeString(data.protocol.book) ||
+            typeof data.protocol.page === "number" ||
+            normalizeString(data.protocol.os));
+
+    const protocol: Protocol | undefined = hasProtocolFields
+        ? {
+            recordNumber: normalizeString(data.protocol?.recordNumber) ?? null,
+            book: normalizeString(data.protocol?.book) ?? null,
+            page:
+                typeof data.protocol?.page === "number"
+                    ? data.protocol.page
+                    : null,
+            os: normalizeString(data.protocol?.os) ?? null,
+        }
+        : undefined;
+
+    // --- Payload final
+    const payload: CreateSalePayload = {
+        clientId: data.clientId,
+        prescriptionId: data.prescriptionId ?? null,
+        productItems: productItems.length > 0 ? productItems : [],
+        serviceItems: serviceItems.length > 0 ? serviceItems : [],
+        subtotal: data.subtotal ?? 0,
+        discount: data.discount ?? 0,
+        total: data.total ?? 0,
+        notes: normalizeString(data.notes),
+        protocol: protocol ?? null,
     };
 
-    console.log("📦 PAYLOAD COMPLETO:", JSON.stringify(payload, null, 2));
     return payload;
-};
+}
 
 /**
- * Mapeia dados do protocolo para a API - ✅ CORREÇÃO: Tratamento seguro do id
+ * Limpa e normaliza o estado do formulário antes de mapear
  */
-const mapProtocolToPayload = (protocol: Sale['protocol'], isEdit: boolean = false): ProtocolCreate | null => {
-    if (!protocol) return null;
-
-    return {
-        // ✅ CORREÇÃO: Só inclui ID se existir e for edição
-        recordNumber: protocol.recordNumber?.trim() || null,
-        book: protocol.book?.trim() || null,
-        page: protocol.page || null,
-        os: protocol.os?.trim() || null,
-        prescription: protocol.prescription ? mapPrescriptionToPayload(protocol.prescription, isEdit) : null
-    };
-};
-
-/**
- * Mapeia dados da prescrição para a API - ✅ CORREÇÃO: Tratamento seguro do id
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const mapPrescriptionToPayload = (prescription: any, _isEdit: boolean = false): PrescriptionCreate => {
-    return {
-        // ✅ CORREÇÃO: Só inclui ID se existir e for edição
-        doctorName: prescription.doctorName?.trim() || '',
-        crm: prescription.crm?.trim() || '',
-        odSpherical: prescription.odSpherical?.trim() || '',
-        odCylindrical: prescription.odCylindrical?.trim() || '',
-        odAxis: prescription.odAxis?.trim() || '',
-        odDnp: prescription.odDnp?.trim() || '',
-        oeSpherical: prescription.oeSpherical?.trim() || '',
-        oeCylindrical: prescription.oeCylindrical?.trim() || '',
-        oeAxis: prescription.oeAxis?.trim() || '',
-        oeDnp: prescription.oeDnp?.trim() || '',
-        addition: prescription.addition?.trim() || '',
-        opticalCenter: prescription.opticalCenter?.trim() || '',
-    };
-};
-
-/**
- * Função auxiliar para limpar dados antes do envio
- */
-export const sanitizeSaleData = (data: Sale): Sale => {
-    return {
+export function sanitizeSaleData(
+    data: CreateSalePayload
+): CreateSalePayload {
+    const sanitized: CreateSalePayload = {
         ...data,
-        notes: data.notes?.trim() || '',
-        protocol: data.protocol ? {
-            ...data.protocol,
-            recordNumber: data.protocol.recordNumber?.trim() || null,
-            book: data.protocol.book?.trim() || null,
-            os: data.protocol.os?.trim() || null,
-            prescription: data.protocol.prescription ? {
-                ...data.protocol.prescription,
-                doctorName: data.protocol.prescription.doctorName?.trim() || '',
-                crm: data.protocol.prescription.crm?.trim() || '',
-                odSpherical: data.protocol.prescription.odSpherical?.trim() || '',
-                odCylindrical: data.protocol.prescription.odCylindrical?.trim() || '',
-                odAxis: data.protocol.prescription.odAxis?.trim() || '',
-                odDnp: data.protocol.prescription.odDnp?.trim() || '',
-                oeSpherical: data.protocol.prescription.oeSpherical?.trim() || '',
-                oeCylindrical: data.protocol.prescription.oeCylindrical?.trim() || '',
-                oeAxis: data.protocol.prescription.oeAxis?.trim() || '',
-                oeDnp: data.protocol.prescription.oeDnp?.trim() || '',
-                addition: data.protocol.prescription.addition?.trim() || '',
-                opticalCenter: data.protocol.prescription.opticalCenter?.trim() || '',
-            } : undefined
-        } : undefined
+        notes: normalizeString(data.notes),
+        productItems:
+            data.productItems?.map((item) => ({
+                ...item,
+                quantity: item.quantity ?? 1,
+                frameDetails: item.frameDetails
+                    ? {
+                        material: item.frameDetails.material,
+                        reference: normalizeString(item.frameDetails.reference),
+                        color: normalizeString(item.frameDetails.color),
+                    }
+                    : undefined,
+            })) ?? [],
+        serviceItems:
+            data.serviceItems?.map((item) => ({
+                ...item,
+            })) ?? [],
+        protocol: data.protocol
+            ? {
+                recordNumber: normalizeString(data.protocol.recordNumber) ?? null,
+                book: normalizeString(data.protocol.book) ?? null,
+                page:
+                    typeof data.protocol.page === "number"
+                        ? data.protocol.page
+                        : null,
+                os: normalizeString(data.protocol.os) ?? null,
+            }
+            : null,
     };
-};
+
+    return sanitized;
+}

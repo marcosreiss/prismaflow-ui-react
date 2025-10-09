@@ -21,7 +21,7 @@ import SaleFormActions from "./SaleFormActions";
 
 // Steps
 
-import type { Sale, CreateSalePayload, UpdateSalePayload } from "../types/salesTypes";
+import type { Sale, CreateSalePayload } from "../types/salesTypes";
 import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
 import { useGetProducts } from "@/modules/products/hooks/useProduct";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
@@ -124,10 +124,6 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
                     service, // opcional, apenas para exibição no form
                     id: 0,
                     saleId: 0,
-                    branchId: "",
-                    tenantId: "",
-                    createdAt: "",
-                    updatedAt: "",
                 },
             ],
             { shouldValidate: true, shouldDirty: true }
@@ -145,7 +141,7 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
     };
 
     // Submit
-    const onSubmit = async (data: CreateSalePayload | UpdateSalePayload) => {
+    const onSubmit = async (data: CreateSalePayload) => {
         const finalValidation = canSubmitSale(data as Sale);
         if (!finalValidation.isValid) {
             finalValidation.errors.forEach((e) => addNotification(e, "warning"));
@@ -154,7 +150,7 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
 
         try {
             const sanitizedData = sanitizeSaleData(data);
-            const payload = mapSaleToPayload(sanitizedData, isEditMode);
+            const payload = mapSaleToPayload(sanitizedData);
 
             if (isEditMode && existingSale?.id) {
                 await updateSale.mutateAsync({
@@ -170,6 +166,8 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
             navigate("/sales");
         } catch (err: unknown) {
             const error = err as AxiosError<ApiResponse<null>>;
+            console.log(err );
+            
             const errorMessage =
                 error.response?.data?.message ??
                 `Erro ao ${isEditMode ? "atualizar" : "criar"} a venda. Tente novamente.`;

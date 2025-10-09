@@ -7,7 +7,7 @@ import type {
   Sale,
 } from "../types/salesTypes";
 
-const SALES_ENDPOINT = "/sales";
+const SALES_ENDPOINT = "/api/sales";
 
 // ==============================
 // 🔹 LISTAR VENDAS (paginado + filtro opcional)

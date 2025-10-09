@@ -34,15 +34,10 @@ export type Sale = {
 // 🔹 ENTIDADE: SALE PRODUCT ITEM
 // ==============================
 export type SaleProductItem = {
-  id: number;
-  saleId: number;
+  id?: number;
+  saleId?: number;
   productId: number;
   quantity: number;
-  branchId: string;
-  tenantId: string;
-  createdAt: string;
-  updatedAt: string;
-
   product?: Product;
   frameDetails?: FrameDetails | null;
 
@@ -57,14 +52,9 @@ export type SaleProductItem = {
 // 🔹 ENTIDADE: SALE SERVICE ITEM
 // ==============================
 export type SaleServiceItem = {
-  id: number;
-  saleId: number;
+  id?: number;
+  saleId?: number;
   serviceId: number;
-  branchId: string;
-  tenantId: string;
-  createdAt: string;
-  updatedAt: string;
-
   service?: OpticalService;
 };
 

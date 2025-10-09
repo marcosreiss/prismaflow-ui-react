@@ -50,7 +50,6 @@ export const mapSaleApiToFormData = (sale: Sale): CreateSalePayload => {
         book: sale.protocol.book ?? "",
         page: sale.protocol.page ?? null,
         os: sale.protocol.os ?? "",
-        isActive: sale.protocol.isActive ?? true,
       }
     : null;
 
@@ -59,7 +58,7 @@ export const mapSaleApiToFormData = (sale: Sale): CreateSalePayload => {
   // ==============================
   const payload: CreateSalePayload = {
     clientId: sale.clientId,
-    prescriptionId: (sale as any).prescriptionId ?? null,
+    prescriptionId: sale.prescriptionId ?? null,
     productItems,
     serviceItems,
     protocol,
