@@ -24,6 +24,7 @@ import { useNotification } from "@/context/NotificationContext";
 import ProductAccordion from "@/modules/sales/components/saleDetails/ProductAccordion";
 import ServiceAccordion from "@/modules/sales/components/saleDetails/ServiceAccordion";
 import ProtocolAccordion from "@/modules/sales/components/saleDetails/ProtocolAccordion";
+import { useGetSaleById } from "../hooks/useSales";
 
 interface InfoCardProps {
     title: string;
@@ -61,7 +62,7 @@ export default function SalesDetailsPage() {
     const { addNotification } = useNotification();
 
     const saleId = id ? parseInt(id) : null;
-    const { data: apiResponse, isLoading, error } = useSaleDetails(saleId);
+    const { data: apiResponse, isLoading, error } = useGetSaleById(saleId);
     const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
 
     const sale = (apiResponse as any)?.data;

@@ -1,6 +1,6 @@
 import type { Sale } from "@/modules/sales/types/salesTypes";
 import { Box, Typography, IconButton } from "@mui/material";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 
 interface SaleFormHeaderProps {
     isEditMode: boolean;
@@ -19,7 +19,10 @@ export default function SaleFormHeader({
             <IconButton
                 onClick={onBack}
                 aria-label="Voltar"
-                sx={{ width: { xs: 40, sm: 36 }, height: { xs: 40, sm: 36 } }}
+                sx={{
+                    width: { xs: 40, sm: 36 },
+                    height: { xs: 40, sm: 36 },
+                }}
             >
                 <ArrowLeft size={20} />
             </IconButton>
@@ -42,19 +45,46 @@ export default function SaleFormHeader({
             {/* Indicador de status */}
             {isEditMode && (
                 <Box sx={{ ml: "auto" }}>
-                    <Typography
-                        variant="body2"
-                        color={existingSale ? "success.main" : "text.secondary"}
-                        sx={{
-                            px: 2,
+                    <Box
+                        sx={(theme) => ({
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            px: 1.75,
                             py: 0.5,
-                            bgcolor: existingSale ? "success.light" : "grey.100",
-                            borderRadius: 1,
-                            fontWeight: "medium",
-                        }}
+                            borderRadius: 1.5,
+                            transition: "background-color 0.3s ease, color 0.3s ease",
+                            bgcolor: existingSale
+                                ? theme.palette.primary.main + "1A" // leve transparência (10%)
+                                : theme.palette.action.hover,
+                            color: existingSale
+                                ? theme.palette.primary.main
+                                : theme.palette.text.secondary,
+                            border: `1px solid ${existingSale
+                                    ? theme.palette.primary.main + "40"
+                                    : theme.palette.divider
+                                }`,
+                        })}
                     >
-                        {existingSale ? "✅ Dados carregados" : "⏳ Carregando..."}
-                    </Typography>
+                        {existingSale ? (
+                            <CheckCircle2 size={16} strokeWidth={2} />
+                        ) : (
+                            <Loader2
+                                size={16}
+                                strokeWidth={2}
+                                className="animate-spin"
+                            />
+                        )}
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                fontWeight: 600,
+                                lineHeight: 1.4,
+                            }}
+                        >
+                            {existingSale ? "Dados carregados" : "Carregando..."}
+                        </Typography>
+                    </Box>
                 </Box>
             )}
         </Box>
