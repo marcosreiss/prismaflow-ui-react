@@ -1,26 +1,30 @@
 import { useNotification } from "@/context/NotificationContext";
-import { useGetProductStock } from "@/modules/products/hooks/useProduct";
+import type { ProductResponse } from "@/modules/products/types/productTypes";
+import baseApi from "@/utils/axios";
 
+/**
+ * Hook para validação de estoque sem usar hook interno.
+ */
 export const useStockValidation = () => {
   const { addNotification } = useNotification();
 
   const validateStock = async (productId: number, quantity: number) => {
     try {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const { data } = useGetProductStock(productId);
-      if (
-        data?.data?.data?.stockQuantity &&
-        data?.data?.data?.stockQuantity < quantity
-      ) {
+      const { data } = await baseApi.get<ProductResponse>(`/api/products/${productId}/stock`);
+      
+      const stockAvailable = data?.data?.stockQuantity ?? 0;
+
+      if (stockAvailable < quantity) {
         addNotification(
-          `Estoque insuficiente. Restam ${data?.data?.data?.stockQuantity} unidades.`,
+          `Estoque insuficiente. Restam apenas ${stockAvailable} unidade(s).`,
           "warning"
         );
         return false;
       }
+
       return true;
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      console.error(error);
       addNotification("Erro ao validar estoque do produto.", "error");
       return false;
     }
