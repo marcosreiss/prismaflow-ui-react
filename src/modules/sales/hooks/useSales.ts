@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 import api from "@/utils/axios";
 import type {
   CreateSalePayload,
   UpdateSalePayload,
-  Sale,
+  SalesResponse,
+  SaleResponse,
 } from "../types/salesTypes";
+import type { ApiResponse } from "@/utils/apiResponse";
 
 const SALES_ENDPOINT = "/api/sales";
 
@@ -17,9 +18,9 @@ export function useGetSales(
   limit: number = 10,
   clientId?: number
 ) {
-  return useQuery<PaginatedResponse<Sale>>({
+  return useQuery<SalesResponse>({
     queryKey: ["sales", page, clientId],
-    queryFn: async (): Promise<PaginatedResponse<Sale>> => {
+    queryFn: async (): Promise<SalesResponse> => {
       const params: Record<string, string | number> = {
         page,
         limit,
@@ -29,7 +30,7 @@ export function useGetSales(
         params.clientId = clientId;
       }
 
-      const { data } = await api.get<PaginatedResponse<Sale>>(SALES_ENDPOINT, {
+      const { data } = await api.get<SalesResponse>(SALES_ENDPOINT, {
         params,
       });
 
@@ -42,7 +43,7 @@ export function useGetSales(
 // 🔹 BUSCAR VENDA POR ID (detalhes)
 // ==============================
 export function useGetSaleById(id: number | null) {
-  return useQuery<ApiResponse<Sale>>({
+  return useQuery<SaleResponse>({
     queryKey: ["sale", id],
     queryFn: async () => {
       const { data } = await api.get(`${SALES_ENDPOINT}/${id}`);
@@ -58,7 +59,7 @@ export function useGetSaleById(id: number | null) {
 export function useCreateSale() {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse<Sale>, unknown, CreateSalePayload>({
+  return useMutation<SaleResponse, unknown, CreateSalePayload>({
     mutationFn: async (payload) => {
       const { data } = await api.post(`${SALES_ENDPOINT}`, payload);
       return data;
@@ -75,7 +76,7 @@ export function useCreateSale() {
 export function useUpdateSale() {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse<Sale>, unknown, UpdateSalePayload>({
+  return useMutation<SaleResponse, unknown, UpdateSalePayload>({
     mutationFn: async (payload) => {
       const { data } = await api.put(
         `${SALES_ENDPOINT}/${payload.id}`,
@@ -96,7 +97,7 @@ export function useUpdateSale() {
 export function useDeleteSale() {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse<void>, unknown, number>({
+  return useMutation<ApiResponse<null>, unknown, number>({
     mutationFn: async (id) => {
       const { data } = await api.delete(`${SALES_ENDPOINT}/${id}`);
       return data;

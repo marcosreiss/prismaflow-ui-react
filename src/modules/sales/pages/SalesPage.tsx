@@ -47,6 +47,7 @@ export default function SalesPage() {
         setSelectedSale,
     } = controller;
 
+
     // ==============================
     // 🔹 Colunas da tabela
     // ==============================

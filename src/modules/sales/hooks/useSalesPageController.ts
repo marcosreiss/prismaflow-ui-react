@@ -103,8 +103,8 @@ export function useSalesPageController() {
   // ==========================
   // 🔹 Dados derivados
   // ==========================
-  const sales = data?.content ?? [];
-  const total = data?.totalElements ?? 0;
+  const sales = data?.data?.content ?? [];
+  const total = data?.data?.totalElements ?? 0;
 
   // ==========================
   // 🔹 Retorno do controller

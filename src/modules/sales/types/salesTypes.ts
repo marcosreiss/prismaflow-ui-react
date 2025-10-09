@@ -3,6 +3,7 @@ import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 import type { Payment } from "@/modules/payments/types/paymentTypes";
 import type { Product } from "@/modules/products/types/productTypes";
+import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 
 // ==============================
 // 🔹 ENTIDADE: SALE
@@ -108,3 +109,7 @@ export const FrameMaterialTypeLabels: Record<FrameMaterialType, string> = {
   TR90: "TR-90",
   OTHER: "Outro",
 };
+
+
+export type SalesResponse = ApiResponse<PaginatedResponse<Sale>>;
+export type SaleResponse = ApiResponse<Sale>;
