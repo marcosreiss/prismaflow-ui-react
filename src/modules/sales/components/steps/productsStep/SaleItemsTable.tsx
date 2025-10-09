@@ -20,8 +20,8 @@ import {
     Collapse,
 } from "@mui/material";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import FrameDetailsForm from "@/modules/sales/components/productsStep/FrameDetailsForm";
-import type { Sale } from "../../types/salesTypes";
+import FrameDetailsForm from "@/modules/sales/components/steps/productsStep/FrameDetailsForm";
+import type { Sale } from "../../../types/salesTypes";
 
 export default function SaleItemsTable() {
     const formContext = useFormContext<Sale>();

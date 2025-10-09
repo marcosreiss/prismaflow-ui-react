@@ -2,35 +2,26 @@ import { useEffect } from "react";
 import { FormProvider } from "react-hook-form";
 import { Box, Paper, Divider, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
 import { useNotification } from "@/context/NotificationContext";
 import { mapSaleToPayload, sanitizeSaleData } from "@/modules/sales/utils/salePayloadMapper";
 import { canSubmitSale } from "@/modules/sales/utils/saleValidators";
 import { getSummaryCalculations } from "@/modules/sales/utils/calculations";
-
-// ⚙️ Hooks no padrão separado por operação
-
 import { useCreateSale, useUpdateSale } from "../hooks/useSales";
-
 import { useSaleForm } from "@/modules/sales/hooks/useSaleForm";
-
 import SaleFormHeader from "./SaleFormHeader";
 import StepperNavigation from "./StepperNavigation";
 import SaleSummary from "./SaleSummary";
 import SaleFormActions from "./SaleFormActions";
-
-// Steps
-
 import type { Sale, CreateSalePayload } from "../types/salesTypes";
 import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
 import { useGetProducts } from "@/modules/products/hooks/useProduct";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
-import ClientStep from "./ClientStep";
-import ProductsStep from "./productsStep/ProductsStep";
-import ProtocolStep from "./ProtocolStep";
-import ReviewStep from "./ReviewStep";
+import ClientStep from "./steps/ClientStep";
+import ProductsStep from "./steps/productsStep/ProductsStep";
+import ReviewStep from "./steps/ReviewStep";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/utils/apiResponse";
+import ProtocolStep from "./steps/ProtocolStep";
 
 const steps = ["Cliente", "Produtos", "Protocolo", "Revisão"];
 
