@@ -22,7 +22,7 @@ import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import { useSelectClients } from "@/modules/clients/hooks/useClient";
 import { useGetPrescriptionsByClientId } from "@/modules/clients/hooks/usePrescription";
-import type { CreateSalePayload } from "../../types/salesTypes";
+import type { CreateSalePayload } from "../../../types/salesTypes";
 
 interface ClientStepProps {
     control: Control<CreateSalePayload>;
@@ -145,8 +145,8 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
             </Typography>
 
             {/* ==========================
-          🔹 Selecionar Cliente
-          ========================== */}
+                🔹 Selecionar Cliente
+                ========================== */}
             <Controller
                 name="clientId"
                 control={control}
@@ -161,11 +161,7 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
                         value={selectedClient}
                         onInputChange={(_, value) => setValue("clientSearch", value)}
                         onChange={handleClientChange}
-                        noOptionsText={
-                            debouncedSearch.length > 0
-                                ? "Nenhum cliente encontrado."
-                                : "Digite para buscar clientes."
-                        }
+                        noOptionsText={"Digite para buscar clientes."}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
