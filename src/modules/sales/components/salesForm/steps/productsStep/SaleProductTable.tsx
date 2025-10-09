@@ -22,7 +22,7 @@ import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import type { SalePayload, SaleProductItem } from "@/modules/sales/types/salesTypes";
 import FrameDetailsForm from "./FrameDetailsForm";
 
-export default function SaleItemsTable() {
+export default function SaleProductTable() {
     const { control } = useFormContext<SalePayload>();
     const [expandedRows, setExpandedRows] = useState<number[]>([]);
 
