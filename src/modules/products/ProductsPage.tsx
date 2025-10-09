@@ -1,5 +1,3 @@
-"use client";
-
 import { Paper, Button } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
