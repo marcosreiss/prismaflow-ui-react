@@ -15,7 +15,7 @@ const ClientsPage = lazy(() => import('@/modules/clients/pages/ClientsPage'));
 const ClientPrescriptionsPage = lazy(() => import('@/modules/clients/pages/ClientPrescriptionsPage'));
 
 
-const SalesPage = lazy(() => import('@/modules/sales/pages/SalePage'));
+const SalesPage = lazy(() => import('@/modules/sales/pages/SalesPage'));
 const SalesForm = lazy(() => import('@/modules/sales/pages/SalesFormPage'));
 const SalesDetailsPage = lazy(() => import('@/modules/sales/pages/salesDetailsPage'));
 
