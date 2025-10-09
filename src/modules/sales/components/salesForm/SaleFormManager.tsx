@@ -52,8 +52,8 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
         limit: 1000,
     });
 
-    const products = productsResponse?.data!.content || [];
-    const services = servicesResponse?.data!.content || [];
+    const products = productsResponse?.data?.content || [];
+    const services = servicesResponse?.data?.content || [];
 
 
     // Mutations separadas
