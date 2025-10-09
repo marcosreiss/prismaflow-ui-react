@@ -7,9 +7,6 @@ import type {
   Sale,
 } from "../types/salesTypes";
 
-// ==============================
-// 🔹 ENDPOINT BASE
-// ==============================
 const SALES_ENDPOINT = "/sales";
 
 // ==============================
@@ -32,12 +29,9 @@ export function useGetSales(
         params.clientId = clientId;
       }
 
-      const { data } = await api.get<PaginatedResponse<Sale>>(
-        "/sales",
-        {
-          params,
-        }
-      );
+      const { data } = await api.get<PaginatedResponse<Sale>>(SALES_ENDPOINT, {
+        params,
+      });
 
       return data;
     },

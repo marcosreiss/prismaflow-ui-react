@@ -63,6 +63,9 @@ export type SaleServiceItem = {
 };
 
 
+// ======================================
+// 🔹 ENTIDADE: FrameDetails e Protocol
+// ======================================
 export type FrameDetails = {
   id: number;
   material: string;
