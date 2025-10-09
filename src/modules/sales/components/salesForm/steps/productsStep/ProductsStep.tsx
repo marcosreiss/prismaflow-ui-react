@@ -13,7 +13,7 @@ import type { OpticalService } from "@/modules/opticalservices/types/opticalServ
 import ProductSelector from "./ProductSelector";
 import SaleProductTable from "./SaleProductTable";
 import SaleServiceSelector from "./SaleServiceSelector";
-import ServicesTable from "./serviceTable";
+import SaleServiceTable from "./SaleServiceTable";
 import type { SalePayload } from "@/modules/sales/types/salesTypes";
 
 interface ProductsStepProps {
@@ -112,7 +112,7 @@ export default function ProductsStep({
                 >
                     Serviços adicionados
                 </Typography>
-                <ServicesTable />
+                <SaleServiceTable />
             </Paper>
 
             {/* Observações */}

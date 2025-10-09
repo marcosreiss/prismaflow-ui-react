@@ -15,7 +15,7 @@ import { Trash2 } from "lucide-react";
 import type { SalePayload } from "@/modules/sales/types/salesTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 
-export default function ServicesTable() {
+export default function SaleServiceTable() {
     const { control } = useFormContext<SalePayload>();
 
     const { fields, remove } = useFieldArray({
