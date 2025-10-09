@@ -132,7 +132,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
                 return;
             }
 
-            // revalidar estoque de todos os produtos
+            // revalidar estoque
             const allValid = await Promise.all(
                 (data.productItems ?? []).map((p) =>
                     validateStock(p.productId ?? p.product?.id, p.quantity ?? 1)
@@ -155,13 +155,26 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
                     await createSale.mutateAsync(payload);
                     addNotification("Venda criada com sucesso!", "success");
                 }
+
+                // ✅ Limpar formulário e redirecionar
+                methods.reset();                  // limpa o formulário
+                window.location.href = "/sales";  // redireciona (alternativa: navigate("/sales"))
             } catch (error) {
                 console.log(error);
                 addNotification("Erro ao salvar venda. Tente novamente.", "error");
             }
         },
-        [isEditMode, existingSale, addNotification, validateStock, createSale, updateSale]
+        [
+            isEditMode,
+            existingSale,
+            addNotification,
+            validateStock,
+            createSale,
+            updateSale,
+            methods, // precisa estar aqui para usar reset()
+        ]
     );
+
 
     // ======= Valor do Contexto =======
     const value = useMemo(
