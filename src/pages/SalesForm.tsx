@@ -6,7 +6,7 @@ import { useSale } from "@/hooks/useSale";
 import { useCustomer } from "@/hooks/useCustomer";
 import { useProduct } from "@/hooks/useProduct";
 import { useNotification } from "@/context/NotificationContext";
-import { useSaleForm } from "@/hooks/useSaleForm";
+import { useSaleForm } from "@/modules/sales/hooks/useSaleForm";
 import { mapSaleToPayload, sanitizeSaleData } from "@/utils/sales/salePayloadMapper";
 import { canSubmitSale } from "@/utils/sales/saleValidators";
 import { getSummaryCalculations } from "@/utils/sales/calculations";

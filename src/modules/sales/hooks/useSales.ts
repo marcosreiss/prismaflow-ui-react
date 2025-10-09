@@ -1,11 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
 import api from "@/services/config/api";
-import type { SaleListItem, Sale } from "@/types/saleTypes";
 import type {
-  SaleDetails,
   CreateSalePayload,
   UpdateSalePayload,
+  Sale,
 } from "../types/salesTypes";
 
 // ==============================
@@ -21,9 +20,9 @@ export function useGetSales(
   limit: number = 10,
   clientId?: number
 ) {
-  return useQuery<PaginatedResponse<SaleListItem>>({
+  return useQuery<PaginatedResponse<Sale>>({
     queryKey: ["sales", page, clientId],
-    queryFn: async (): Promise<PaginatedResponse<SaleListItem>> => {
+    queryFn: async (): Promise<PaginatedResponse<Sale>> => {
       const params: Record<string, string | number> = {
         page,
         limit,
@@ -33,7 +32,7 @@ export function useGetSales(
         params.clientId = clientId;
       }
 
-      const { data } = await api.get<PaginatedResponse<SaleListItem>>(
+      const { data } = await api.get<PaginatedResponse<Sale>>(
         "/sales",
         {
           params,
@@ -49,7 +48,7 @@ export function useGetSales(
 // 🔹 BUSCAR VENDA POR ID (detalhes)
 // ==============================
 export function useGetSaleById(id: number | null) {
-  return useQuery<ApiResponse<SaleDetails>>({
+  return useQuery<ApiResponse<Sale>>({
     queryKey: ["sale", id],
     queryFn: async () => {
       const { data } = await api.get(`${SALES_ENDPOINT}/${id}`);

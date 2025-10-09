@@ -12,7 +12,7 @@ import { getSummaryCalculations } from "@/utils/sales/calculations";
 
 import { useCreateSale, useUpdateSale } from "../hooks/useSales";
 
-import { useSaleForm } from "@/hooks/useSaleForm";
+import { useSaleForm } from "@/modules/sales/hooks/useSaleForm";
 
 import SaleFormHeader from "./SaleFormHeader";
 import StepperNavigation from "./StepperNavigation";

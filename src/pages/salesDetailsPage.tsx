@@ -21,7 +21,6 @@ import {
     Assignment,
 } from "@mui/icons-material";
 import { useNotification } from "@/context/NotificationContext";
-import { useSaleDetails } from "@/services/useSaleDetails";
 import ProductAccordion from "@/components/saleDetails/ProductAccordion";
 import ServiceAccordion from "@/components/saleDetails/ServiceAccordion";
 import ProtocolAccordion from "@/components/saleDetails/ProtocolAccordion";

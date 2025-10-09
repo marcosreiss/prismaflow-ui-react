@@ -12,11 +12,11 @@ import {
     Box,
 } from "@mui/material";
 import { Trash2 } from "lucide-react";
-import type { OpticalServiceSummary, Sale } from "@/modules/sales/types/salesTypes";
+import type { Sale } from "@/modules/sales/types/salesTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 
 type ServiceItem = {
-    service: OpticalServiceSummary;
+    service: OpticalService;
 };
 
 export default function ServicesTable() {
@@ -42,7 +42,7 @@ export default function ServicesTable() {
 
     // Total geral de serviços
     const servicesTotal = fields.reduce((acc, item) => {
-        const { service } = item as ServiceItem;
+        const { service } = item as unknown as ServiceItem;
         return acc + (service?.price ?? 0);
     }, 0);
 
@@ -63,7 +63,7 @@ export default function ServicesTable() {
                     </TableHead>
                     <TableBody>
                         {fields.map((item, index) => {
-                            const service = (item as ServiceItem).service as OpticalService;
+                            const service = (item as unknown as ServiceItem).service as OpticalService;
 
                             return (
                                 <TableRow key={item.id}>

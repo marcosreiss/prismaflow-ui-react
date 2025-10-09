@@ -7,19 +7,19 @@ import {
 } from "@mui/material";
 import { CheckCircle } from "lucide-react";
 import type {
-    ClientSummary,
-    PrescriptionSummary,
     SaleProductItem,
     SaleServiceItem,
-    CreateProtocolPayload,
+    Protocol,
 } from "@/modules/sales/types/salesTypes";
+import type { Client } from "@/modules/clients/types/clientTypes";
+import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 
 interface ReviewStepProps {
-    client?: ClientSummary | null;
-    prescription?: PrescriptionSummary | null;
+    client?: Client | null;
+    prescription?: Prescription | null;
     productItems: SaleProductItem[];
     serviceItems: SaleServiceItem[];
-    protocol?: CreateProtocolPayload | null;
+    protocol?: Protocol | null;
     subtotal: number;
     discount: number;
     total: number;
@@ -168,9 +168,6 @@ export default function ReviewStep({
                                 {protocol.os && (
                                     <Typography variant="body2">OS: {protocol.os}</Typography>
                                 )}
-                                <Typography variant="body2" color={protocol.isActive ? "success.main" : "error.main"}>
-                                    {protocol.isActive ? "Ativo" : "Inativo"}
-                                </Typography>
                             </Stack>
                         </Box>
                     )}

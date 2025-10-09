@@ -121,8 +121,8 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
             </Typography>
 
             {/* ==========================
-          🔹 Selecionar Cliente
-      =========================== */}
+                🔹 Selecionar Cliente
+                ========================== */}
             <Controller
                 name="client"
                 control={control}
@@ -137,6 +137,11 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
                         value={selectedClient}
                         onInputChange={(_, value) => setSearchName(value)}
                         onChange={handleClientChange}
+                        noOptionsText={
+                            searchName.length > 0
+                                ? "Nenhum cliente corresponde à busca."
+                                : "Digite para buscar clientes."
+                        }
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -161,6 +166,7 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
                     />
                 )}
             />
+
 
             {/* ==========================
           🔹 Selecionar Receita (opcional)
