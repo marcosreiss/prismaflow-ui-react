@@ -18,13 +18,11 @@ const steps = ["Cliente", "Produtos", "Protocolo", "Revisão"];
 export default function SaleFormManager() {
     const navigate = useNavigate();
     const {
-        mode,
         methods,
         activeStep,
         handleSubmitSale,
     } = useSaleFormContext();
 
-    const isEditMode = mode === "edit";
     const {
         handleSubmit,
         formState: { errors, isSubmitting },
@@ -71,7 +69,6 @@ export default function SaleFormManager() {
     return (
         <Paper sx={{ p: 3, borderRadius: 2, maxWidth: 1200, mx: "auto" }}>
             <SaleFormHeader
-                isEditMode={isEditMode}
                 onBack={() => navigate("/sales")}
             />
 

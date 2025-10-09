@@ -1,18 +1,17 @@
-import type { Sale } from "@/modules/sales/types/salesTypes";
-import { Box, Typography, IconButton } from "@mui/material";
-import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { Box, Typography, IconButton, CircularProgress } from "@mui/material";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
 
 interface SaleFormHeaderProps {
-    isEditMode: boolean;
-    existingSale?: Sale | null;
     onBack: () => void;
 }
 
-export default function SaleFormHeader({
-    isEditMode,
-    existingSale,
-    onBack,
-}: SaleFormHeaderProps) {
+export default function SaleFormHeader({ onBack }: SaleFormHeaderProps) {
+    const { mode, existingSale } = useSaleFormContext();
+    const isEditMode = mode === "edit";
+
+    const isLoadingSale = isEditMode && !existingSale;
+
     return (
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
             {/* Botão voltar */}
@@ -55,7 +54,7 @@ export default function SaleFormHeader({
                             borderRadius: 1.5,
                             transition: "background-color 0.3s ease, color 0.3s ease",
                             bgcolor: existingSale
-                                ? theme.palette.primary.main + "1A" // leve transparência (10%)
+                                ? theme.palette.primary.main + "1A"
                                 : theme.palette.action.hover,
                             color: existingSale
                                 ? theme.palette.primary.main
@@ -66,15 +65,12 @@ export default function SaleFormHeader({
                                 }`,
                         })}
                     >
-                        {existingSale ? (
-                            <CheckCircle2 size={16} strokeWidth={2} />
+                        {isLoadingSale ? (
+                            <CircularProgress size={16} thickness={4} />
                         ) : (
-                            <Loader2
-                                size={16}
-                                strokeWidth={2}
-                                className="animate-spin"
-                            />
+                            existingSale && <CheckCircle2 size={16} strokeWidth={2} />
                         )}
+
                         <Typography
                             variant="body2"
                             sx={{
@@ -82,7 +78,11 @@ export default function SaleFormHeader({
                                 lineHeight: 1.4,
                             }}
                         >
-                            {existingSale ? "Dados carregados" : "Carregando..."}
+                            {isLoadingSale
+                                ? "Carregando..."
+                                : existingSale
+                                    ? "Dados carregados"
+                                    : "Sem dados"}
                         </Typography>
                     </Box>
                 </Box>
