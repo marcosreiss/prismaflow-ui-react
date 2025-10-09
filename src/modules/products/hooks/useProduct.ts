@@ -138,3 +138,22 @@ export const useGetProductById = (id?: number) => {
     enabled: !!id,
   });
 };
+
+// =============================
+// 🔹 HOOK: GET PRODUCT STOCK
+// =============================
+export const useGetProductStock = (id?: number) => {
+  return useQuery<
+    ApiResponse<ProductResponse>,
+    AxiosError<ApiResponse<null>>
+  >({
+    queryKey: ["productStock", id],
+    queryFn: async () => {
+      const { data } = await baseApi.get<
+        ApiResponse<ProductResponse>
+      >(`/api/products/${id}/stock`);
+      return data;
+    },
+    enabled: !!id,
+  });
+};
