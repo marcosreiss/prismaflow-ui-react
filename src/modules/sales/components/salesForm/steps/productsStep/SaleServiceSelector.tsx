@@ -23,7 +23,7 @@ interface ServiceSelectorProps {
 /**
  * 🔹 Seletor de serviços com preview e botão de adicionar
  */
-export default function ServiceSelector({
+export default function SaleServiceSelector({
     services,
     isLoading,
     disabled = false,

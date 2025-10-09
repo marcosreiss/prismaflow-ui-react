@@ -12,7 +12,7 @@ import type { Product } from "@/modules/products/types/productTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 import ProductSelector from "./ProductSelector";
 import SaleProductTable from "./SaleProductTable";
-import ServiceSelector from "./serviceSelector";
+import SaleServiceSelector from "./SaleServiceSelector";
 import ServicesTable from "./serviceTable";
 import type { SalePayload } from "@/modules/sales/types/salesTypes";
 
@@ -99,7 +99,7 @@ export default function ProductsStep({
                 </Box>
                 <Divider sx={{ my: 2 }} />
 
-                <ServiceSelector
+                <SaleServiceSelector
                     services={services}
                     isLoading={isLoadingServices}
                     disabled={isLoading}
