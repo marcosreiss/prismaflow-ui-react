@@ -7,7 +7,7 @@ import BlankLayout from '../layout/blanckLayout';
 import DashboardLayout from '../layout/dashboardLayout';
 
 const SignInPage = lazy(() => import('@/modules/auth/pages/login'));
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const DashboardPage = lazy(() => import('@/modules/dashboard/DashboardPage'));
 const BrandPage = lazy(() => import('@/modules/brands/BrandsPage'));
 const ProductPage = lazy(() => import('@/modules/products/ProductsPage'));
 const OpticalServicePage = lazy(() => import('@/modules/opticalservices/OpticalServicesPage'));
@@ -15,9 +15,9 @@ const ClientsPage = lazy(() => import('@/modules/clients/pages/ClientsPage'));
 const ClientPrescriptionsPage = lazy(() => import('@/modules/clients/pages/ClientPrescriptionsPage'));
 
 
-const SalesPage = lazy(() => import('@/pages/SalePage'));
-const SalesForm = lazy(() => import('@/modules/sales/SalesFormPage'));
-const SalesDetailsPage = lazy(() => import('@/pages/salesDetailsPage'));
+const SalesPage = lazy(() => import('@/modules/sales/pages/SalePage'));
+const SalesForm = lazy(() => import('@/modules/sales/pages/SalesFormPage'));
+const SalesDetailsPage = lazy(() => import('@/modules/sales/pages/salesDetailsPage'));
 
 
 const PaymentPage = lazy(() => import('@/pages/PaymentsPage'));
