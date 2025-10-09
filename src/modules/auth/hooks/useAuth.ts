@@ -8,7 +8,7 @@ import type {
   AdminBranchSelectionResponse,
 } from "@/modules/auth/types/auth";
 import { registerService } from "@/services/authService";
-import baseApi from "@/services/config/api";
+import baseApi from "@/services/axios";
 import type { ApiResponse } from "@/types/apiResponse";
 
 /**

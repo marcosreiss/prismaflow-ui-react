@@ -5,7 +5,7 @@ import {
   keepPreviousData,
 } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import baseApi from "@/services/config/api";
+import baseApi from "@/services/axios";
 import type { ApiResponse } from "@/types/apiResponse";
 
 import type {

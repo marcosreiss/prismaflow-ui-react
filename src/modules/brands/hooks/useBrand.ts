@@ -8,7 +8,7 @@ import type {
   UpdateBrandPayload,
 } from "@/modules/brands/types/brandTypes";
 import type { ApiResponse } from "@/types/apiResponse";
-import baseApi from "@/services/config/api";
+import baseApi from "@/services/axios";
 
 // =============================
 // 🔹 HOOK: GET ALL (paginated)
