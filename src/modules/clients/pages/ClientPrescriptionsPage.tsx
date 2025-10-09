@@ -95,12 +95,12 @@ export default function ClientPrescriptionsPage() {
         {
             key: "addition",
             label: "Adição",
-            render: (row) => row.addition || "-",
+            render: (row) => row.additionLeft || "-",
         },
         {
             key: "opticalCenter",
             label: "Centro Óptico",
-            render: (row) => row.opticalCenter || "-",
+            render: (row) => row.opticalCenterLeft || "-",
         },
         {
             key: "createdAt",
