@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography, Alert } from "@mui/material";
 import { useGetSaleById } from "@/modules/sales/hooks/useSales";
-import SaleFormManager from "@/modules/sales/components/SaleFormManager";
+import SaleFormManager from "@/modules/sales/components/salesForm/SaleFormManager";
 
 
 // ==============================
