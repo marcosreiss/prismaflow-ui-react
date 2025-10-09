@@ -173,7 +173,7 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
         switch (step) {
             case 0:
                 // ClientStep usa useSelectClients internamente (padrão do projeto)
-                return <ClientStep {...stepProps} />;
+                return <ClientStep />;
 
             case 1:
                 return (
