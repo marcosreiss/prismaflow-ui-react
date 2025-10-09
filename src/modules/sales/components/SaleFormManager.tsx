@@ -4,9 +4,9 @@ import { Box, Paper, Divider, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import { useNotification } from "@/context/NotificationContext";
-import { mapSaleToPayload, sanitizeSaleData } from "@/utils/sales/salePayloadMapper";
-import { canSubmitSale } from "@/utils/sales/saleValidators";
-import { getSummaryCalculations } from "@/utils/sales/calculations";
+import { mapSaleToPayload, sanitizeSaleData } from "@/modules/sales/utils/salePayloadMapper";
+import { canSubmitSale } from "@/modules/sales/utils/saleValidators";
+import { getSummaryCalculations } from "@/modules/sales/utils/calculations";
 
 // ⚙️ Hooks no padrão separado por operação
 
@@ -21,7 +21,7 @@ import SaleFormActions from "./SaleFormActions";
 
 // Steps
 
-import type { Sale, CreateSalePayload } from "../types/salesTypes";
+import type { Sale, CreateSalePayload, UpdateSalePayload } from "../types/salesTypes";
 import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
 import { useGetProducts } from "@/modules/products/hooks/useProduct";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
@@ -145,8 +145,8 @@ export default function SaleFormManager({ mode, existingSale }: SaleFormManagerP
     };
 
     // Submit
-    const onSubmit = async (data: CreateSalePayload) => {
-        const finalValidation = canSubmitSale(data);
+    const onSubmit = async (data: CreateSalePayload | UpdateSalePayload) => {
+        const finalValidation = canSubmitSale(data as Sale);
         if (!finalValidation.isValid) {
             finalValidation.errors.forEach((e) => addNotification(e, "warning"));
             return;

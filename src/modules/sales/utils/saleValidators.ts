@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Sale } from "@/types/saleTypes";
+import type { FrameDetails, Sale, SaleProductItem } from "@/modules/sales/types/salesTypes";
 import type { Product } from "@/modules/products/types/productTypes";
 type ValidatorOptions = { isEditMode?: boolean };
 /**
@@ -38,13 +37,6 @@ export const validateSaleForm = (
       }
       break;
 
-    case 2: // Protocolo
-      {
-        const protocolErrors = validateProtocol(data.protocol);
-        errors.push(...protocolErrors);
-      }
-      break;
-
     case 3: // Revisão
       {
         const reviewErrors = validateReview(data);
@@ -68,7 +60,7 @@ export const validateProductItems = (
 ): string[] => {
   const errors: string[] = [];
 
-  productItems.forEach((item: any) => {
+  productItems?.forEach((item: SaleProductItem) => {
     const product = item?.product as Product;
     const quantity = Number(item?.quantity || 0);
 
@@ -83,7 +75,7 @@ export const validateProductItems = (
     // detectar se é um item existente e inalterado (edição)
     const unchanged =
       !!options?.isEditMode &&
-      !!item?.saleItemId && // id do item da venda (não do produto)
+      !!item?.id && // id do item da venda (não do produto)
       item?._original &&
       Number(item?._original?.quantity) === quantity &&
       String(item?._original?.productId) === String(product?.id);
@@ -92,7 +84,7 @@ export const validateProductItems = (
     console.log("product esetoque:", product.stockQuantity);
 
     if (!unchanged) {
-      const available = Number((product as any)?.stockQuantity ?? 0);
+      const available = Number((product as Product)?.stockQuantity ?? 0);
       if (available < quantity) {
         errors.push(
           `Produto "${product.name}": estoque insuficiente. Disponível: ${available}, Solicitado: ${quantity}.`
@@ -108,7 +100,7 @@ export const validateProductItems = (
  * Validações dos detalhes da armação
  */
 // Adicione esta validação específica:
-export const validateFrameDetails = (frameDetails: any, productName: string): string[] => {
+export const validateFrameDetails = (frameDetails: FrameDetails, productName: string): string[] => {
   const errors: string[] = [];
 
   if (!frameDetails) {
@@ -116,52 +108,12 @@ export const validateFrameDetails = (frameDetails: any, productName: string): st
     return errors;
   }
 
-  // ✅ VALIDAÇÃO CRÍTICA: material não pode ser null/empty
   if (!frameDetails.material) {
     errors.push(`Armação "${productName}": tipo de material é obrigatório.`);
   }
 
   if (!frameDetails.color) {
     errors.push(`Armação "${productName}": cor é obrigatória.`);
-  }
-
-  return errors;
-};
-
-// Atualize a validateProductItems para incluir esta validação:
-
-
-/**
- * Validações do protocolo
- */
-export const validateProtocol = (protocol: Sale['protocol']): string[] => {
-  const errors: string[] = [];
-
-  if (!protocol) {
-    return errors; // Protocolo é opcional
-  }
-
-  // Validações da prescrição se existir
-  if (protocol.prescription) {
-    const prescriptionErrors = validatePrescription(protocol.prescription);
-    errors.push(...prescriptionErrors);
-  }
-
-  return errors;
-};
-
-/**
- * Validações da prescrição médica
- */
-export const validatePrescription = (prescription: any): string[] => {
-  const errors: string[] = [];
-
-  if (prescription.doctorName && !prescription.crm) {
-    errors.push("CRM é obrigatório quando o nome do médico é informado.");
-  }
-
-  if (prescription.crm && !prescription.doctorName) {
-    errors.push("Nome do médico é obrigatório quando o CRM é informado.");
   }
 
   return errors;
@@ -213,7 +165,7 @@ export const canProceedToNextStep = (data: Sale, currentStep: number): boolean =
 export const canSubmitSale = (data: Sale): ValidationResult => {
   const errors: string[] = [];
 
-  const isEditMode = Boolean((data as any)?.id); // venda existente => edição
+  const isEditMode = Boolean(data?.id); // venda existente => edição
 
 
   for (let step = 0; step < 4; step++) {
@@ -229,10 +181,6 @@ export const canSubmitSale = (data: Sale): ValidationResult => {
  */
 export const validateProductBeforeAdd = (product: Product, quantity: number = 1): ValidationResult => {
   const errors: string[] = [];
-
-  if (!product.isActive) {
-    errors.push("Produto não está ativo.");
-  }
 
   if (product.stockQuantity < quantity) {
     errors.push(`Estoque insuficiente. Disponível: ${product.stockQuantity}`);

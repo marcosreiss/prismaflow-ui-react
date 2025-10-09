@@ -1,5 +1,5 @@
 import { useFormContext, Controller } from "react-hook-form";
-import { FrameMaterialTypeLabels } from "@/types/frameDetailsTypes";
+import { FrameMaterialTypeLabels } from "@/modules/sales/types/salesTypes";
 import {
     Paper,
     Typography,

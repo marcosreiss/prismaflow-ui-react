@@ -45,6 +45,12 @@ export type SaleProductItem = {
 
   product?: Product;
   frameDetails?: FrameDetails | null;
+
+  /** usado no front para comparar mudanças no modo edição */
+  _original?: {
+    productId: number;
+    quantity: number;
+  };
 };
 
 // ==============================
@@ -61,7 +67,6 @@ export type SaleServiceItem = {
 
   service?: OpticalService;
 };
-
 
 // ======================================
 // 🔹 ENTIDADE: FrameDetails e Protocol
@@ -99,3 +104,17 @@ export type UpdateSalePayload = Partial<CreateSalePayload> & {
   id: number;
 };
 
+export type FrameMaterialType =
+  | "ACETATE"
+  | "METAL"
+  | "TITANIUM"
+  | "TR90"
+  | "OTHER";
+
+export const FrameMaterialTypeLabels: Record<FrameMaterialType, string> = {
+  ACETATE: "Acetato",
+  METAL: "Metal",
+  TITANIUM: "Titânio",
+  TR90: "TR-90",
+  OTHER: "Outro",
+};
