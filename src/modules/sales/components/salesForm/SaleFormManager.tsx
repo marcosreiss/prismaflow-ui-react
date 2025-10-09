@@ -11,7 +11,7 @@ import { useSaleForm } from "@/modules/sales/hooks/useSaleForm";
 import SaleFormHeader from "../SaleFormHeader";
 import StepperNavigation from "../StepperNavigation";
 import SaleSummary from "../SaleSummary";
-import SaleFormActions from "../SaleFormActions";
+import SaleFormActions from "./SaleFormActions";
 import type { Sale, CreateSalePayload } from "../../types/salesTypes";
 import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
 import { useGetProducts } from "@/modules/products/hooks/useProduct";
