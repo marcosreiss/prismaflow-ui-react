@@ -17,6 +17,7 @@ interface SaleFormContextValue {
     existingSale?: Sale | null;
     methods: ReturnType<typeof useSaleForm>["methods"];
     activeStep: number;
+    setActiveStep: (step: number) => void;
     handleNext: () => void;
     handleBack: () => void;
     handleAddProduct: (product: Product & { quantity?: number }) => Promise<void>;
@@ -46,6 +47,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
     const {
         methods,
         activeStep,
+        setActiveStep,
         handleAddProduct,
         handleRemoveProduct,
         handleNext,
@@ -168,6 +170,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
             existingSale,
             methods,
             activeStep,
+            setActiveStep,
             handleNext,
             handleBack,
             handleAddProduct: handleValidatedAddProduct,
@@ -184,6 +187,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
             existingSale,
             methods,
             activeStep,
+            setActiveStep,
             handleNext,
             handleBack,
             handleValidatedAddProduct,

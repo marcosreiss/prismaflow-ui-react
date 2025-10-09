@@ -1,232 +1,105 @@
-import { useEffect } from "react";
-import { FormProvider } from "react-hook-form";
 import { Box, Paper, Divider, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useNotification } from "@/context/NotificationContext";
-import { mapSaleToPayload, sanitizeSaleData } from "@/modules/sales/utils/salePayloadMapper";
-import { canSubmitSale } from "@/modules/sales/utils/saleValidators";
-import { getSummaryCalculations } from "@/modules/sales/utils/calculations";
-import { useCreateSale, useUpdateSale } from "../../hooks/useSales";
-import { useSaleForm } from "@/modules/sales/hooks/useSaleForm";
+import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
+import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
+import { useGetProducts } from "@/modules/products/hooks/useProduct";
+
 import SaleFormHeader from "./SaleFormHeader";
 import StepperNavigation from "./steps/StepperNavigation";
 import SaleSummary from "./SaleSummary";
 import SaleFormActions from "./SaleFormActions";
-import type { Sale, CreateSalePayload } from "../../types/salesTypes";
-import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
-import { useGetProducts } from "@/modules/products/hooks/useProduct";
 import ClientStep from "./steps/ClientStep";
 import ProductsStep from "./steps/productsStep/ProductsStep";
-import ReviewStep from "./steps/ReviewStep";
-import type { AxiosError } from "axios";
-import type { ApiResponse } from "@/utils/apiResponse";
 import ProtocolStep from "./steps/ProtocolStep";
+import ReviewStep from "./steps/ReviewStep";
 
 const steps = ["Cliente", "Produtos", "Protocolo", "Revisão"];
 
-interface SaleFormManagerProps {
-    mode: "create" | "edit";
-    existingSale?: Sale | null; // quando edição, virá do detalhe fora deste componente
-}
-
-export default function SaleFormManager({ mode, existingSale }: SaleFormManagerProps) {
+export default function SaleFormManager() {
     const navigate = useNavigate();
-    const { addNotification } = useNotification();
-    const isEditMode = mode === "edit";
+    const {
+        mode,
+        methods,
+        activeStep,
+        handleSubmitSale,
+    } = useSaleFormContext();
 
-    // Dados de apoio para seleção de itens
+    const isEditMode = mode === "edit";
+    const {
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = methods;
+
+    // Dados de apoio para seleção de produtos e serviços
     const {
         data: productsResponse,
         isLoading: isLoadingProducts,
-    } = useGetProducts({
-        page: 1,
-        limit: 1000, // pode ajustar se quiser paginação
-    });
+    } = useGetProducts({ page: 1, limit: 1000 });
 
     const {
         data: servicesResponse,
         isLoading: isLoadingServices,
-    } = useGetOpticalServices({
-        page: 1,
-        limit: 1000,
-    });
+    } = useGetOpticalServices({ page: 1, limit: 1000 });
 
     const products = productsResponse?.data?.content || [];
     const services = servicesResponse?.data?.content || [];
 
-
-    // Mutations separadas
-    const createSale = useCreateSale();
-    const updateSale = useUpdateSale();
-    const isSubmitting = createSale.isPending || updateSale.isPending;
-
-    // Form Controller (estado global do formulário desta tela)
-    const {
-        methods,
-        control,
-        activeStep,
-        setActiveStep,
-        handleNext,
-        handleBack,
-        resetForm,
-    } = useSaleForm();
-
-    const {
-        handleSubmit,
-        formState: { errors },
-        watch,
-    } = methods;
-
-    // watchers (para review/summary)
-    const watchedProductItems = watch("productItems") ?? [];
-    const watchedDiscount = watch("discount") ?? 0;
-
-    // Hidratar o formulário no modo edição
-    useEffect(() => {
-        if (!isEditMode || !existingSale) return;
-        // Aqui é o lugar para um mapper dedicado API -> form se você tiver (recomendado)
-        resetForm(existingSale as unknown as CreateSalePayload);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditMode, existingSale]);
-
-    // Cálculos do resumo
-    const summaryCalculations = getSummaryCalculations(watchedProductItems, watchedDiscount);
-
-    // Navegação entre steps
-    const handleStepNext = () => handleNext();
-    const handleStepChange = (newStep: number) => setActiveStep(newStep);
-
-
-    // Rascunho
-    const handleSaveDraft = () => {
-        // const data = getValues();
-        // const sanitizedData = sanitizeSaleData(data);
-        // Você pode persistir num storage/localDraftsService aqui
-        // console.log("Rascunho salvo:", sanitizedData);
-        addNotification("Rascunho salvo com sucesso!", "info");
-    };
-
-    // Submit
-    const onSubmit = async (data: CreateSalePayload) => {
-        const finalValidation = canSubmitSale(data as Sale);
-        if (!finalValidation.isValid) {
-            finalValidation.errors.forEach((e) => addNotification(e, "warning"));
-            return;
-        }
-
-        try {
-            const sanitizedData = sanitizeSaleData(data);
-            const payload = mapSaleToPayload(sanitizedData);
-
-            if (isEditMode && existingSale?.id) {
-                await updateSale.mutateAsync({
-                    ...payload,
-                    id: existingSale.id,
-                });
-                addNotification("Venda atualizada com sucesso!", "success");
-            } else {
-                await createSale.mutateAsync(payload);
-                addNotification("Venda criada com sucesso!", "success");
-            }
-
-            navigate("/sales");
-        } catch (err: unknown) {
-            const error = err as AxiosError<ApiResponse<null>>;
-            console.log(err );
-            
-            const errorMessage =
-                error.response?.data?.message ??
-                `Erro ao ${isEditMode ? "atualizar" : "criar"} a venda. Tente novamente.`;
-            addNotification(errorMessage, "error");
-        }
-    };
-
-    // Render dos steps
+    // Renderização dos steps
     const renderStepContent = (step: number) => {
-        const stepProps = { control, errors };
-
         switch (step) {
             case 0:
-                // ClientStep usa useSelectClients internamente (padrão do projeto)
                 return <ClientStep />;
-
             case 1:
                 return (
                     <ProductsStep
-                        {...stepProps}
-                        products={products || []}
-                        services={services || []}
+                        products={products}
+                        services={services}
                         isLoadingProducts={isLoadingProducts}
                         isLoadingServices={isLoadingServices}
                         isLoading={isSubmitting}
                     />
                 );
-
             case 2:
                 return <ProtocolStep />;
-
             case 3:
-                return (
-                    <ReviewStep />
-                );
-
+                return <ReviewStep />;
             default:
                 return <Alert severity="error">Etapa não encontrada.</Alert>;
         }
     };
 
     return (
-        <FormProvider {...methods}>
-            <Paper sx={{ p: 3, borderRadius: 2, maxWidth: 1200, mx: "auto" }}>
-                <SaleFormHeader
-                    isEditMode={isEditMode}
-                    existingSale={existingSale}
-                    onBack={() => navigate("/sales")}
-                />
+        <Paper sx={{ p: 3, borderRadius: 2, maxWidth: 1200, mx: "auto" }}>
+            <SaleFormHeader
+                isEditMode={isEditMode}
+                onBack={() => navigate("/sales")}
+            />
 
-                <Divider sx={{ mb: 3 }} />
+            <Divider sx={{ mb: 3 }} />
 
-                <StepperNavigation
-                    steps={steps}
-                    activeStep={activeStep}
-                    onStepChange={handleStepChange}
-                />
+            <StepperNavigation steps={steps} />
 
-                {errors.root && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {errors.root.message as string}
-                    </Alert>
-                )}
+            {errors.root && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {errors.root.message as string}
+                </Alert>
+            )}
 
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <Box sx={{ display: "flex", flexDirection: { xs: "column", lg: "row" }, gap: 4 }}>
-                        {/* Coluna principal */}
-                        <Box sx={{ flex: 2 }}>{renderStepContent(activeStep)}</Box>
+            <form onSubmit={handleSubmit(handleSubmitSale)}>
+                <Box sx={{ display: "flex", flexDirection: { xs: "column", lg: "row" }, gap: 4 }}>
+                    {/* Coluna principal */}
+                    <Box sx={{ flex: 2 }}>{renderStepContent(activeStep)}</Box>
 
-                        {/* Lateral: resumo */}
-                        {activeStep > 0 && (
-                            <Box sx={{ flex: 1, minWidth: 300 }}>
-                                <SaleSummary
-                                    subtotal={summaryCalculations.subtotal}
-                                    total={summaryCalculations.total}
-                                />
-                            </Box>
-                        )}
-                    </Box>
+                    {/* Lateral: resumo */}
+                    {activeStep > 0 && (
+                        <Box sx={{ flex: 1, minWidth: 300 }}>
+                            <SaleSummary />
+                        </Box>
+                    )}
+                </Box>
 
-                    <SaleFormActions
-                        activeStep={activeStep}
-                        totalSteps={steps.length}
-                        isLoading={isSubmitting}
-                        hasProducts={watchedProductItems.length > 0}
-                        isEditMode={isEditMode}
-                        onBack={handleBack}
-                        onNext={handleStepNext}
-                        onSaveDraft={handleSaveDraft}
-                        onSubmit={handleSubmit(onSubmit)}
-                    />
-                </form>
-            </Paper>
-        </FormProvider>
+                <SaleFormActions />
+            </form>
+        </Paper>
     );
 }

@@ -1,16 +1,20 @@
 import { Stepper, Step, StepLabel } from "@mui/material";
+import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
 
 interface StepperNavigationProps {
     steps: string[];
-    activeStep: number;
-    onStepChange: (index: number) => void;
 }
 
-export default function StepperNavigation({
-    steps,
-    activeStep,
-    onStepChange,
-}: StepperNavigationProps) {
+/**
+ * 🔹 Stepper de navegação das etapas do formulário de venda
+ */
+export default function StepperNavigation({ steps }: StepperNavigationProps) {
+    const { activeStep, setActiveStep } = useSaleFormContext();
+
+    const handleStepChange = (index: number) => {
+        setActiveStep(index);
+    };
+
     return (
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
             {steps.map((label, index) => (
@@ -20,8 +24,8 @@ export default function StepperNavigation({
                     active={index === activeStep}
                     role="button"
                     tabIndex={0}
-                    onClick={() => onStepChange(index)}
-                    onKeyDown={(e) => e.key === "Enter" && onStepChange(index)}
+                    onClick={() => handleStepChange(index)}
+                    onKeyDown={(e) => e.key === "Enter" && handleStepChange(index)}
                     sx={{
                         cursor: "pointer",
                         "&:hover .MuiStepLabel-label": { opacity: 0.8 },
