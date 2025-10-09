@@ -5,7 +5,6 @@ import {
     useFieldArray,
     Controller,
 } from "react-hook-form";
-import type { ItemProduct } from "@/types/itemProductTypes";
 import {
     Paper,
     Table,
@@ -20,8 +19,8 @@ import {
     Collapse,
 } from "@mui/material";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import FrameDetailsForm from "@/modules/sales/components/steps/productsStep/FrameDetailsForm";
-import type { Sale } from "../../../types/salesTypes";
+import type { Sale, SaleProductItem } from "@/modules/sales/types/salesTypes";
+import FrameDetailsForm from "./FrameDetailsForm";
 
 export default function SaleItemsTable() {
     const formContext = useFormContext<Sale>();
@@ -90,7 +89,7 @@ export default function SaleItemsTable() {
                 </TableHead>
                 <TableBody>
                     {fields.map((item, index) => {
-                        const productItem = item as unknown as ItemProduct;
+                        const productItem = item as unknown as SaleProductItem;
                         const product = productItem.product;
                         const quantity = productItem.quantity ?? 0;
                         const unitPrice = product?.salePrice ?? 0;

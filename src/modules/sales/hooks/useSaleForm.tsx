@@ -67,60 +67,32 @@ export const useSaleForm = () => {
     // ==============================
     // 🔹 Adicionar produto à venda
     // ==============================
-    const handleAddProduct = (product: Product) => {
+    const handleAddProduct = (product: Product & { quantity?: number }) => {
         const currentItems = [...watchedProductItems];
+        const quantity = product.quantity ?? 1;
 
-        // Categorias agrupáveis
-        const groupableCategories = ["ACCESSORY", "LENS"];
-        const isGroupable = groupableCategories.includes(product.category);
-        const isFrame = product.category === "FRAME";
-
-        // Se produto já existe e é agrupável, apenas incrementa
-        if (isGroupable) {
-            const existingIndex = currentItems.findIndex(
-                (item: SaleProductItem) => item.product?.id === product.id
-            );
-            if (existingIndex !== -1) {
-                const updatedItems = [...currentItems];
-                updatedItems[existingIndex] = {
-                    ...updatedItems[existingIndex],
-                    quantity: updatedItems[existingIndex].quantity + 1,
-                };
-                setValue("productItems", updatedItems, { shouldValidate: true });
-                return;
-            }
-        }
-
-        // Se for armação, cria estrutura de frameDetails
-        const frameDetails = isFrame
-            ? {
-                material: "ACETATE" as const,
-                reference: null,
-                color: null,
-            }
+        const frameDetails = product.category === "FRAME"
+            ? { material: "ACETATE" as const, reference: null, color: null }
             : null;
 
         const newItem: Omit<SaleProductItem, "id" | "saleId" | "tenantId" | "branchId" | "createdAt" | "updatedAt"> = {
             product,
-            quantity: 1,
+            quantity,
             frameDetails,
-            productId: 0
+            productId: product.id, // 👈 aqui deve ser o id real do produto
         };
 
         setValue("productItems", [...currentItems, newItem as SaleProductItem], {
             shouldValidate: true,
         });
 
-        // Se venda contém lentes → cria protocolo padrão se ainda não existir
-        const saleHasLens = [...currentItems, newItem as SaleProductItem].some(
-            (item: SaleProductItem) => item.product?.category === "LENS"
-        );
-        const hasProtocol = !!watch("protocol");
-
-        if (saleHasLens && !hasProtocol) {
+        // protocolo opcional para lentes
+        if (product.category === "LENS" && !watch("protocol")) {
             setValue("protocol", createDefaultProtocol());
         }
+        console.log("[handleAddProduct] Produto adicionado:", product);
     };
+
 
     // ==============================
     // 🔹 Remover produto da venda
