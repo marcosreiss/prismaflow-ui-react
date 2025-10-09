@@ -7,7 +7,6 @@ import type {
   UserRegisterResponse,
   AdminBranchSelectionResponse,
 } from "@/modules/auth/types/auth";
-import { registerService } from "@/services/authService";
 import baseApi from "@/utils/axios";
 import type { ApiResponse } from "@/utils/apiResponse";
 
@@ -16,7 +15,7 @@ import type { ApiResponse } from "@/utils/apiResponse";
  */
 export const useLogin = () => {
   return useMutation<
-    LoginResponse | AdminBranchSelectionResponse, // 👈 aceita ambos os tipos de resposta
+    LoginResponse | AdminBranchSelectionResponse,
     AxiosError<ApiResponse<null>>,
     LoginRequest
   >({
@@ -27,7 +26,6 @@ export const useLogin = () => {
       return data;
     },
     onSuccess: (data) => {
-      // Detecta se é fluxo de seleção de filial
       if (
         "data" in data &&
         data.data !== undefined &&
@@ -35,16 +33,14 @@ export const useLogin = () => {
         "tempToken" in data.data
       ) {
         console.log("⚙️ Admin com múltiplas filiais — seleção necessária");
-        // Guarda temporariamente no storage para próxima etapa
         localStorage.setItem("tempAuthToken", data.data.tempToken);
         localStorage.setItem(
           "availableBranches",
           JSON.stringify(data.data.branches)
         );
-        return; // o frontend (UI) exibirá a seleção de filiais
+        return;
       }
 
-      // 🔹 Caso normal (login direto)
       const typedData = data as LoginResponse;
       localStorage.setItem("authToken", typedData.token ?? "");
       console.log("✅ Login efetuado com sucesso:", typedData.data?.name);
@@ -57,16 +53,32 @@ export const useLogin = () => {
 };
 
 /**
- * 🧑‍💻 Hook para registro de novo usuário
+ * 🧑‍💻 Hook para registro de novo usuário (Manager ou Employee)
  */
 export const useRegister = () => {
-  return useMutation<UserRegisterResponse, AxiosError, UserRegisterRequest>({
-    mutationFn: (payload) => registerService(payload),
+  return useMutation<
+    UserRegisterResponse,
+    AxiosError<ApiResponse<null>>,
+    UserRegisterRequest
+  >({
+    mutationFn: async (payload) => {
+      const { data } = await baseApi.post<UserRegisterResponse>(
+        "/api/auth/register-user",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken") ?? ""}`,
+          },
+        }
+      );
+      return data;
+    },
     onSuccess: (data) => {
-      console.log("Usuário registrado com sucesso:", data);
+      console.log("✅ Usuário registrado com sucesso:", data);
     },
     onError: (error) => {
-      console.error("Erro ao registrar usuário:", error);
+      const errData = error.response?.data;
+      console.error(`❌ ${errData?.message ?? "Erro ao registrar usuário."}`);
     },
   });
 };
