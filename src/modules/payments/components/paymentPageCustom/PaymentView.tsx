@@ -1,7 +1,7 @@
 import { Box, Chip, Typography, Divider } from "@mui/material";
 import { PaymentMethodLabels, PaymentStatusLabels } from "@/types/paymentTypes";
 import type { Payment } from "@/types/paymentTypes";
-import { usePaymentView } from "@/hooks/payment/usePaymentView";
+import { usePaymentView } from "@/modules/payments/usePaymentView";
 
 export default function PaymentView({ payment }: { payment: Payment }) {
     const { money, getSaldo } = usePaymentView();

@@ -11,7 +11,7 @@ import {
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
 import type { AxiosError } from "axios";
-import type { ApiResponse } from "@/types/apiResponse";
+import type { ApiResponse } from "@/utils/apiResponse";
 import type { Brand, CreateBrandPayload } from "@/modules/brands/types/brandTypes";
 import { useCreateBrand } from "@/modules/brands/hooks/useBrand";
 import { useNotification } from "@/context/NotificationContext";

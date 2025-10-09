@@ -5,7 +5,7 @@ import {
   keepPreviousData,
 } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import baseApi from "@/services/axios";
+import baseApi from "@/utils/axios";
 
 import type {
   PrescriptionsResponse,
@@ -13,7 +13,7 @@ import type {
   CreatePrescriptionPayload,
   UpdatePrescriptionPayload,
 } from "../types/prescriptionTypes";
-import type { ApiResponse } from "@/types/apiResponse";
+import type { ApiResponse } from "@/utils/apiResponse";
 
 // =============================
 // 🔹 HOOK: GET ALL (paginated)

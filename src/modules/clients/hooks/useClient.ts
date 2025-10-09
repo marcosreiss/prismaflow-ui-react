@@ -5,7 +5,7 @@ import {
   keepPreviousData,
 } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import baseApi from "@/services/axios";
+import baseApi from "@/utils/axios";
 
 import type {
   ClientsResponse,
@@ -14,7 +14,7 @@ import type {
   UpdateClientPayload,
   ClientSelectResponse,
 } from "../types/clientTypes";
-import type { ApiResponse } from "@/types/apiResponse";
+import type { ApiResponse } from "@/utils/apiResponse";
 
 // =============================
 // 🔹 HOOK: GET ALL (paginated)

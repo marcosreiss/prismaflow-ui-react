@@ -23,7 +23,7 @@ import type { AdminBranchSelectionResponse, LoginRequest, LoginResponse } from "
 import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLogin } from "@/modules/auth/hooks/useAuth";
-import baseApi from "@/services/axios";
+import baseApi from "@/utils/axios";
 
 /** ================== util de "criptografia" (ofuscação) ================== */
 const APP_KDF_SALT = "prismaflow::rememberme::v1";

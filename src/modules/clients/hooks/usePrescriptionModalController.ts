@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import type { AxiosError } from "axios";
 import { useNotification } from "@/context/NotificationContext";
-import type { ApiResponse } from "@/types/apiResponse";
+import type { ApiResponse } from "@/utils/apiResponse";
 
 import {
   useCreatePrescription,

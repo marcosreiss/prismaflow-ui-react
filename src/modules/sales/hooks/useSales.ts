@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
-import api from "@/services/axios";
+import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
+import api from "@/utils/axios";
 import type {
   CreateSalePayload,
   UpdateSalePayload,

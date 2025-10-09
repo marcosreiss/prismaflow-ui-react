@@ -4,7 +4,7 @@ import PFTable from "@/components/crud/PFTable";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 
 import type { Payment } from "@/types/paymentTypes";
-import { usePaymentsPage } from "@/hooks/payment/usePaymentsPage";
+import { usePaymentsPage } from "@/modules/payments/usePaymentsPage";
 import PaymentEditDrawer from "@/components/paymentPageCustom/PaymentEditDrawer";
 import PaymentViewDrawer from "@/components/paymentPageCustom/PaymentViewDrawer";
 

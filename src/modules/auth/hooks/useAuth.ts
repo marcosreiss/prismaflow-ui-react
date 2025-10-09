@@ -8,8 +8,8 @@ import type {
   AdminBranchSelectionResponse,
 } from "@/modules/auth/types/auth";
 import { registerService } from "@/services/authService";
-import baseApi from "@/services/axios";
-import type { ApiResponse } from "@/types/apiResponse";
+import baseApi from "@/utils/axios";
+import type { ApiResponse } from "@/utils/apiResponse";
 
 /**
  * 🔐 Hook para autenticação (login) do usuário

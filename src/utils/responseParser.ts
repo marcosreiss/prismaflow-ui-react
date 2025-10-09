@@ -1,6 +1,6 @@
 // src/services/utils/responseParser.ts
 
-import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
+import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 
 export function parseList<T>(res: ApiResponse<PaginatedResponse<T>>) {
   const page = res.data!;

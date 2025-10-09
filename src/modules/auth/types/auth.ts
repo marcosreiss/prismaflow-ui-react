@@ -1,4 +1,4 @@
-import type { ApiResponse } from "../../../types/apiResponse";
+import type { ApiResponse } from "../../../utils/apiResponse";
 
 export type UserRegisterRequest = {
   username: string;

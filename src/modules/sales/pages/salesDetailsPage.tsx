@@ -21,9 +21,9 @@ import {
     Assignment,
 } from "@mui/icons-material";
 import { useNotification } from "@/context/NotificationContext";
-import ProductAccordion from "@/components/saleDetails/ProductAccordion";
-import ServiceAccordion from "@/components/saleDetails/ServiceAccordion";
-import ProtocolAccordion from "@/components/saleDetails/ProtocolAccordion";
+import ProductAccordion from "@/modules/sales/components/saleDetails/ProductAccordion";
+import ServiceAccordion from "@/modules/sales/components/saleDetails/ServiceAccordion";
+import ProtocolAccordion from "@/modules/sales/components/saleDetails/ProtocolAccordion";
 
 interface InfoCardProps {
     title: string;

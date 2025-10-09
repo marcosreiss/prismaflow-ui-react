@@ -1,4 +1,4 @@
-import type { ApiResponse, PaginatedResponse } from "@/types/apiResponse";
+import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 
 // ===========================

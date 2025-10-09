@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { AxiosError } from "axios";
-import type { ApiResponse } from "@/types/apiResponse";
+import type { ApiResponse } from "@/utils/apiResponse";
 import { useNotification } from "@/context/NotificationContext";
 import { useGetProducts, useDeleteProduct } from "./useProduct";
 import type { Product } from "../types/productTypes";

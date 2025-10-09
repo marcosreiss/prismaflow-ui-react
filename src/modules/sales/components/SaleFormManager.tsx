@@ -30,7 +30,7 @@ import ProductsStep from "./productsStep/ProductsStep";
 import ProtocolStep from "./ProtocolStep";
 import ReviewStep from "./ReviewStep";
 import type { AxiosError } from "axios";
-import type { ApiResponse } from "@/types/apiResponse";
+import type { ApiResponse } from "@/utils/apiResponse";
 
 const steps = ["Cliente", "Produtos", "Protocolo", "Revisão"];
 
