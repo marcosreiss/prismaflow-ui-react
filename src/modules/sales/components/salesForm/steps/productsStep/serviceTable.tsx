@@ -12,11 +12,11 @@ import {
     Box,
 } from "@mui/material";
 import { Trash2 } from "lucide-react";
-import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
+import type { SalePayload } from "@/modules/sales/types/salesTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 
 export default function ServicesTable() {
-    const { control } = useFormContext<CreateSalePayload>();
+    const { control } = useFormContext<SalePayload>();
 
     const { fields, remove } = useFieldArray({
         control,

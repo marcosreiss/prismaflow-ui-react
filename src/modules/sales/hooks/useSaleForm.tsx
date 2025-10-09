@@ -3,9 +3,9 @@ import { useForm } from "react-hook-form";
 import type { DeepPartial } from "react-hook-form";
 import type { Product } from "@/modules/products/types/productTypes";
 import type { Protocol, SaleProductItem } from "@/modules/sales/types/salesTypes";
-import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
+import type { SalePayload } from "@/modules/sales/types/salesTypes";
 
-const defaultValues: DeepPartial<CreateSalePayload> = {
+const defaultValues: DeepPartial<SalePayload> = {
     clientId: 0,
     prescriptionId: null,
     productItems: [],
@@ -25,8 +25,8 @@ const createDefaultProtocol = (): Protocol => ({
 });
 
 export const useSaleForm = () => {
-    const methods = useForm<CreateSalePayload>({
-        defaultValues: defaultValues as CreateSalePayload,
+    const methods = useForm<SalePayload>({
+        defaultValues: defaultValues as SalePayload,
     });
 
     const { watch, setValue, reset } = methods;
@@ -99,8 +99,8 @@ export const useSaleForm = () => {
     const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
 
     // 🔹 Resetar formulário
-    const resetForm = (sale?: CreateSalePayload) => {
-        reset(sale || (defaultValues as CreateSalePayload));
+    const resetForm = (sale?: SalePayload) => {
+        reset(sale || (defaultValues as SalePayload));
         setActiveStep(0);
     };
 

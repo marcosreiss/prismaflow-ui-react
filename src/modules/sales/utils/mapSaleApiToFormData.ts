@@ -3,7 +3,7 @@
 // ==============================
 import type {
   Sale,
-  CreateSalePayload,
+  SalePayload,
   SaleProductItem,
   SaleServiceItem,
   Protocol,
@@ -13,7 +13,7 @@ import type {
  * Mapeia o retorno da API (Sale completo) para o formato usado pelo formulário.
  * Isso permite reusar o hook `useSaleForm` tanto em criação quanto edição.
  */
-export const mapSaleApiToFormData = (sale: Sale): CreateSalePayload => {
+export const mapSaleApiToFormData = (sale: Sale): SalePayload => {
   if (!sale)
     throw new Error("mapSaleApiToFormData: parâmetro 'sale' é obrigatório");
 
@@ -56,7 +56,7 @@ export const mapSaleApiToFormData = (sale: Sale): CreateSalePayload => {
   // ==============================
   // 🔹 Retorno final no formato do formulário
   // ==============================
-  const payload: CreateSalePayload = {
+  const payload: SalePayload = {
     clientId: sale.clientId,
     prescriptionId: sale.prescriptionId ?? null,
     productItems,

@@ -19,11 +19,11 @@ import {
     Collapse,
 } from "@mui/material";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import type { CreateSalePayload, SaleProductItem } from "@/modules/sales/types/salesTypes";
+import type { SalePayload, SaleProductItem } from "@/modules/sales/types/salesTypes";
 import FrameDetailsForm from "./FrameDetailsForm";
 
 export default function SaleItemsTable() {
-    const { control } = useFormContext<CreateSalePayload>();
+    const { control } = useFormContext<SalePayload>();
     const [expandedRows, setExpandedRows] = useState<number[]>([]);
 
     const { fields, remove } = useFieldArray({

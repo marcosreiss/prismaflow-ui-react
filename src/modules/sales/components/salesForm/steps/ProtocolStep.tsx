@@ -8,11 +8,11 @@ import {
     Stack,
 } from "@mui/material";
 import { FileText } from "lucide-react";
-import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
+import type { SalePayload } from "@/modules/sales/types/salesTypes";
 import { useEffect } from "react";
 
 export default function ProtocolStep() {
-    const { control, setValue, watch } = useFormContext<CreateSalePayload>();
+    const { control, setValue, watch } = useFormContext<SalePayload>();
     const protocol = watch("protocol");
 
     useEffect(() => {

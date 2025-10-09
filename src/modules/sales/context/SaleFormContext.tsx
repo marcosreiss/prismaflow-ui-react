@@ -5,7 +5,7 @@ import { useSaleForm } from "../hooks/useSaleForm";
 import { useStockValidation } from "./useStockValidation";
 import { useSaleDraft } from "./useSaleDraft";
 import { useNotification } from "@/context/NotificationContext";
-import type { CreateSalePayload, Sale } from "../types/salesTypes";
+import type { SalePayload, Sale } from "../types/salesTypes";
 import { sanitizeSaleData, mapSaleToPayload } from "../utils/salePayloadMapper";
 import { canSubmitSale } from "../utils/saleValidators";
 import { useCreateSale, useUpdateSale } from "../hooks/useSales";
@@ -26,7 +26,7 @@ interface SaleFormContextValue {
     handleRemoveService: (index: number) => void;
     handleSaveDraft: () => void;
     handleClearDraft: () => void;
-    handleSubmitSale: (data: CreateSalePayload) => Promise<void>;
+    handleSubmitSale: (data: SalePayload) => Promise<void>;
     loadDraft: () => void;
 }
 
@@ -41,7 +41,7 @@ interface ProviderProps {
 
 export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps) => {
     const isEditMode = mode === "edit";
-    const { addNotification } = useNotification();
+    const { addNotification } = useNotification();    
 
     // ======= Form principal =======
     const {
@@ -71,7 +71,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
         if (hydratedRef.current) return;
         hydratedRef.current = true;
 
-        resetForm(existingSale as unknown as CreateSalePayload);
+        resetForm(existingSale as unknown as SalePayload);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditMode, existingSale]);
 
@@ -131,7 +131,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
 
     // ======= Submissão final =======
     const handleSubmitSale = useCallback(
-        async (data: CreateSalePayload) => {
+        async (data: SalePayload) => {
             const finalValidation = canSubmitSale(data as Sale);
             if (!finalValidation.isValid) {
                 finalValidation.errors.forEach((e) => addNotification(e, "warning"));

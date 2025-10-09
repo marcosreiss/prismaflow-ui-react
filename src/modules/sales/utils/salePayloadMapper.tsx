@@ -1,5 +1,5 @@
 import type { Product } from "@/modules/products/types/productTypes";
-import type { CreateSalePayload, Protocol } from "../types/salesTypes";
+import type { SalePayload, Protocol } from "../types/salesTypes";
 
 
 /**
@@ -13,8 +13,8 @@ const normalizeString = (value?: string | null): string | undefined =>
  * para o payload esperado pela API no fluxo de criação.
  */
 export function mapSaleToPayload(
-    data: CreateSalePayload
-): CreateSalePayload {
+    data: SalePayload
+): SalePayload {
     // --- Produtos
     const productItems =
         data.productItems
@@ -91,7 +91,7 @@ export function mapSaleToPayload(
         : undefined;
 
     // --- Payload final
-    const payload: CreateSalePayload = {
+    const payload: SalePayload = {
         clientId: data.clientId,
         prescriptionId: data.prescriptionId ?? null,
         productItems: productItems.length > 0 ? productItems : [],
@@ -110,9 +110,9 @@ export function mapSaleToPayload(
  * Limpa e normaliza o estado do formulário antes de mapear
  */
 export function sanitizeSaleData(
-    data: CreateSalePayload
-): CreateSalePayload {
-    const sanitized: CreateSalePayload = {
+    data: SalePayload
+): SalePayload {
+    const sanitized: SalePayload = {
         ...data,
         notes: normalizeString(data.notes),
         productItems:

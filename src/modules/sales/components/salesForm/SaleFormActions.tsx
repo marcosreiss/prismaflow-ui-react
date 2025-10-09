@@ -1,10 +1,10 @@
 import { Box, Button } from "@mui/material";
 import { useFormContext } from "react-hook-form";
 import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
-import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
+import type { SalePayload } from "@/modules/sales/types/salesTypes";
 
 export default function SaleFormActions() {
-    const { watch } = useFormContext<CreateSalePayload>();
+    const { watch } = useFormContext<SalePayload>();
     const {
         activeStep,
         handleBack,

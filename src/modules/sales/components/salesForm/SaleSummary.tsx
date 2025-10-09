@@ -7,13 +7,13 @@ import {
     Divider,
     Box,
 } from "@mui/material";
-import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
+import type { SalePayload } from "@/modules/sales/types/salesTypes";
 
 /**
  * 🔹 Resumo financeiro da venda (subtotal, desconto e total)
  */
 export default function SaleSummary() {
-    const { control, watch } = useFormContext<CreateSalePayload>();
+    const { control, watch } = useFormContext<SalePayload>();
 
     const subtotal = watch("subtotal") ?? 0;
     const total = watch("total") ?? 0;

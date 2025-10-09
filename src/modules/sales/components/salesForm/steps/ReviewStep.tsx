@@ -9,13 +9,13 @@ import { CheckCircle } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { useGetClientById } from "@/modules/clients/hooks/useClient";
 import type {
-    CreateSalePayload,
+    SalePayload,
     SaleProductItem,
     SaleServiceItem,
 } from "@/modules/sales/types/salesTypes";
 
 export default function ReviewStep() {
-    const { watch } = useFormContext<CreateSalePayload>();
+    const { watch } = useFormContext<SalePayload>();
 
     // Dados observados do formulário
     const clientId = watch("clientId");

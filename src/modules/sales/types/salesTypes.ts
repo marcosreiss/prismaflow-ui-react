@@ -79,7 +79,8 @@ export type Protocol = {
 // ==============================
 // 🔹 PAYLOADS
 // ==============================
-export type CreateSalePayload = {
+export type SalePayload = {
+  id?: number;
   clientId: number;
   prescriptionId?: number | null;
   productItems?: SaleProductItem[];
@@ -89,10 +90,6 @@ export type CreateSalePayload = {
   total?: number;
   notes?: string;
   protocol?: Protocol | null;
-};
-
-export type UpdateSalePayload = Partial<CreateSalePayload> & {
-  id: number;
 };
 
 export type FrameMaterialType =

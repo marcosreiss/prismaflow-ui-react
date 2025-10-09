@@ -1,12 +1,12 @@
 import { useNotification } from "@/context/NotificationContext";
-import type { CreateSalePayload } from "../types/salesTypes";
+import type { SalePayload } from "../types/salesTypes";
 
 const STORAGE_KEY = "saleFormDraft";
 
-export const useSaleDraft = (resetForm: (data?: CreateSalePayload) => void) => {
+export const useSaleDraft = (resetForm: (data?: SalePayload) => void) => {
   const { addNotification } = useNotification();
 
-  const saveDraft = (data: CreateSalePayload) => {
+  const saveDraft = (data: SalePayload) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     addNotification("Rascunho salvo com sucesso!", "info");
   };

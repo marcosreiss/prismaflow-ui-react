@@ -13,7 +13,7 @@ import ProductSelector from "./ProductSelector";
 import SaleItemsTable from "./SaleItemsTable";
 import ServiceSelector from "./serviceSelector";
 import ServicesTable from "./serviceTable";
-import type { CreateSalePayload } from "@/modules/sales/types/salesTypes";
+import type { SalePayload } from "@/modules/sales/types/salesTypes";
 
 interface ProductsStepProps {
     products: Product[];
@@ -33,7 +33,7 @@ export default function ProductsStep({
     isLoadingServices,
     isLoading,
 }: ProductsStepProps) {
-    const { control } = useFormContext<CreateSalePayload>();
+    const { control } = useFormContext<SalePayload>();
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>

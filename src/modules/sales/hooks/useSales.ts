@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/utils/axios";
 import type {
-  CreateSalePayload,
-  UpdateSalePayload,
+  SalePayload,
   SalesResponse,
   SaleResponse,
 } from "../types/salesTypes";
@@ -59,7 +58,7 @@ export function useGetSaleById(id: number | null) {
 export function useCreateSale() {
   const queryClient = useQueryClient();
 
-  return useMutation<SaleResponse, unknown, CreateSalePayload>({
+  return useMutation<SaleResponse, unknown, SalePayload>({
     mutationFn: async (payload) => {
       const { data } = await api.post(`${SALES_ENDPOINT}`, payload);
       return data;
@@ -76,7 +75,7 @@ export function useCreateSale() {
 export function useUpdateSale() {
   const queryClient = useQueryClient();
 
-  return useMutation<SaleResponse, unknown, UpdateSalePayload>({
+  return useMutation<SaleResponse, unknown, SalePayload>({
     mutationFn: async (payload) => {
       const { data } = await api.put(
         `${SALES_ENDPOINT}/${payload.id}`,

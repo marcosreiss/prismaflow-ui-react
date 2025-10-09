@@ -11,7 +11,7 @@ import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import { useSelectClients } from "@/modules/clients/hooks/useClient";
 import { useGetPrescriptionsByClientId } from "@/modules/clients/hooks/usePrescription";
-import type { CreateSalePayload } from "../../../types/salesTypes";
+import type { SalePayload } from "../../../types/salesTypes";
 
 type PrescriptionOption = Prescription & { label: string };
 
@@ -20,7 +20,7 @@ export default function ClientStep() {
         control,
         setValue,
         formState: { errors },
-    } = useFormContext<CreateSalePayload>();
+    } = useFormContext<SalePayload>();
 
     // 🔎 busca local (não vai pro form)
     const [searchValue, setSearchValue] = useState("");
