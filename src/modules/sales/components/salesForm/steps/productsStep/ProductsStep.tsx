@@ -5,6 +5,7 @@ import {
     TextField,
     Paper,
     Divider,
+    useTheme,
 } from "@mui/material";
 import { FileText, ShoppingCart, Wrench } from "lucide-react";
 import type { Product } from "@/modules/products/types/productTypes";
@@ -34,14 +35,29 @@ export default function ProductsStep({
     isLoading,
 }: ProductsStepProps) {
     const { control } = useFormContext<SalePayload>();
+    const theme = useTheme();
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {/* Produtos */}
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+            <Paper
+                variant="outlined"
+                sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    borderColor: theme.palette.divider,
+                    bgcolor: theme.palette.background.paper,
+                }}
+            >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <ShoppingCart size={24} color="#1976d2" />
-                    <Typography variant="h6">Produtos</Typography>
+                    <ShoppingCart
+                        size={22}
+                        color={theme.palette.primary.main}
+                        strokeWidth={2}
+                    />
+                    <Typography variant="h6" color="text.primary" fontWeight={600}>
+                        Produtos
+                    </Typography>
                 </Box>
                 <Divider sx={{ my: 2 }} />
 
@@ -62,10 +78,24 @@ export default function ProductsStep({
             </Paper>
 
             {/* Serviços */}
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+            <Paper
+                variant="outlined"
+                sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    borderColor: theme.palette.divider,
+                    bgcolor: theme.palette.background.paper,
+                }}
+            >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Wrench size={24} color="#1976d2" />
-                    <Typography variant="h6">Serviços</Typography>
+                    <Wrench
+                        size={22}
+                        color={theme.palette.primary.main}
+                        strokeWidth={2}
+                    />
+                    <Typography variant="h6" color="text.primary" fontWeight={600}>
+                        Serviços
+                    </Typography>
                 </Box>
                 <Divider sx={{ my: 2 }} />
 
@@ -86,10 +116,24 @@ export default function ProductsStep({
             </Paper>
 
             {/* Observações */}
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+            <Paper
+                variant="outlined"
+                sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    borderColor: theme.palette.divider,
+                    bgcolor: theme.palette.background.paper,
+                }}
+            >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <FileText size={24} color="#1976d2" />
-                    <Typography variant="h6">Observações</Typography>
+                    <FileText
+                        size={22}
+                        color={theme.palette.primary.main}
+                        strokeWidth={2}
+                    />
+                    <Typography variant="h6" color="text.primary" fontWeight={600}>
+                        Observações
+                    </Typography>
                 </Box>
                 <Divider sx={{ my: 2 }} />
 
@@ -105,6 +149,7 @@ export default function ProductsStep({
                             fullWidth
                             variant="outlined"
                             placeholder="Adicione observações sobre a venda..."
+                            InputLabelProps={{ shrink: true }}
                         />
                     )}
                 />
