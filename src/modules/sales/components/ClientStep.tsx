@@ -1,5 +1,10 @@
-import { useState, useMemo, type SyntheticEvent } from "react";
-import { Controller, useFormContext, type Control, type FieldErrors } from "react-hook-form";
+import { useState, useMemo, useEffect, type SyntheticEvent } from "react";
+import {
+    Controller,
+    useFormContext,
+    type Control,
+    type FieldErrors,
+} from "react-hook-form";
 import {
     Box,
     Typography,
@@ -11,6 +16,7 @@ import {
 } from "@mui/material";
 import { User, Plus, XCircle } from "lucide-react";
 import dayjs from "dayjs";
+
 import PrescriptionModal from "@/modules/clients/components/PrescriptionModal";
 import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
@@ -22,18 +28,19 @@ interface ClientStepProps {
     control: Control<CreateSalePayload>;
     errors: FieldErrors<CreateSalePayload>;
 }
+
 type PrescriptionOption = Prescription & { label: string };
 
 /**
- * Step 1 — Seleção de Cliente + Receita
+ * Step 1 — Seleção de Cliente + Receita (com debounce de busca)
  */
 export default function ClientStep({ control, errors }: ClientStepProps) {
-    const { setValue } = useFormContext();
+    const { setValue, watch, handleSubmit } = useFormContext();
 
-    // ==============================
-    // 🔹 Estados locais
-    // ==============================
-    const [searchName, setSearchName] = useState("");
+    // Campo auxiliar de busca
+    const searchName = watch("clientSearch") || "";
+    const [debouncedSearch, setDebouncedSearch] = useState(searchName);
+
     const [selectedClient, setSelectedClient] = useState<ClientSelectItem | null>(
         null
     );
@@ -42,20 +49,27 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
     const [openPrescriptionModal, setOpenPrescriptionModal] = useState(false);
 
     // ==============================
+    // ⏱️ Debounce (500 ms)
+    // ==============================
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchName);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchName]);
+
+    // ==============================
     // 🔹 Busca de clientes (autocomplete)
     // ==============================
     const {
         data: clientData,
         isFetching: isLoadingClients,
-    } = useSelectClients(searchName);
+    } = useSelectClients(debouncedSearch);
 
-    const clientOptions = useMemo(
-        () => clientData?.data || [],
-        [clientData?.data]
-    );
+    const clientOptions = useMemo(() => clientData?.data || [], [clientData]);
 
     // ==============================
-    // 🔹 Busca de receitas por cliente selecionado
+    // 🔹 Busca de receitas por cliente
     // ==============================
     const {
         data: prescriptionsData,
@@ -66,7 +80,7 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
         limit: 100,
     });
 
-    const prescriptionOptions =
+    const prescriptionOptions: PrescriptionOption[] =
         prescriptionsData?.data?.content.map((p) => ({
             ...p,
             label: `${p.doctorName || "Médico não informado"} - ${dayjs(
@@ -74,14 +88,13 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
             ).format("DD/MM/YYYY")}`,
         })) || [];
 
-
     // ==============================
     // 🔹 Ações
     // ==============================
     const handleClientChange = (
         _: SyntheticEvent<Element, Event>,
         newClient: ClientSelectItem | null
-    ): void => {
+    ) => {
         setSelectedClient(newClient);
         setSelectedPrescription(null);
         setValue("clientId", newClient?.id ?? null);
@@ -91,7 +104,7 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
     const handlePrescriptionChange = (
         _: SyntheticEvent<Element, Event>,
         newPrescription: Prescription | null
-    ): void => {
+    ) => {
         setSelectedPrescription(newPrescription);
         setValue("prescriptionId", newPrescription?.id ?? null);
     };
@@ -108,6 +121,17 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
     };
 
     // ==============================
+    // 🚀 (Opcional) Submeter após debounce
+    // ==============================
+    useEffect(() => {
+        if (debouncedSearch.trim()) {
+            handleSubmit(() => {
+                // console.log("Submit automático após debounce:", debouncedSearch);
+            })();
+        }
+    }, [debouncedSearch, handleSubmit]);
+
+    // ==============================
     // 🔹 Render
     // ==============================
     return (
@@ -121,8 +145,8 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
             </Typography>
 
             {/* ==========================
-                🔹 Selecionar Cliente
-                ========================== */}
+          🔹 Selecionar Cliente
+          ========================== */}
             <Controller
                 name="clientId"
                 control={control}
@@ -135,11 +159,11 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
                         loading={isLoadingClients}
                         getOptionLabel={(option) => option.name || ""}
                         value={selectedClient}
-                        onInputChange={(_, value) => setSearchName(value)}
+                        onInputChange={(_, value) => setValue("clientSearch", value)}
                         onChange={handleClientChange}
                         noOptionsText={
-                            searchName.length > 0
-                                ? "Nenhum cliente corresponde à busca."
+                            debouncedSearch.length > 0
+                                ? "Nenhum cliente encontrado."
                                 : "Digite para buscar clientes."
                         }
                         renderInput={(params) => (
@@ -167,10 +191,9 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
                 )}
             />
 
-
             {/* ==========================
           🔹 Selecionar Receita (opcional)
-      =========================== */}
+          ========================== */}
             {selectedClient && (
                 <Box sx={{ mt: 3 }}>
                     <Stack
@@ -236,8 +259,8 @@ export default function ClientStep({ control, errors }: ClientStepProps) {
             )}
 
             {/* ==========================
-                🔹 Modal de Receita
-                ========================== */}
+          🔹 Modal de Receita
+          ========================== */}
             <PrescriptionModal
                 open={openPrescriptionModal}
                 mode="create"
