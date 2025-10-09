@@ -65,7 +65,7 @@ export default function SalesDetailsPage() {
     const { data: apiResponse, isLoading, error } = useGetSaleById(saleId);
     const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
 
-    const sale = (apiResponse as any)?.data;
+    const sale = apiResponse?.data;
 
     useEffect(() => {
         if (error) {
@@ -120,21 +120,24 @@ export default function SalesDetailsPage() {
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Chip
                             icon={<Inventory />}
-                            label={`${sale.products?.length || 0} produtos`}
+                            label={`${sale.productItems?.length || 0} produtos`}
                             variant="outlined"
                             size="small"
+                            sx={{px: 1, py: 1.6}}
                         />
                         <Chip
                             icon={<Build />}
-                            label={`${sale.services?.length || 0} serviços`}
+                            label={`${sale.serviceItems?.length || 0} serviços`}
                             variant="outlined"
                             size="small"
+                            sx={{px: 1, py: 1.6}}
                         />
                         <Chip
                             icon={<Assignment />}
                             label={`${sale.protocol ? 1 : 0} protocolo`}
                             variant="outlined"
                             size="small"
+                            sx={{px: 1, py: 1.6}}
                         />
                         <Chip
                             icon={<AttachMoney />}
@@ -142,6 +145,7 @@ export default function SalesDetailsPage() {
                             color="primary"
                             variant="outlined"
                             size="small"
+                            sx={{px: 1, py: 1.6}}
                         />
                     </Box>
                 </Box>
@@ -224,7 +228,7 @@ export default function SalesDetailsPage() {
                                         Status
                                     </Typography>
                                     <Typography variant="body1">
-                                        {sale.isActive ? "🟢 Ativa" : "🔴 Finalizada"}
+                                        {sale.payment?.status}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -232,14 +236,14 @@ export default function SalesDetailsPage() {
 
                         {/* Accordion de Produtos */}
                         <ProductAccordion
-                            products={sale.products || []}
+                            products={sale.productItems || []}
                             expanded={expandedAccordion === 'products'}
                             onChange={(isExpanded) => setExpandedAccordion(isExpanded ? 'products' : false)} // ← ASSIM
                         />
 
                         {/* Accordion de Serviços */}
                         <ServiceAccordion
-                            services={sale.services || []}
+                            services={sale.serviceItems || []}
                             expanded={expandedAccordion === 'services'}
                             onChange={(isExpanded) => setExpandedAccordion(isExpanded ? 'services' : false)}
                         />
