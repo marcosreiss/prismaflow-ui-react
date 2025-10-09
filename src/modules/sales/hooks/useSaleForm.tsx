@@ -1,9 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import type { DeepPartial } from "react-hook-form";
 import type { Product } from "@/modules/products/types/productTypes";
-import type { Protocol, SaleProductItem } from "@/modules/sales/types/salesTypes";
-import type { SalePayload } from "@/modules/sales/types/salesTypes";
+import type {
+    Protocol,
+    SaleProductItem,
+    SalePayload,
+    SaleServiceItem,
+} from "@/modules/sales/types/salesTypes";
 
 const defaultValues: DeepPartial<SalePayload> = {
     clientId: 0,
@@ -29,27 +33,37 @@ export const useSaleForm = () => {
         defaultValues: defaultValues as SalePayload,
     });
 
-    const { watch, setValue, reset } = methods;
+    const { control, setValue, reset, getValues } = methods;
     const [activeStep, setActiveStep] = useState(0);
 
-    // 🔹 Itens e desconto
-    const productItems = useMemo(() => watch("productItems") || [], [watch]);
-    const discount = watch("discount") || 0;
+    // ✅ valores observados
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const productItems = useWatch({ control, name: "productItems" }) ?? [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const serviceItems = useWatch({ control, name: "serviceItems" }) ?? [];
+    const discount = useWatch({ control, name: "discount" }) ?? 0;
 
-    // 🔹 Cálculo automático de subtotal e total
+    // ✅ cálculo automático — simples e sem warnings
     useEffect(() => {
-        const subtotal = productItems.reduce((acc: number, item: SaleProductItem) => {
-            const price = item.product?.salePrice || 0;
-            const quantity = item.quantity || 0;
+        const productSubtotal = productItems.reduce((acc, item: SaleProductItem) => {
+            const price = item.product?.salePrice ?? 0;
+            const quantity = item.quantity ?? 0;
             return acc + price * quantity;
         }, 0);
 
-        const total = Math.max(0, subtotal - discount);
-        setValue("subtotal", subtotal);
-        setValue("total", total);
-    }, [productItems, discount, setValue]);
+        const serviceSubtotal = serviceItems.reduce((acc, item: SaleServiceItem) => {
+            const price = item.service?.price ?? 0;
+            return acc + price;
+        }, 0);
 
-    // 🔹 Adicionar produto à venda
+        const subtotal = productSubtotal + serviceSubtotal;
+        const total = Math.max(0, subtotal - discount);
+
+        setValue("subtotal", subtotal, { shouldDirty: false });
+        setValue("total", total, { shouldDirty: false });
+    }, [productItems, serviceItems, discount, setValue]);
+
+    // 🔹 adicionar produto
     const handleAddProduct = (product: Product & { quantity?: number }) => {
         const currentItems = [...productItems];
         const quantity = product.quantity ?? 1;
@@ -73,19 +87,17 @@ export const useSaleForm = () => {
             shouldValidate: true,
         });
 
-        // cria protocolo padrão apenas se houver lente e não existir ainda
-        if (product.category === "LENS" && !watch("protocol")) {
+        if (product.category === "LENS" && !getValues("protocol")) {
             setValue("protocol", createDefaultProtocol());
         }
     };
 
-    // 🔹 Remover produto da venda
+    // 🔹 remover produto
     const handleRemoveProduct = (index: number) => {
         const currentItems = [...productItems];
         currentItems.splice(index, 1);
         setValue("productItems", currentItems, { shouldValidate: true });
 
-        // remove protocolo se não houver mais lentes
         const stillHasLens = currentItems.some(
             (item: SaleProductItem) => item.product?.category === "LENS"
         );
@@ -94,11 +106,9 @@ export const useSaleForm = () => {
         }
     };
 
-    // 🔹 Navegação entre passos
     const handleNext = () => setActiveStep((prev) => Math.min(prev + 1, 3));
     const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
 
-    // 🔹 Resetar formulário
     const resetForm = (sale?: SalePayload) => {
         reset(sale || (defaultValues as SalePayload));
         setActiveStep(0);

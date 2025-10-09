@@ -7,5 +7,5 @@ export const navData: NavItem[] = [
   { title: "Serviços", path: "/services", icon: "Box" },
   { title: "Clientes", path: "/clients", icon: "Users" },
   { title: "Vendas", path: "/sales", icon: "DollarSign" },
-  { title: "Pagamentos", path: "/payments", icon: "CreditCard" },
+  // { title: "Pagamentos", path: "/payments", icon: "CreditCard" },
 ];
