@@ -285,7 +285,6 @@ export default function PrescriptionModal({
                                 </Section>
 
                                 {/* Olho Esquerdo */}
-                                {/* Olho Esquerdo */}
                                 <Section title="Olho Esquerdo (OE)">
                                     <GridBlock>
                                         <Controller
