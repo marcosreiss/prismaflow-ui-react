@@ -103,8 +103,7 @@ export default function PrescriptionModal({
 
             <Divider sx={{ mb: 2 }} />
 
-            <DialogContent dividers sx={{ px: 1.5, py: 2 }}>
-
+            <DialogContent dividers={isView && prescription != null} sx={{ px: 1.5, py: 2 }}>
                 {isView && prescription && (
                     <Stack spacing={2}>
                         <Stack direction="row" spacing={1} mb={1}>
@@ -213,7 +212,6 @@ export default function PrescriptionModal({
                                     </Stack>
                                 </Section>
 
-                                {/* Olho Direito */}
                                 {/* Olho Direito */}
                                 <Section title="Olho Direito (OD)">
                                     <GridBlock>

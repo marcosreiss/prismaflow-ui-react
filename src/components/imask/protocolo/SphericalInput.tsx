@@ -1,4 +1,3 @@
-// SphericalInput.tsx
 import React from "react";
 import TextField, { type TextFieldProps } from "@mui/material/TextField";
 
@@ -7,99 +6,92 @@ type Props = Omit<TextFieldProps, "value" | "onChange"> & {
     onChange: (v: string) => void;
 };
 
-function cleanSphericalValue(value: string): string {
-    if (!value) return '';
+const formatter = new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
 
-    // 1. Converte vírgula para ponto
-    let cleaned = value.replace(/,/g, '.');
-
-    // 2. Remove caracteres que não são dígitos, ponto ou sinais (+/-)
-    cleaned = cleaned.replace(/[^\d.+-]/g, '');
-
-    // 3. Garante que só haja um ponto decimal
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-        cleaned = parts[0] + '.' + parts.slice(1).join('');
-    }
-
-    // 4. Garante que sinais estejam apenas no início e remove sinais duplicados
-    const sign = cleaned.match(/^[+-]/)?.[0] || '';
-    let numberPart = cleaned.replace(/[+-]/g, '');
-    numberPart = numberPart.replace(/^-/, ''); // Garante que sinais internos sejam removidos
-
-    return sign + numberPart;
+function isZeroString(v: string): boolean {
+    // considera +0,00, -0,00, 0,00, +0.00, -0.00, 0.00, etc.
+    if (!v) return false;
+    const normalized = v.replace(",", ".").replace(/[+-]/g, "").trim();
+    return normalized === "0.00" || normalized === "0";
 }
-
-function validateSpherical(value: string): string {
-    if (!value) return '';
-
-    // Permite valores incompletos durante digitação
-    if (value === '-' || value === '+' || value === '+.' || value === '-.' || value.endsWith('.')) {
-        return '';
-    }
-
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) return 'Valor inválido';
-
-    if (numValue < -20.00 || numValue > 20.00) {
-        return 'Esférico deve estar entre -20.00 e +20.00';
-    }
-
-    return '';
-}
-
-function formatFinalValue(value: string): string {
-    if (!value) return '';
-
-    // Não formata valores incompletos
-    if (value === '-' || value === '+' || value === '+.' || value === '-.') {
-        return '';
-    }
-
-    const numValue = parseFloat(value);
-    // <--- MELHORIA: Retorna vazio se o valor não for um número.
-    if (isNaN(numValue)) return '';
-
-    // Limita ao range permitido
-    const finalValue = Math.max(-20.00, Math.min(20.00, numValue));
-
-    // Formata com sinal positivo para valores >= 0
-    if (finalValue >= 0) {
-        return `+${finalValue.toFixed(2)}`;
-    } else {
-        return finalValue.toFixed(2);
-    }
-}
-
 
 export default function SphericalInput({ value, onChange, ...rest }: Props) {
-    // <--- CORRIGIDO: Formata o valor na inicialização.
-    const [display, setDisplay] = React.useState(() => formatFinalValue(value));
-    const [error, setError] = React.useState('');
+    const [display, setDisplay] = React.useState(value);
 
-    // <--- CORRIGIDO: Aplica a formatação sempre que o valor externo mudar.
     React.useEffect(() => {
-        setDisplay(formatFinalValue(value));
+        console.log("[useEffect] external value changed:", value);
+        if (isZeroString(value)) {
+            console.log("→ RESETTING display (zero detected)");
+            setDisplay("");
+            return;
+        }
+        setDisplay(value);
     }, [value]);
 
     const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const rawValue = e.target.value;
-        const cleanedValue = cleanSphericalValue(rawValue);
-        setDisplay(cleanedValue);
-        onChange(cleanedValue);
-        const validationError = validateSpherical(cleanedValue);
-        setError(validationError);
+        const raw = e.target.value;
+        const hasMinus = raw.trim().startsWith("-");
+        const hasPlus = raw.trim().startsWith("+");
+        const digits = raw.replace(/[^0-9]/g, "");
+
+        console.groupCollapsed("[handleChange]");
+        console.log("raw:", raw);
+        console.log("hasMinus:", hasMinus, "hasPlus:", hasPlus);
+        console.log("digits:", digits);
+
+        if (raw === "") {
+            console.log("→ EMPTY FIELD");
+            setDisplay("");
+            onChange("");
+            console.groupEnd();
+            return;
+        }
+
+        if ((hasMinus || hasPlus) && digits.length === 0) {
+            console.log("→ ONLY SIGN");
+            const sign = hasMinus ? "-" : "+";
+            setDisplay(sign);
+            onChange(sign);
+            console.groupEnd();
+            return;
+        }
+
+        if (!digits) {
+            console.log("→ NO DIGITS");
+            setDisplay("");
+            onChange("");
+            console.groupEnd();
+            return;
+        }
+
+        let num = parseInt(digits, 10) / 100;
+        if (hasMinus) num *= -1;
+
+        num = Math.max(-20, Math.min(20, num));
+
+        const formatted = `${num >= 0 ? "+" : ""}${formatter.format(num)}`;
+        console.log("→ FORMATTED VALUE:", formatted, "(num:", num, ")");
+
+        // 🔹 zera se valor for +0,00 ou -0,00
+        if (isZeroString(formatted)) {
+            console.log("→ ZERO DETECTED, clearing input");
+            setDisplay("");
+            onChange("");
+            console.groupEnd();
+            return;
+        }
+
+        setDisplay(formatted);
+        onChange(formatted);
+        console.groupEnd();
     };
 
-    const handleBlur = () => {
-        const formatted = formatFinalValue(display);
-        const validationError = validateSpherical(formatted);
-        setError(validationError);
-
-        if (formatted !== display || !formatted) {
-            onChange(formatted);
-            setDisplay(formatted);
-        }
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        console.log("[handleFocus]");
+        e.target.select();
     };
 
     return (
@@ -107,12 +99,10 @@ export default function SphericalInput({ value, onChange, ...rest }: Props) {
             {...rest}
             value={display}
             onChange={handleChange}
-            onBlur={handleBlur}
-            error={!!error}
-            helperText={error || rest.helperText}
+            onFocus={handleFocus}
             inputProps={{
                 inputMode: "decimal",
-                placeholder: "-15.00"
+                placeholder: "-15.00",
             }}
         />
     );
