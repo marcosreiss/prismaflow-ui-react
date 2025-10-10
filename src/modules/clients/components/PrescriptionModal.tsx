@@ -22,6 +22,8 @@ import AdditionInput from "@/components/imask/protocolo/AdditionInput";
 import CylindricalInput from "@/components/imask/protocolo/CylindricalInput";
 import DnpInput from "@/components/imask/protocolo/DnpInput";
 import SphericalInput from "@/components/imask/protocolo/SphericalInput";
+import AxisInput from "@/components/imask/protocolo/AxisInput";
+import OpticalCenterInput from "@/components/imask/protocolo/OpticalCenterInput";
 
 type PrescriptionModalProps = {
     open: boolean;
@@ -103,8 +105,7 @@ export default function PrescriptionModal({
 
             <Divider sx={{ mb: 2 }} />
 
-            <DialogContent dividers sx={{ px: 1.5, py: 2 }}>
-
+            <DialogContent dividers={isView && prescription != null} sx={{ px: 1.5, py: 2 }}>
                 {isView && prescription && (
                     <Stack spacing={2}>
                         <Stack direction="row" spacing={1} mb={1}>
@@ -214,7 +215,6 @@ export default function PrescriptionModal({
                                 </Section>
 
                                 {/* Olho Direito */}
-                                {/* Olho Direito */}
                                 <Section title="Olho Direito (OD)">
                                     <GridBlock>
                                         <Controller
@@ -241,10 +241,17 @@ export default function PrescriptionModal({
                                                 />
                                             )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Eixo"
-                                            {...methods.register("odAxis")}
+                                        <Controller
+                                            name="odAxis"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <AxisInput
+                                                    label="Eixo"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                />
+                                            )}
                                         />
                                         <Controller
                                             name="odDnp"
@@ -270,15 +277,21 @@ export default function PrescriptionModal({
                                                 />
                                             )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Centro Óptico"
-                                            {...methods.register("opticalCenterRight")}
+                                        <Controller
+                                            name="opticalCenterRight"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <OpticalCenterInput
+                                                    label="Centro Óptico"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // garante valor controlado
+                                                />
+                                            )}
                                         />
                                     </GridBlock>
                                 </Section>
 
-                                {/* Olho Esquerdo */}
                                 {/* Olho Esquerdo */}
                                 <Section title="Olho Esquerdo (OE)">
                                     <GridBlock>
@@ -306,10 +319,17 @@ export default function PrescriptionModal({
                                                 />
                                             )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Eixo"
-                                            {...methods.register("oeAxis")}
+                                        <Controller
+                                            name="oeAxis"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <AxisInput
+                                                    label="Eixo"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                />
+                                            )}
                                         />
                                         <Controller
                                             name="oeDnp"
@@ -335,10 +355,17 @@ export default function PrescriptionModal({
                                                 />
                                             )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Centro Óptico"
-                                            {...methods.register("opticalCenterLeft")}
+                                        <Controller
+                                            name="opticalCenterLeft"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <OpticalCenterInput
+                                                    label="Centro Óptico"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // garante valor controlado
+                                                />
+                                            )}
                                         />
                                     </GridBlock>
                                 </Section>

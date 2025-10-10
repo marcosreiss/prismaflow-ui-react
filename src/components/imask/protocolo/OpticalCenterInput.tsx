@@ -7,17 +7,17 @@ type Props = Omit<TextFieldProps, "value" | "onChange"> & {
 };
 
 const formatter = new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
 });
 
 function isZeroString(v: string): boolean {
     if (!v) return false;
-    const normalized = v.replace(",", ".").replace(/[+-]/g, "").trim();
-    return normalized === "0.00" || normalized === "0";
+    const normalized = v.replace(",", ".").replace(/[^\d.]/g, "");
+    return normalized === "0" || normalized === "0.0";
 }
 
-export default function AdditionInput({ value, onChange, ...rest }: Props) {
+export default function OpticalCenterInput({ value, onChange, ...rest }: Props) {
     const [display, setDisplay] = React.useState(value);
 
     React.useEffect(() => {
@@ -39,28 +39,28 @@ export default function AdditionInput({ value, onChange, ...rest }: Props) {
             return;
         }
 
-        // 2️⃣ sem dígitos válidos
+        // 2️⃣ sem dígitos
         if (!digits) {
             setDisplay("");
             onChange("");
             return;
         }
 
-        // 3️⃣ interpreta como centavos
-        let num = parseInt(digits, 10) / 100;
+        // 3️⃣ converte para décimos
+        let num = parseInt(digits, 10) / 10;
 
-        // 4️⃣ limite prático (0–20)
-        num = Math.max(0, Math.min(20, num));
+        // 4️⃣ aplica limites (0–99.9)
+        num = Math.max(0, Math.min(99.9, num));
 
-        // 5️⃣ limpa se zero
+        // 5️⃣ limpa se for 0
         if (num === 0) {
             setDisplay("");
             onChange("");
             return;
         }
 
-        // 6️⃣ formata com sinal +
-        const formatted = `+${formatter.format(num)}`;
+        // 6️⃣ formata
+        const formatted = formatter.format(num);
 
         setDisplay(formatted);
         onChange(formatted);
@@ -69,7 +69,7 @@ export default function AdditionInput({ value, onChange, ...rest }: Props) {
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
         e.target.select();
     };
-
+    // deploy
     return (
         <TextField
             {...rest}
@@ -78,7 +78,7 @@ export default function AdditionInput({ value, onChange, ...rest }: Props) {
             onFocus={handleFocus}
             inputProps={{
                 inputMode: "decimal",
-                placeholder: "+0.25",
+                placeholder: "0,0",
             }}
         />
     );

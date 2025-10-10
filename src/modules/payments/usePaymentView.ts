@@ -1,6 +1,6 @@
 // hooks/usePaymentView.ts
 import { useCallback } from "react";
-import type { Payment } from "@/types/paymentTypes";
+import type { Payment } from "./types/paymentTypes";
 
 export function usePaymentView() {
   const money = useCallback(
