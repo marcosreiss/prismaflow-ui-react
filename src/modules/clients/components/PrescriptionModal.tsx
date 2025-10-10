@@ -22,6 +22,7 @@ import AdditionInput from "@/components/imask/protocolo/AdditionInput";
 import CylindricalInput from "@/components/imask/protocolo/CylindricalInput";
 import DnpInput from "@/components/imask/protocolo/DnpInput";
 import SphericalInput from "@/components/imask/protocolo/SphericalInput";
+import AxisInput from "@/components/imask/protocolo/AxisInput";
 
 type PrescriptionModalProps = {
     open: boolean;
@@ -239,10 +240,17 @@ export default function PrescriptionModal({
                                                 />
                                             )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Eixo"
-                                            {...methods.register("odAxis")}
+                                        <Controller
+                                            name="odAxis"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <AxisInput
+                                                    label="Eixo"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                />
+                                            )}
                                         />
                                         <Controller
                                             name="odDnp"
@@ -304,10 +312,17 @@ export default function PrescriptionModal({
                                                 />
                                             )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Eixo"
-                                            {...methods.register("oeAxis")}
+                                        <Controller
+                                            name="oeAxis"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <AxisInput
+                                                    label="Eixo"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                />
+                                            )}
                                         />
                                         <Controller
                                             name="oeDnp"
