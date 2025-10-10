@@ -23,6 +23,7 @@ import CylindricalInput from "@/components/imask/protocolo/CylindricalInput";
 import DnpInput from "@/components/imask/protocolo/DnpInput";
 import SphericalInput from "@/components/imask/protocolo/SphericalInput";
 import AxisInput from "@/components/imask/protocolo/AxisInput";
+import OpticalCenterInput from "@/components/imask/protocolo/OpticalCenterInput";
 
 type PrescriptionModalProps = {
     open: boolean;
@@ -276,10 +277,17 @@ export default function PrescriptionModal({
                                                 />
                                             )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Centro Óptico"
-                                            {...methods.register("opticalCenterRight")}
+                                        <Controller
+                                            name="opticalCenterRight"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <OpticalCenterInput
+                                                    label="Centro Óptico"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // garante valor controlado
+                                                />
+                                            )}
                                         />
                                     </GridBlock>
                                 </Section>
@@ -347,10 +355,17 @@ export default function PrescriptionModal({
                                                 />
                                             )}
                                         />
-                                        <TextField
-                                            size="small"
-                                            label="Centro Óptico"
-                                            {...methods.register("opticalCenterLeft")}
+                                        <Controller
+                                            name="opticalCenterLeft"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <OpticalCenterInput
+                                                    label="Centro Óptico"
+                                                    size="small"
+                                                    {...field}
+                                                    value={field.value || ""} // garante valor controlado
+                                                />
+                                            )}
                                         />
                                     </GridBlock>
                                 </Section>
