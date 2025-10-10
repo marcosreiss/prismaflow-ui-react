@@ -77,9 +77,12 @@ export function useUpdateSale() {
 
   return useMutation<SaleResponse, unknown, SalePayload>({
     mutationFn: async (payload) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { clientId, id, ...updatePayload } = payload;
+      console.log("Updating sale with payload:", updatePayload);
       const { data } = await api.put(
-        `${SALES_ENDPOINT}/${payload.id}`,
-        payload
+        `${SALES_ENDPOINT}/${id}`,
+        updatePayload
       );
       return data;
     },
