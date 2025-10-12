@@ -195,11 +195,6 @@ export default function ExpiringPrescriptionsPage() {
                 clientId={selectedPrescription?.clientId ?? null}
                 prescription={viewPrescription ?? undefined}
                 onClose={handleCloseViewModal}
-                onCreated={() => { }}
-                onUpdated={() => { }}
-                onEdit={() => { }}
-                onDelete={() => { }}
-                onCreateNew={() => { }}
             />
         </Paper>
     );

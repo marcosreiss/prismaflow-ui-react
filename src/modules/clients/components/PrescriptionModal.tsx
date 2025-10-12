@@ -13,11 +13,11 @@ import {
     IconButton,
 } from "@mui/material";
 import { X, Pencil, Trash2 } from "lucide-react";
-import { FormProvider, Controller } from "react-hook-form"; // <--- ALTERADO: Importa o Controller
+import { FormProvider, Controller } from "react-hook-form";
 import { usePrescriptionModalController } from "../hooks/usePrescriptionModalController";
 import type { Prescription } from "../types/prescriptionTypes";
 
-// --- Importando os novos componentes de input com máscara ---
+// --- Inputs com máscara ---
 import AdditionInput from "@/components/imask/protocolo/AdditionInput";
 import CylindricalInput from "@/components/imask/protocolo/CylindricalInput";
 import DnpInput from "@/components/imask/protocolo/DnpInput";
@@ -25,17 +25,20 @@ import SphericalInput from "@/components/imask/protocolo/SphericalInput";
 import AxisInput from "@/components/imask/protocolo/AxisInput";
 import OpticalCenterInput from "@/components/imask/protocolo/OpticalCenterInput";
 
+// ==============================
+// 🔹 Props
+// ==============================
 type PrescriptionModalProps = {
     open: boolean;
     mode: "create" | "edit" | "view";
     clientId: number | null;
     prescription?: Prescription | null;
     onClose: () => void;
-    onCreated: (prescription: Prescription) => void;
-    onUpdated: (prescription: Prescription) => void;
-    onEdit: () => void;
-    onDelete: (prescription: Prescription) => void;
-    onCreateNew: () => void;
+    onCreated?: (prescription: Prescription) => void;
+    onUpdated?: (prescription: Prescription) => void;
+    onEdit?: () => void;
+    onDelete?: (prescription: Prescription) => void;
+    onCreateNew?: () => void;
 };
 
 // ==============================
@@ -67,13 +70,10 @@ export default function PrescriptionModal({
         mode,
         clientId,
         prescription,
-        onCreated,
-        onUpdated,
+        onCreated: onCreated ?? (() => { }),
+        onUpdated: onUpdated ?? (() => { }),
     });
 
-    // ==============================
-    // 🔹 Render
-    // ==============================
     return (
         <Dialog
             open={open}
@@ -105,34 +105,53 @@ export default function PrescriptionModal({
 
             <Divider sx={{ mb: 2 }} />
 
-            <DialogContent dividers={isView && prescription != null} sx={{ px: 1.5, py: 2 }}>
+            <DialogContent dividers={isView && !!prescription} sx={{ px: 1.5, py: 2 }}>
+                {/* =======================
+                    MODO VISUALIZAÇÃO
+                ======================= */}
                 {isView && prescription && (
                     <Stack spacing={2}>
-                        <Stack direction="row" spacing={1} mb={1}>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                startIcon={<Pencil size={14} />}
-                                onClick={onEdit}
-                            >
-                                Editar
-                            </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color="error"
-                                startIcon={<Trash2 size={14} />}
-                                onClick={() => onDelete(prescription)}
-                            >
-                                Remover
-                            </Button>
-                        </Stack>
+                        {/* Botões superiores — só se os handlers existirem */}
+                        {(onEdit || onDelete) && (
+                            <Stack direction="row" spacing={1} mb={1}>
+                                {onEdit && (
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        startIcon={<Pencil size={14} />}
+                                        onClick={onEdit}
+                                    >
+                                        Editar
+                                    </Button>
+                                )}
+                                {onDelete && (
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<Trash2 size={14} />}
+                                        onClick={() => onDelete(prescription)}
+                                    >
+                                        Remover
+                                    </Button>
+                                )}
+                            </Stack>
+                        )}
 
-                        <Divider sx={{ mb: 2 }} />
+                        {(onEdit || onDelete) && <Divider sx={{ mb: 2 }} />}
 
                         <Row label="Médico" value={prescription.doctorName} />
                         <Row label="CRM" value={prescription.crm} />
-                        <Row label="Data da Receita" value={prescription.prescriptionDate} />
+                        <Row
+                            label="Data da Receita"
+                            value={
+                                prescription.prescriptionDate
+                                    ? new Date(
+                                        prescription.prescriptionDate
+                                    ).toLocaleDateString("pt-BR")
+                                    : "-"
+                            }
+                        />
 
                         <Divider sx={{ my: 2 }} />
                         <Typography fontWeight={600} fontSize={14}>
@@ -144,10 +163,7 @@ export default function PrescriptionModal({
                             <Row label="Eixo" value={prescription.odAxis} />
                             <Row label="DNP" value={prescription.odDnp} />
                             <Row label="Adição" value={prescription.additionRight} />
-                            <Row
-                                label="Centro Óptico"
-                                value={prescription.opticalCenterRight}
-                            />
+                            <Row label="Centro Óptico" value={prescription.opticalCenterRight} />
                         </GridBlock>
 
                         <Divider sx={{ my: 2 }} />
@@ -160,26 +176,28 @@ export default function PrescriptionModal({
                             <Row label="Eixo" value={prescription.oeAxis} />
                             <Row label="DNP" value={prescription.oeDnp} />
                             <Row label="Adição" value={prescription.additionLeft} />
-                            <Row
-                                label="Centro Óptico"
-                                value={prescription.opticalCenterLeft}
-                            />
+                            <Row label="Centro Óptico" value={prescription.opticalCenterLeft} />
                         </GridBlock>
 
-                        <Divider sx={{ my: 3 }} />
-                        <Button fullWidth variant="contained" onClick={onCreateNew}>
-                            Nova Receita
-                        </Button>
+                        {/* Botão Nova Receita — só se existir handler */}
+                        {onCreateNew && (
+                            <>
+                                <Divider sx={{ my: 3 }} />
+                                <Button fullWidth variant="contained" onClick={onCreateNew}>
+                                    Nova Receita
+                                </Button>
+                            </>
+                        )}
                     </Stack>
                 )}
 
-
-
+                {/* =======================
+                    MODO CRIAÇÃO / EDIÇÃO
+                ======================= */}
                 {(isCreate || isEdit) && (
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit}>
                             <Stack spacing={2}>
-                                {/* Profissional */}
                                 <Section title="Profissional">
                                     <Stack
                                         direction={{ xs: "column", sm: "row" }}
@@ -206,7 +224,6 @@ export default function PrescriptionModal({
                                         <TextField
                                             fullWidth
                                             size="small"
-                                            label=""
                                             type="date"
                                             InputLabelProps={{ shrink: true }}
                                             {...methods.register("prescriptionDate", { required: true })}
@@ -214,7 +231,6 @@ export default function PrescriptionModal({
                                     </Stack>
                                 </Section>
 
-                                {/* Olho Direito */}
                                 <Section title="Olho Direito (OD)">
                                     <GridBlock>
                                         <Controller
@@ -225,7 +241,7 @@ export default function PrescriptionModal({
                                                     label="Esférico"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -237,7 +253,7 @@ export default function PrescriptionModal({
                                                     label="Cilíndrico"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -261,7 +277,7 @@ export default function PrescriptionModal({
                                                     label="DNP"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -273,7 +289,7 @@ export default function PrescriptionModal({
                                                     label="Adição"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -285,14 +301,13 @@ export default function PrescriptionModal({
                                                     label="Centro Óptico"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // garante valor controlado
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
                                     </GridBlock>
                                 </Section>
 
-                                {/* Olho Esquerdo */}
                                 <Section title="Olho Esquerdo (OE)">
                                     <GridBlock>
                                         <Controller
@@ -303,7 +318,7 @@ export default function PrescriptionModal({
                                                     label="Esférico"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -315,7 +330,7 @@ export default function PrescriptionModal({
                                                     label="Cilíndrico"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -339,7 +354,7 @@ export default function PrescriptionModal({
                                                     label="DNP"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -351,7 +366,7 @@ export default function PrescriptionModal({
                                                     label="Adição"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // <--- CORREÇÃO
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -363,7 +378,7 @@ export default function PrescriptionModal({
                                                     label="Centro Óptico"
                                                     size="small"
                                                     {...field}
-                                                    value={field.value || ""} // garante valor controlado
+                                                    value={field.value || ""}
                                                 />
                                             )}
                                         />
@@ -380,9 +395,7 @@ export default function PrescriptionModal({
                                     variant="contained"
                                     disabled={creating || updating}
                                     startIcon={
-                                        creating || updating ? (
-                                            <CircularProgress size={18} />
-                                        ) : undefined
+                                        creating || updating ? <CircularProgress size={18} /> : undefined
                                     }
                                 >
                                     {isCreate
@@ -445,7 +458,6 @@ function Row({
     value: string | number | null | undefined;
 }) {
     if (!value && value !== 0) return null;
-
     return (
         <Box sx={{ display: "flex", gap: 1 }}>
             <Typography variant="body2" fontWeight={600}>
