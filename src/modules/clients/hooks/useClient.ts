@@ -150,3 +150,26 @@ export const useSelectClients = (name: string) => {
     staleTime: 1000 * 60 * 5, // cache por 5 minutos
   });
 };
+
+// =============================
+// 🔹 HOOK: GET BIRTHDAYS (paginated)
+// =============================
+export const useGetBirthdays = ({
+  page,
+  limit = 50,
+}: {
+  page: number;
+  limit?: number;
+}) => {
+  return useQuery<ClientsResponse, AxiosError<ApiResponse<null>>>({
+    queryKey: ["clients", "birthdays", page, limit],
+    queryFn: async () => {
+      const { data } = await baseApi.get<ClientsResponse>(
+        "/api/clients/birthdays",
+        { params: { page, limit } }
+      );
+      return data;
+    },
+    placeholderData: keepPreviousData,
+  });
+};
