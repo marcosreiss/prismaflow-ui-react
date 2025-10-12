@@ -29,12 +29,14 @@ export default function BirthdayMessageModal({
     // 🎉 Mensagem base do .env
     const baseTemplate =
         import.meta.env.VITE_BIRTHDAY_MESSAGE_TEMPLATE ||
-        "A equipe da Ótica Reis quer te parabenizar por esse dia tão especial, {{nome}}! 🎉 Desejamos um ano de muitas conquistas e realizações. Um abraço!";
+        "A equipe da Ótica Reis quer te parabenizar por esse dia tão especial, {{nome}}! Desejamos um ano de muitas conquistas e realizações. Um abraço!";
 
     // Substitui o placeholder pelo nome do cliente
     useEffect(() => {
         if (client) {
-            const filled = baseTemplate.replace("{{nome}}", client.name);
+            // Extrai apenas o primeiro nome (antes do primeiro espaço)
+            const firstName = client.name.trim().split(" ")[0];
+            const filled = baseTemplate.replace("{{nome}}", firstName);
             setMessage(filled);
         }
     }, [client, baseTemplate]);
@@ -74,17 +76,6 @@ export default function BirthdayMessageModal({
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                     />
-
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mt: 1, wordBreak: "break-all" }}
-                    >
-                        Link gerado:{" "}
-                        <Typography component="span" color="primary.main">
-                            {waLink}
-                        </Typography>
-                    </Typography>
                 </Box>
             </DialogContent>
 
