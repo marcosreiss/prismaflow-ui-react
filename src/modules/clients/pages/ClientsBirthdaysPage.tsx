@@ -1,35 +1,37 @@
-import PFTable from "@/components/crud/PFTable";
-import PFTopToolbar from "@/components/crud/PFTopToolbar";
-import { Box } from "lucide-react";
-import Container from "@mui/material/Container";
 import { useState } from "react";
+import { Paper } from "@mui/material";
+import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
+import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import BirthdayMessageModal from "../components/BirthdayMessageModal";
-import { useGetBirthdays } from "../hooks/useClient";
 import type { Client } from "../types/clientTypes";
+import { useGetBirthdays } from "../hooks/useClient";
 
+// ==============================
+// 🎂 Página de Aniversariantes do Dia
+// ==============================
 export default function ClientsBirthdaysPage() {
-    // =============================
-    // 📦 Estados
-    // =============================
+    // ==============================
+    // 🔹 Estados
+    // ==============================
     const [page, setPage] = useState(0);
     const [limit, setLimit] = useState(50);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-    const [openModal, setOpenModal] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
 
-    // =============================
-    // 🔄 Dados
-    // =============================
-    const { data, isLoading, refetch } = useGetBirthdays({
+    // ==============================
+    // 🔹 Dados
+    // ==============================
+    const { data, isLoading, isFetching, refetch } = useGetBirthdays({
         page: page + 1,
         limit,
     });
-    const rows = data?.data?.content || [];
+    const clients = data?.data?.content || [];
     const total = data?.data?.totalElements || 0;
 
-    // =============================
-    // 📋 Colunas da tabela
-    // =============================
-    const columns = [
+    // ==============================
+    // 🔹 Colunas da tabela
+    // ==============================
+    const columns: ColumnDef<Client>[] = [
         {
             key: "name",
             label: "Nome",
@@ -37,64 +39,70 @@ export default function ClientsBirthdaysPage() {
         {
             key: "phone01",
             label: "Telefone",
+            render: (row) => row.phone01 ?? "-",
         },
         {
             key: "bornDate",
             label: "Data de Nascimento",
-            render: (row: Client) =>
+            render: (row) =>
                 row.bornDate
                     ? new Date(row.bornDate).toLocaleDateString("pt-BR")
                     : "-",
         },
     ];
 
-    // =============================
-    // 🧠 Handlers
-    // =============================
+    // ==============================
+    // 🔹 Handlers
+    // ==============================
     const handleRowClick = (_id: string | number, client: Client) => {
         setSelectedClient(client);
-        setOpenModal(true);
+        setModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setSelectedClient(null);
-        setOpenModal(false);
+        setModalOpen(false);
     };
 
+    // ==============================
+    // 🔹 Render
+    // ==============================
     return (
-        <Container maxWidth="lg" sx={{ py: 3 }}>
-            {/* ============================= */}
-            {/* 🔹 Toolbar */}
-            {/* ============================= */}
+        <Paper
+            elevation={0}
+            sx={{
+                borderRadius: 2,
+                borderColor: "grey.200",
+                backgroundColor: "background.paper",
+                p: 3,
+            }}
+        >
+            {/* Top Toolbar */}
             <PFTopToolbar
                 title="Aniversariantes do Dia"
-                onRefresh={refetch}
-                backUrl="/app/dashboard"
+                onRefresh={() => {
+                    setPage(0);
+                    refetch();
+                }}
             />
 
-            {/* ============================= */}
-            {/* 🔹 Tabela */}
-            {/* ============================= */}
-            <Box>
-                <PFTable
-                    columns={columns}
-                    rows={rows}
-                    loading={isLoading}
-                    total={total}
-                    page={page}
-                    pageSize={limit}
-                    onPageChange={setPage}
-                    onPageSizeChange={setLimit}
-                    onRowClick={handleRowClick}
-                    getRowId={(row: Client) => row.id}
-                />
-            </Box>
+            {/* Tabela */}
+            <PFTable
+                columns={columns}
+                rows={clients}
+                total={total}
+                page={page}
+                pageSize={limit}
+                loading={isLoading || isFetching}
+                onPageChange={(newPage) => setPage(newPage)}
+                onPageSizeChange={(newLimit) => setLimit(newLimit)}
+                getRowId={(row) => row.id}
+                onRowClick={(_, row) => handleRowClick(row.id, row)}
+            />
 
-            {/* ============================= */}
-            {/* 🔹 Modal de Mensagem */}
-            {/* ============================= */}
+            {/* Modal de mensagem */}
             <BirthdayMessageModal
-                open={openModal}
+                open={modalOpen}
                 onClose={handleCloseModal}
                 client={
                     selectedClient
@@ -105,6 +113,6 @@ export default function ClientsBirthdaysPage() {
                         : null
                 }
             />
-        </Container>
+        </Paper>
     );
 }
