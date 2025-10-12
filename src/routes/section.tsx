@@ -14,6 +14,7 @@ const OpticalServicePage = lazy(() => import('@/modules/opticalservices/OpticalS
 const ClientsPage = lazy(() => import('@/modules/clients/pages/ClientsPage'));
 const ClientPrescriptionsPage = lazy(() => import('@/modules/clients/pages/ClientPrescriptionsPage'));
 const ClientsBirthdaysPage = lazy(() => import('@/modules/clients/pages/ClientsBirthdaysPage'));
+const ExpiringPrescriptionsPage = lazy(() => import('@/modules/clients/pages/ExpiringPrescriptionsPage'));
 
 
 const SalesPage = lazy(() => import('@/modules/sales/pages/SalesPage'));
@@ -54,6 +55,7 @@ export function PrivateRouter() {
                 { path: 'services', element: <OpticalServicePage /> },
                 { path: 'clients', element: <ClientsPage /> },
                 { path: 'clients-birthday', element: <ClientsBirthdaysPage /> },
+                { path: 'expiring-prescriptions', element: <ExpiringPrescriptionsPage /> },
                 { path: 'clients/:id/prescriptions', element: <ClientPrescriptionsPage /> },
 
                 { path: 'sales', element: <SalesPage /> },
