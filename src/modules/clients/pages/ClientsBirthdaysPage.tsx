@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Paper } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
-import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import BirthdayMessageModal from "../components/BirthdayMessageModal";
 import type { Client } from "../types/clientTypes";
 import { useGetBirthdays } from "../hooks/useClient";
+import PFDateToolbar from "../components/PFDateToolbar";
 
 // ==============================
-// 🎂 Página de Aniversariantes do Dia
+// 🎂 Página de Aniversariantes
 // ==============================
 export default function ClientsBirthdaysPage() {
     // ==============================
@@ -17,6 +17,12 @@ export default function ClientsBirthdaysPage() {
     const [limit, setLimit] = useState(50);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [date, setDate] = useState(() => {
+        const now = new Date();
+        now.setDate(now.getDate() + 1);
+        return now.toISOString().split("T")[0];
+    });
+
 
     // ==============================
     // 🔹 Dados
@@ -24,7 +30,9 @@ export default function ClientsBirthdaysPage() {
     const { data, isLoading, isFetching, refetch } = useGetBirthdays({
         page: page + 1,
         limit,
+        date, // ← data selecionada
     });
+
     const clients = data?.data?.content || [];
     const total = data?.data?.totalElements || 0;
 
@@ -32,10 +40,7 @@ export default function ClientsBirthdaysPage() {
     // 🔹 Colunas da tabela
     // ==============================
     const columns: ColumnDef<Client>[] = [
-        {
-            key: "name",
-            label: "Nome",
-        },
+        { key: "name", label: "Nome" },
         {
             key: "phone01",
             label: "Telefone",
@@ -77,16 +82,17 @@ export default function ClientsBirthdaysPage() {
                 p: 3,
             }}
         >
-            {/* Top Toolbar */}
-            <PFTopToolbar
-                title="Aniversariantes do Dia"
-                onRefresh={() => {
+            {/* 🔹 Toolbar com seletor de data */}
+            <PFDateToolbar
+                title="Aniversariantes"
+                onDateChange={(newDate) => {
+                    setDate(newDate);
                     setPage(0);
-                    refetch();
                 }}
+                onRefresh={() => refetch()}
             />
 
-            {/* Tabela */}
+            {/* 🔹 Tabela */}
             <PFTable
                 columns={columns}
                 rows={clients}
@@ -100,7 +106,7 @@ export default function ClientsBirthdaysPage() {
                 onRowClick={(_, row) => handleRowClick(row.id, row)}
             />
 
-            {/* Modal de mensagem */}
+            {/* 🔹 Modal de mensagem */}
             <BirthdayMessageModal
                 open={modalOpen}
                 onClose={handleCloseModal}
