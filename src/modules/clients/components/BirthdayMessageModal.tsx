@@ -26,7 +26,7 @@ export default function BirthdayMessageModal({
 }: BirthdayMessageModalProps) {
     const [message, setMessage] = useState("");
 
-    // 🎉 Mensagem base do .env
+    // 🎉 Mensagem base do .env 
     const baseTemplate =
         import.meta.env.VITE_BIRTHDAY_MESSAGE_TEMPLATE ||
         "A equipe da Ótica Reis quer te parabenizar por esse dia tão especial, {{nome}}! Desejamos um ano de muitas conquistas e realizações. Um abraço!";
