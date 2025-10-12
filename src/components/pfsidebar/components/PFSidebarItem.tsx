@@ -17,6 +17,8 @@ export type PFSidebarItemProps = {
     active: string | null;
     setActive: (val: string) => void;
     onNavigate: (path: string) => void;
+    isMobile?: boolean;
+    onCloseMobile?: () => void;
 };
 
 export default function PFSidebarItem({
@@ -24,26 +26,28 @@ export default function PFSidebarItem({
     active,
     setActive,
     onNavigate,
+    isMobile,
+    onCloseMobile,
 }: PFSidebarItemProps) {
     const theme = useTheme();
     const Icon = LucideIcons[item.icon] as React.ElementType;
     const isActive = active === item.title;
-
-    // Estado local para expandir/colapsar dropdown
     const [open, setOpen] = React.useState(false);
 
     const handleClick = () => {
         if (item.children) {
+            // apenas abre/fecha dropdown
             setOpen((prev) => !prev);
         } else if (item.path) {
             setActive(item.title);
             onNavigate(item.path);
+            // 🔥 Fecha Drawer se estiver no mobile
+            if (isMobile && onCloseMobile) onCloseMobile();
         }
     };
 
     return (
         <>
-            {/* Item principal */}
             <ListItemButton
                 onClick={handleClick}
                 sx={{
@@ -77,7 +81,6 @@ export default function PFSidebarItem({
                     }}
                 />
 
-                {/* Seta de expandir/colapsar */}
                 {item.children && (
                     <Box sx={{ ml: 1, color: "text.secondary" }}>
                         {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -85,7 +88,6 @@ export default function PFSidebarItem({
                 )}
             </ListItemButton>
 
-            {/* Subitens com animação */}
             {item.children && (
                 <Collapse in={open} timeout="auto" unmountOnExit>
                     <Box sx={{ pl: 3 }}>
@@ -95,7 +97,11 @@ export default function PFSidebarItem({
                                 child={child}
                                 active={active}
                                 setActive={setActive}
-                                onNavigate={onNavigate}
+                                onNavigate={(path) => {
+                                    onNavigate(path);
+                                    // 🔥 fecha Drawer no mobile ao clicar em subitem
+                                    if (isMobile && onCloseMobile) onCloseMobile();
+                                }}
                             />
                         ))}
                     </Box>

@@ -15,7 +15,7 @@ export const navData: NavItem[] = [
         icon: "List",
       },
       {
-        title: "Aniversariantes do dia",
+        title: "Aniversariantes",
         path: "/clients-birthday",
         icon: "Cake",
       },
