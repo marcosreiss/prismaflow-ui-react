@@ -177,8 +177,20 @@ export default function PrescriptionModal({
 
                 {(isCreate || isEdit) && (
                     <FormProvider {...methods}>
-                        <form onSubmit={handleSubmit}>
-                            <Stack spacing={2}>
+                        <form
+                            onSubmit={(e) => {
+                                // 🔒 BLOQUEIA A PROPAGAÇÃO DO EVENTO
+                                e.preventDefault();    // Impede comportamento padrão
+                                e.stopPropagation();   // Impede propagação para formulário pai
+
+                                // ✅ AGORA SÓ EXECUTA O SUBMIT DO MODAL
+                                handleSubmit(e);
+                                handleSubmit().then(() => {
+                                    // ✅ FECHA O MODAL APÓS O SUBMIT
+                                    onClose();
+                                });
+                            }}
+                        >                            <Stack spacing={2}>
                                 {/* Profissional */}
                                 <Section title="Profissional">
                                     <Stack

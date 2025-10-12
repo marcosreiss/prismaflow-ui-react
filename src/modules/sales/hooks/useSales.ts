@@ -60,6 +60,7 @@ export function useCreateSale() {
 
   return useMutation<SaleResponse, unknown, SalePayload>({
     mutationFn: async (payload) => {
+      console.log("Creating sale with payload:", payload);
       const { data } = await api.post(`${SALES_ENDPOINT}`, payload);
       return data;
     },
