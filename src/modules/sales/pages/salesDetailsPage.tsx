@@ -229,7 +229,7 @@ export default function SalesDetailsPage() {
                                         Status
                                     </Typography>
                                     <Typography variant="body1">
-                                        {sale.payment?.status}
+                                        {sale.payment?.status || "Não informado"}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -271,7 +271,11 @@ export default function SalesDetailsPage() {
                 <Box sx={{ flex: 1, minWidth: { xs: '100%', lg: 300 } }}>
                     <Stack spacing={3}>
                         <InfoCard title="Cliente" icon={<Person />}>
-                            <Stack spacing={1.5}>
+                            <Box sx={{
+                                display: 'grid',
+                                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                                gap: 2
+                            }}>
                                 <Box>
                                     <Typography variant="body2" color="text.secondary">
                                         Nome
@@ -285,10 +289,26 @@ export default function SalesDetailsPage() {
                                         CPF
                                     </Typography>
                                     <Typography variant="body1">
-                                        {sale?.client?.cpf || "Não informado"} {/* ← Cliente pode não ter CPF */}
+                                        {sale?.client?.cpf || "Não informado"}
                                     </Typography>
                                 </Box>
-                            </Stack>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Telefone
+                                    </Typography>
+                                    <Typography variant="body1">
+                                        {sale.client?.phone01 || "Não informado"}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        E-mail
+                                    </Typography>
+                                    <Typography variant="body1">
+                                        {sale.client?.email || "Não informado"}
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </InfoCard>
 
                         <InfoCard title="Resumo Financeiro" icon={<AttachMoney />}>
