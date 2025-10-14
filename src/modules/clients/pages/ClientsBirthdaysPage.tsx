@@ -19,7 +19,7 @@ export default function ClientsBirthdaysPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [date, setDate] = useState(() => {
         const now = new Date();
-        now.setDate(now.getDate() + 1);
+        now.setDate(now.getDate());
         return now.toISOString().split("T")[0];
     });
 

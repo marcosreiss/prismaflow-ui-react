@@ -26,7 +26,7 @@ export default function PFDateToolbar({
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         const date = new Date(value);
-        date.setDate(date.getDate() + 1); 
+        date.setDate(date.getDate()); 
         const adjusted = date.toISOString().split("T")[0];
 
         setSelectedDate(value);  
