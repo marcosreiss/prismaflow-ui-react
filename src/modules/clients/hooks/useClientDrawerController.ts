@@ -11,6 +11,7 @@ import type {
   UpdateClientPayload,
 } from "../types/clientTypes";
 import type { Gender } from "../types/clientTypes"; // ✅ novo tipo
+import { cleanPayload } from "@/utils/cleanPayload";
 
 // ==========================
 // 🔹 Tipagem local
@@ -171,13 +172,16 @@ export function useClientDrawerController({
   // ==========================
   const onSubmit = handleSubmit(async (values) => {
     try {
+      // 🔹 remove campos vazios
+      const cleaned = cleanPayload(values);
+
       if (isCreate) {
-        const res = await createClient(values as CreateClientPayload);
+        const res = await createClient(cleaned as CreateClientPayload);
         if (res?.data) onCreated(res.data);
       } else if (isEdit && client) {
         const res = await updateClient({
           id: client.id,
-          data: values as UpdateClientPayload,
+          data: cleaned as UpdateClientPayload,
         });
         if (res?.data) onUpdated(res.data);
       }
