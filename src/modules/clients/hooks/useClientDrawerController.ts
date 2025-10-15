@@ -110,8 +110,11 @@ export function useClientDrawerController({
         nickname: client.nickname ?? "",
         cpf: client.cpf ?? "",
         rg: client.rg ?? "",
-        bornDate: client.bornDate ?? "",
-        gender: (client.gender as Gender) ?? "OTHER", // ✅ novo campo
+        // ✅ converte data para formato aceito pelo input
+        bornDate: client.bornDate
+          ? new Date(client.bornDate).toISOString().split("T")[0]
+          : "",
+        gender: (client.gender as Gender) ?? "OTHER",
         fatherName: client.fatherName ?? "",
         motherName: client.motherName ?? "",
         spouse: client.spouse ?? "",

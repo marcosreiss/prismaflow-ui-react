@@ -166,7 +166,14 @@ export default function ClientDrawer({
                             <Row label="Apelido" value={client.nickname} />
                             <Row label="CPF" value={client.cpf} />
                             <Row label="RG" value={client.rg} />
-                            <Row label="Data de nascimento" value={client.bornDate} />
+                            <Row
+                                label="Data de nascimento"
+                                value={
+                                    client.bornDate
+                                        ? new Date(client.bornDate).toLocaleDateString("pt-BR")
+                                        : "-"
+                                }
+                            />
                             {/* ✅ Novo campo: gênero */}
                             <Row
                                 label="Gênero"
