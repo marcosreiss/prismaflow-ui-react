@@ -226,7 +226,7 @@ export default function SalesDetailsPage() {
                                 </Box>
                                 <Box>
                                     <Typography variant="body2" color="text.secondary">
-                                        Status
+                                        Status de Pagamento
                                     </Typography>
                                     <Typography variant="body1">
                                         {sale.payment?.status || "Não informado"}
