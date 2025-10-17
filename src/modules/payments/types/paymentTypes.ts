@@ -98,12 +98,16 @@ export type PaymentDetails = Payment & {
 export type CreatePaymentPayload = {
   saleId: number;
   method: PaymentMethod;
+  status: PaymentStatus; // Adicionado
   total: number;
-  discount?: number;
-  downPayment?: number;
-  installmentsTotal?: number;
+  discount: number; // Mudado de opcional para obrigatório
+  downPayment: number; // Mudado de opcional para obrigatório
+  installmentsTotal: number; // Mudado de opcional para obrigatório
+  paidAmount: number; // Adicionado
+  installmentsPaid: number; // Adicionado
   firstDueDate?: string;
   branchId: string;
+  tenantId: string; // Adicionado
 
   // Parcelamento opcional
   installments?: {
@@ -113,19 +117,29 @@ export type CreatePaymentPayload = {
   }[];
 };
 
-export type UpdatePaymentPayload = Partial<CreatePaymentPayload> & {
-  id: number;
+// No paymentTypes.ts
+export type UpdatePaymentPayload = {
+  method?: PaymentMethod;
+  status?: PaymentStatus;
+  total?: number;
+  discount?: number;
+  downPayment?: number;
+  installmentsTotal?: number;
+  firstDueDate?: string;
 };
 
 // ==============================
 // 🔹 TIPOS AUXILIARES PARA FORMULÁRIOS
 // ==============================
 export type PaymentFormValues = {
+  saleId: number; // Adicionado
   method: PaymentMethod;
+  status: PaymentStatus; // Adicionado
   total: number;
   discount: number;
   downPayment: number;
   installmentsTotal: number;
   firstDueDate: string;
-  installments: PaymentInstallment[];
+  // installments: PaymentInstallment[]; // Removido se não for usado no form
 };
+

@@ -20,7 +20,7 @@ const SalesForm = lazy(() => import('@/modules/sales/pages/SalesFormPage'));
 const SalesDetailsPage = lazy(() => import('@/modules/sales/pages/salesDetailsPage'));
 
 
-// const PaymentPage = lazy(() => import('@/modules/payments/pages/PaymentsPage'));
+const PaymentPage = lazy(() => import('@/modules/payments/PaymentsPage'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -59,7 +59,7 @@ export function PrivateRouter() {
                 { path: 'sales/edit/:id', element: <SalesForm /> }, // ✅ EDIÇÃO
                 { path: 'sales/:id', element: <SalesDetailsPage /> },
 
-                // { path: 'payments', element: <PaymentPage /> },
+                { path: 'payments', element: <PaymentPage /> },
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },
