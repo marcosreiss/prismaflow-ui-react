@@ -27,12 +27,16 @@ export const useGetPayments = ({
     search,
     status,
     method,
+    startDate,
+    endDate
 }: {
     page: number;
     limit: number;
     search?: string;
     status?: PaymentStatus;
     method?: PaymentMethod;
+    startDate?: string;
+    endDate?: string;
 }) => {
     return useQuery<
         ApiResponse<{
@@ -44,7 +48,7 @@ export const useGetPayments = ({
         }>,
         AxiosError<ApiResponse<null>>
     >({
-        queryKey: ["payments", page, limit, search, status, method],
+        queryKey: ["payments", page, limit, search, status, method, startDate, endDate], // 🔄 ATUALIZAR
         queryFn: async () => {
             const { data } = await baseApi.get<
                 ApiResponse<{
@@ -60,7 +64,9 @@ export const useGetPayments = ({
                     limit,
                     search: search || "",
                     status: status || "",
-                    method: method || ""
+                    method: method || "",
+                    startDate: startDate || "",    // 🔄 ADICIONAR
+                    endDate: endDate || ""         // 🔄 ADICIONAR
                 },
             });
             return data;

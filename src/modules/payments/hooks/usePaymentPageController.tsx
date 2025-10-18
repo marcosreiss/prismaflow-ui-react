@@ -3,7 +3,7 @@ import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/utils/apiResponse";
 import { useNotification } from "@/context/NotificationContext";
 import { useGetPayments, useDeletePayment, useUpdatePaymentStatus, useProcessPaymentInstallment } from "./usePayments";
-import type { Payment, PaymentDetails, PaymentStatus, PaymentListItem } from "../types/paymentTypes";
+import type { Payment, PaymentDetails, PaymentStatus, PaymentListItem, PaymentMethod } from "../types/paymentTypes";
 
 // ==============================
 // 🔹 Hook principal
@@ -27,6 +27,14 @@ export function usePaymentPageController() {
     const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
     const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
+    // 🔄 NOVOS ESTADOS DE FILTRO
+    const [statusFilter, setStatusFilter] = useState<PaymentStatus | ''>('');
+    const [methodFilter, setMethodFilter] = useState<PaymentMethod | ''>('');
+    const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({
+        start: '',
+        end: ''
+    });
+
     const { addNotification } = useNotification();
 
     // ==========================
@@ -36,6 +44,10 @@ export function usePaymentPageController() {
         page: page + 1,
         limit,
         search,
+        status: statusFilter ? statusFilter : undefined,
+        method: methodFilter ? methodFilter : undefined,
+        startDate: dateFilter.start ? dateFilter.start : undefined,
+        endDate: dateFilter.end ? dateFilter.end : undefined
     });
 
     const deletePayment = useDeletePayment();
@@ -191,6 +203,11 @@ export function usePaymentPageController() {
         confirmDeleteSelected,
         deletingIds,
 
+        // 🔄 NOVOS ESTADOS DE FILTRO
+        statusFilter,
+        methodFilter,
+        dateFilter,
+
         // dados de API
         payments,
         total,
@@ -206,6 +223,12 @@ export function usePaymentPageController() {
         setSelectedPayment,
         setConfirmDelete,
         setConfirmDeleteSelected,
+
+        // 🔄 NOVAS FUNÇÕES DE FILTRO
+        setStatusFilter,
+        setMethodFilter,
+        setDateFilter,
+
         handleOpenDrawer,
         handleCloseDrawer,
         handleDelete,
@@ -225,4 +248,4 @@ export function usePaymentPageController() {
         handleDrawerDelete,
         handleDrawerCreateNew,
     };
-}   
+}

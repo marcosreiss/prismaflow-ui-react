@@ -1,4 +1,4 @@
-import { Paper, Button } from "@mui/material";
+import { Paper, Button, Box } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
@@ -6,6 +6,7 @@ import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import PaymentDrawer from "./components/PaymentDrawer";
 import { usePaymentPageController } from "./hooks/usePaymentPageController";
 import type { Payment, PaymentDetails, PaymentListItem } from "./types/paymentTypes";
+import PaymentFilters from "./components/PaymentFilters";
 
 // ==============================
 // 🔹 Página principal de pagamentos
@@ -29,6 +30,9 @@ export default function PaymentsPage() {
         selectedIds,
         confirmDeleteSelected,
         deletingIds,
+        statusFilter,
+        methodFilter,
+        dateFilter,
 
         // ações e mutações
         setPage,
@@ -46,7 +50,11 @@ export default function PaymentsPage() {
         deletePayment,
         addNotification,
 
-        // 🔹 Novos handlers para Drawer
+        setStatusFilter,
+        setMethodFilter,
+        setDateFilter,
+
+        // 🔹 Handlers para Drawer
         handleDrawerEdit,
         handleDrawerDelete,
         handleDrawerCreateNew,
@@ -119,7 +127,7 @@ export default function PaymentsPage() {
                 p: 3,
             }}
         >
-            {/* Top Toolbar */}
+            {/* Top Toolbar - APENAS busca e ações principais */}
             <PFTopToolbar
                 title="Pagamentos"
                 onSearch={(value) => setSearch(value)}
@@ -145,6 +153,18 @@ export default function PaymentsPage() {
                     )
                 }
             />
+
+            {/* 🔄 ÁREA DE FILTROS - ABAIXO DA BARRA DE PESQUISA */}
+            <Box sx={{ mb: 3, mt: 2 }}>
+                <PaymentFilters
+                    status={statusFilter}
+                    method={methodFilter}
+                    dateRange={dateFilter}
+                    onStatusChange={setStatusFilter}
+                    onMethodChange={setMethodFilter}
+                    onDateChange={setDateFilter}
+                />
+            </Box>
 
             {/* Tabela */}
             <PFTable
@@ -174,7 +194,7 @@ export default function PaymentsPage() {
             <PaymentDrawer
                 open={drawerOpen}
                 mode={drawerMode}
-                payment={selectedPayment} // ← Este deve ser atualizado pelo controller
+                payment={selectedPayment}
                 onClose={handleCloseDrawer}
                 onEdit={handleDrawerEdit}
                 onDelete={handleDrawerDelete}
@@ -188,7 +208,6 @@ export default function PaymentsPage() {
                 }}
                 onUpdated={(payment) => {
                     addNotification("Pagamento atualizado com sucesso!", "success");
-                    // 🔄 ATUALIZAR O SELECTEDPAYMENT NO CONTROLLER
                     controller.setSelectedPayment(payment as PaymentDetails);
                     refetch();
                 }}
@@ -208,8 +227,7 @@ export default function PaymentsPage() {
             <PFConfirmDialog
                 open={confirmDeleteSelected}
                 title="Excluir pagamentos selecionados"
-                description={`Deseja realmente excluir ${selectedIds.length} pagamento${selectedIds.length > 1 ? "s" : ""
-                    } selecionado${selectedIds.length > 1 ? "s" : ""}?`}
+                description={`Deseja realmente excluir ${selectedIds.length} pagamento${selectedIds.length > 1 ? "s" : ""} selecionado${selectedIds.length > 1 ? "s" : ""}?`}
                 onCancel={() => setConfirmDeleteSelected(false)}
                 onConfirm={handleDeleteSelected}
                 loading={deletePayment.isPending}
