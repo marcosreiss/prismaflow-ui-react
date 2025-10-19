@@ -12,6 +12,8 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
+    FormControlLabel,
+    Checkbox,
 } from "@mui/material";
 import { X, Pencil, Trash2, Eye } from "lucide-react";
 import { FormProvider } from "react-hook-form";
@@ -19,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useClientDrawerController } from "../hooks/useClientDrawerController";
 import type { Client } from "../types/clientTypes";
-import { GenderLabels, type Gender } from "../types/clientTypes"; // ✅ importado
+import { GenderLabels, type Gender } from "../types/clientTypes";
 
 // ==========================
 // 🔹 Tipagens e Props
@@ -153,7 +155,9 @@ export default function ClientDrawer({
                                 size="small"
                                 variant="outlined"
                                 startIcon={<Eye size={14} />}
-                                onClick={() => navigate(`/clients/${client.id}/prescriptions`)}
+                                onClick={() =>
+                                    navigate(`/clients/${client.id}/prescriptions`)
+                                }
                             >
                                 Ver receitas
                             </Button>
@@ -166,8 +170,14 @@ export default function ClientDrawer({
                             <Row label="Apelido" value={client.nickname} />
                             <Row label="CPF" value={client.cpf} />
                             <Row label="RG" value={client.rg} />
-                            <Row label="Data de nascimento" value={client.bornDate} />
-                            {/* ✅ Novo campo: gênero */}
+                            <Row
+                                label="Data de nascimento"
+                                value={
+                                    client.bornDate
+                                        ? new Date(client.bornDate).toLocaleDateString("pt-BR")
+                                        : "-"
+                                }
+                            />
                             <Row
                                 label="Gênero"
                                 value={
@@ -176,15 +186,29 @@ export default function ClientDrawer({
                                         : null
                                 }
                             />
+                            <Row label="Pai" value={client.fatherName} />
+                            <Row label="Mãe" value={client.motherName} />
+                            <Row label="Cônjuge" value={client.spouse} />
+                            <Row label="Empresa" value={client.company} />
+                            <Row label="Ocupação" value={client.occupation} />
                             <Row label="E-mail" value={client.email} />
                             <Row label="Telefone 1" value={client.phone01} />
                             <Row label="Telefone 2" value={client.phone02} />
-                            <Row
-                                label="Endereço"
-                                value={`${client.street ?? ""} ${client.number ?? ""}`}
-                            />
+                            <Row label="Telefone 3" value={client.phone03} />
+                            <Row label="Referência 1" value={client.reference01} />
+                            <Row label="Referência 2" value={client.reference02} />
+                            <Row label="Referência 3" value={client.reference03} />
+                            <Row label="Rua" value={client.street} />
+                            <Row label="Número" value={client.number} />
+                            <Row label="Bairro" value={client.neighborhood} />
+                            <Row label="Complemento" value={client.complement} />
                             <Row label="Cidade" value={client.city} />
                             <Row label="UF" value={client.uf} />
+                            <Row label="CEP" value={client.cep} />
+                            <Row
+                                label="Negativado"
+                                value={client.isBlacklisted ? "Sim" : "Não"}
+                            />
                             <Row label="Observações" value={client.obs} />
                         </Stack>
 
@@ -240,7 +264,6 @@ export default function ClientDrawer({
                                             {...methods.register("rg")}
                                         />
                                     </Box>
-
                                     <Box sx={{ display: "flex", gap: 2 }}>
                                         <TextField
                                             label="Data de nascimento"
@@ -250,7 +273,6 @@ export default function ClientDrawer({
                                             InputLabelProps={{ shrink: true }}
                                             {...methods.register("bornDate")}
                                         />
-                                        {/* ✅ Novo campo: gênero */}
                                         <FormControl fullWidth size="small">
                                             <InputLabel>Gênero</InputLabel>
                                             <Select
@@ -266,6 +288,42 @@ export default function ClientDrawer({
                                             </Select>
                                         </FormControl>
                                     </Box>
+                                    <TextField
+                                        label="Nome do pai"
+                                        fullWidth
+                                        size="small"
+                                        {...methods.register("fatherName")}
+                                    />
+                                    <TextField
+                                        label="Nome da mãe"
+                                        fullWidth
+                                        size="small"
+                                        {...methods.register("motherName")}
+                                    />
+                                    <TextField
+                                        label="Cônjuge"
+                                        fullWidth
+                                        size="small"
+                                        {...methods.register("spouse")}
+                                    />
+                                </Stack>
+
+                                <Divider />
+
+                                <SectionTitle title="Profissional" />
+                                <Stack spacing={2}>
+                                    <TextField
+                                        label="Empresa"
+                                        fullWidth
+                                        size="small"
+                                        {...methods.register("company")}
+                                    />
+                                    <TextField
+                                        label="Ocupação"
+                                        fullWidth
+                                        size="small"
+                                        {...methods.register("occupation")}
+                                    />
                                 </Stack>
 
                                 <Divider />
@@ -292,12 +350,41 @@ export default function ClientDrawer({
                                             size="small"
                                             {...methods.register("phone02")}
                                         />
+                                        <TextField
+                                            label="Telefone adicional"
+                                            fullWidth
+                                            size="small"
+                                            {...methods.register("phone03")}
+                                        />
                                     </Box>
                                 </Stack>
 
                                 <Divider />
 
-                                {/* Seção: Endereço */}
+                                <SectionTitle title="Referências" />
+                                <Stack spacing={2}>
+                                    <TextField
+                                        label="Referência 1"
+                                        fullWidth
+                                        size="small"
+                                        {...methods.register("reference01")}
+                                    />
+                                    <TextField
+                                        label="Referência 2"
+                                        fullWidth
+                                        size="small"
+                                        {...methods.register("reference02")}
+                                    />
+                                    <TextField
+                                        label="Referência 3"
+                                        fullWidth
+                                        size="small"
+                                        {...methods.register("reference03")}
+                                    />
+                                </Stack>
+
+                                <Divider />
+
                                 <SectionTitle title="Endereço" />
                                 <Stack spacing={2}>
                                     <Box sx={{ display: "flex", gap: 2 }}>
@@ -312,6 +399,20 @@ export default function ClientDrawer({
                                             fullWidth
                                             size="small"
                                             {...methods.register("number")}
+                                        />
+                                    </Box>
+                                    <Box sx={{ display: "flex", gap: 2 }}>
+                                        <TextField
+                                            label="Bairro"
+                                            fullWidth
+                                            size="small"
+                                            {...methods.register("neighborhood")}
+                                        />
+                                        <TextField
+                                            label="Complemento"
+                                            fullWidth
+                                            size="small"
+                                            {...methods.register("complement")}
                                         />
                                     </Box>
                                     <Box sx={{ display: "flex", gap: 2 }}>
@@ -337,6 +438,20 @@ export default function ClientDrawer({
                                 </Stack>
 
                                 <Divider />
+
+                                <SectionTitle title="Outros" />
+                                <FormControlLabel
+                                    control={<Checkbox {...methods.register("isBlacklisted")} />}
+                                    label="Cliente Negativado?"
+                                />
+                                <TextField
+                                    label="Observações"
+                                    fullWidth
+                                    multiline
+                                    minRows={3}
+                                    size="small"
+                                    {...methods.register("obs")}
+                                />
 
                                 <Button
                                     type="submit"

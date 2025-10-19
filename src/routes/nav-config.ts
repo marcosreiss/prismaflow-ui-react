@@ -5,7 +5,27 @@ export const navData: NavItem[] = [
   { title: "Marcas", path: "/brands", icon: "Tag" },
   { title: "Produtos", path: "/products", icon: "ShoppingCart" },
   { title: "Serviços", path: "/services", icon: "Box" },
-  { title: "Clientes", path: "/clients", icon: "Users" },
+  {
+    title: "Clientes",
+    icon: "Users",
+    children: [
+      {
+        title: "Lista de Clientes",
+        path: "/clients",
+        icon: "List",
+      },
+      {
+        title: "Aniversariantes",
+        path: "/clients-birthday",
+        icon: "Cake",
+      },
+      {
+        title: "Receitas Vencidas",
+        path: "/expiring-prescriptions",
+        icon: "AlertTriangle",
+      },
+    ],
+  },
   { title: "Vendas", path: "/sales", icon: "DollarSign" },
   { title: "Pagamentos", path: "/payments", icon: "CreditCard" },
 ];

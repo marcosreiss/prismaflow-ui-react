@@ -47,8 +47,6 @@ export type Client = {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-
-  // 🔹 Relacionamento: cliente possui várias receitas
   prescriptions?: Prescription[];
 };
 

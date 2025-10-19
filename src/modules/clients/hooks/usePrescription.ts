@@ -12,6 +12,7 @@ import type {
   PrescriptionResponse,
   CreatePrescriptionPayload,
   UpdatePrescriptionPayload,
+  ExpiringPrescriptionsResponse,
 } from "../types/prescriptionTypes";
 import type { ApiResponse } from "@/utils/apiResponse";
 
@@ -82,10 +83,6 @@ export const useUpdatePrescription = () => {
     { id: number; data: UpdatePrescriptionPayload }
   >({
     mutationFn: async ({ id, data }) => {
-      // AQUI ESTÁ A CORREÇÃO TYPE-SAFE (sem 'any'):
-      // Definimos que 'data' é do tipo UpdatePrescriptionPayload E (&) também
-      // possui uma propriedade opcional 'clientId' do tipo number.
-
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { clientId, ...dataToSend } = data as UpdatePrescriptionPayload & {
         clientId?: number;
@@ -93,7 +90,7 @@ export const useUpdatePrescription = () => {
 
       const res = await baseApi.put<PrescriptionResponse>(
         `/api/prescriptions/${id}`,
-        dataToSend // Agora 'dataToSend' é 100% compatível com UpdatePrescriptionPayload
+        dataToSend
       );
       return res.data;
     },
@@ -175,4 +172,33 @@ export const useGetPrescriptionsByClientId = ({
     enabled: !!clientId,
     placeholderData: keepPreviousData,
   });
+};
+
+// =============================
+// 🔹 HOOK: GET EXPIRED PRESCRIPTIONS (paginated)
+// =============================
+export const useGetExpiringPrescriptions = ({
+  page,
+  limit,
+  date,
+}: {
+  page: number;
+  limit: number;
+  date?: string; // opcional (ISO)
+}) => {
+  return useQuery<ExpiringPrescriptionsResponse, AxiosError<ApiResponse<null>>>(
+    {
+      queryKey: ["expiring-prescriptions", page, limit, date],
+      queryFn: async () => {
+        const { data } = await baseApi.get<ExpiringPrescriptionsResponse>(
+          "/api/prescriptions/expired",
+          {
+            params: { page, limit, date },
+          }
+        );
+        return data;
+      },
+      placeholderData: keepPreviousData,
+    }
+  );
 };
