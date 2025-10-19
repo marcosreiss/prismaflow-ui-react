@@ -3,10 +3,10 @@ import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 
-import PaymentDrawer from "./components/PaymentDrawer";
 import { usePaymentPageController } from "./hooks/usePaymentPageController";
 import type { Payment, PaymentDetails, PaymentListItem } from "./types/paymentTypes";
 import PaymentFilters from "./components/PaymentFilters";
+import PaymentDrawer from "./components/paymentDrawer";
 
 // ==============================
 // 🔹 Página principal de pagamentos
