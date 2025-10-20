@@ -29,12 +29,11 @@ export default function ClientPrescriptionsPage() {
 
     const { addNotification } = useNotification();
 
-    const { data, isLoading, isFetching, refetch } =
-        useGetPrescriptionsByClientId({
-            clientId,
-            page: page + 1,
-            limit,
-        });
+    const { data, isLoading, isFetching, refetch } = useGetPrescriptionsByClientId({
+        clientId,
+        page: page + 1,
+        limit,
+    });
 
     const deletePrescription = useDeletePrescription();
 
@@ -69,15 +68,13 @@ export default function ClientPrescriptionsPage() {
         }
     };
 
+    // =============================
+    // 🧾 COLUNAS SIMPLIFICADAS
+    // =============================
     const columns: ColumnDef<Prescription>[] = [
         { key: "id", label: "ID", width: 60 },
         { key: "doctorName", label: "Médico" },
         { key: "crm", label: "CRM" },
-        {
-            key: "frameAndRef",
-            label: "Armação e Ref",
-            render: (row) => row.frameAndRef || "-",
-        },
         {
             key: "lensType",
             label: "Tipo de Lente",
@@ -89,24 +86,16 @@ export default function ClientPrescriptionsPage() {
             render: (row) => row.notes || "-",
         },
         {
-            key: "addition",
-            label: "Adição",
-            render: (row) => row.additionLeft || "-",
-        },
-        {
-            key: "opticalCenter",
-            label: "Centro Óptico",
-            render: (row) => row.opticalCenterLeft || "-",
-        },
-        {
-            key: "createdAt",
-            label: "Criado em",
+            key: "prescriptionDate",
+            label: "Data da Receita",
             render: (row) =>
-                new Date(row.createdAt).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                }),
+                row.prescriptionDate
+                    ? new Date(row.prescriptionDate).toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                    })
+                    : "-",
         },
     ];
 
@@ -172,7 +161,7 @@ export default function ClientPrescriptionsPage() {
             <PFConfirmDialog
                 open={confirmDelete}
                 title="Excluir Receita"
-                description={`Deseja realmente excluir esta receita?`}
+                description="Deseja realmente excluir esta receita?"
                 onCancel={() => setConfirmDelete(false)}
                 onConfirm={handleDelete}
                 loading={deletePrescription.isPending}
