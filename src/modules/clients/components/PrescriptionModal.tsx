@@ -283,56 +283,96 @@ export default function PrescriptionModal({
                                             name="odSphericalFar"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <SphericalInput label="Esférico (Longe)" size="small" {...field} />
+                                                <SphericalInput
+                                                    label="Esférico (Longe)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="odCylindricalFar"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <CylindricalInput label="Cilíndrico (Longe)" size="small" {...field} />
+                                                <CylindricalInput
+                                                    label="Cilíndrico (Longe)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="odAxisFar"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <AxisInput label="Eixo (Longe)" size="small" {...field} />
+                                                <AxisInput
+                                                    label="Eixo (Longe)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="odDnpFar"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <DnpInput label="DNP (Longe)" size="small" {...field} />
+                                                <DnpInput
+                                                    label="DNP (Longe)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="odSphericalNear"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <SphericalInput label="Esférico (Perto)" size="small" {...field} />
+                                                <SphericalInput
+                                                    label="Esférico (Perto)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="odCylindricalNear"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <CylindricalInput label="Cilíndrico (Perto)" size="small" {...field} />
+                                                <CylindricalInput
+                                                    label="Cilíndrico (Perto)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="odAxisNear"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <AxisInput label="Eixo (Perto)" size="small" {...field} />
+                                                <AxisInput
+                                                    label="Eixo (Perto)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="odDnpNear"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <DnpInput label="DNP (Perto)" size="small" {...field} />
+                                                <DnpInput
+                                                    label="DNP (Perto)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <TextField
@@ -349,18 +389,29 @@ export default function PrescriptionModal({
                                             name="additionRight"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <AdditionInput label="Adição" size="small" {...field} />
+                                                <AdditionInput
+                                                    label="Adição"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="opticalCenterRight"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <OpticalCenterInput label="Centro Óptico" size="small" {...field} />
+                                                <OpticalCenterInput
+                                                    label="Centro Óptico"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                     </GridBlock>
                                 </Section>
+
 
                                 <Section title="Olho Esquerdo (OE)">
                                     <GridBlock>
@@ -368,56 +419,96 @@ export default function PrescriptionModal({
                                             name="oeSphericalFar"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <SphericalInput label="Esférico (Longe)" size="small" {...field} />
+                                                <SphericalInput
+                                                    label="Esférico (Longe)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="oeCylindricalFar"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <CylindricalInput label="Cilíndrico (Longe)" size="small" {...field} />
+                                                <CylindricalInput
+                                                    label="Cilíndrico (Longe)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="oeAxisFar"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <AxisInput label="Eixo (Longe)" size="small" {...field} />
+                                                <AxisInput
+                                                    label="Eixo (Longe)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="oeDnpFar"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <DnpInput label="DNP (Longe)" size="small" {...field} />
+                                                <DnpInput
+                                                    label="DNP (Longe)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="oeSphericalNear"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <SphericalInput label="Esférico (Perto)" size="small" {...field} />
+                                                <SphericalInput
+                                                    label="Esférico (Perto)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="oeCylindricalNear"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <CylindricalInput label="Cilíndrico (Perto)" size="small" {...field} />
+                                                <CylindricalInput
+                                                    label="Cilíndrico (Perto)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="oeAxisNear"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <AxisInput label="Eixo (Perto)" size="small" {...field} />
+                                                <AxisInput
+                                                    label="Eixo (Perto)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="oeDnpNear"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <DnpInput label="DNP (Perto)" size="small" {...field} />
+                                                <DnpInput
+                                                    label="DNP (Perto)"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <TextField
@@ -434,18 +525,29 @@ export default function PrescriptionModal({
                                             name="additionLeft"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <AdditionInput label="Adição" size="small" {...field} />
+                                                <AdditionInput
+                                                    label="Adição"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                         <Controller
                                             name="opticalCenterLeft"
                                             control={methods.control}
                                             render={({ field }) => (
-                                                <OpticalCenterInput label="Centro Óptico" size="small" {...field} />
+                                                <OpticalCenterInput
+                                                    label="Centro Óptico"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
                                             )}
                                         />
                                     </GridBlock>
                                 </Section>
+
                             </Stack>
 
                             <DialogActions sx={{ mt: 3, px: 0 }}>
