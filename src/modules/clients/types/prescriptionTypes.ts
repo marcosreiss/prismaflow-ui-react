@@ -12,20 +12,44 @@ export type Prescription = {
   doctorName?: string | null;
   crm?: string | null;
 
-  // Olho Direito (OD)
-  odSpherical?: string | null;
-  odCylindrical?: string | null;
-  odAxis?: string | null;
-  odDnp?: string | null;
-  additionRight?: string | null;
-  opticalCenterRight?: string | null;
+  // OD - Longe
+  odSphericalFar?: string | null;
+  odCylindricalFar?: string | null;
+  odAxisFar?: string | null;
+  odDnpFar?: string | null;
 
-  // Olho Esquerdo (OE)
-  oeSpherical?: string | null;
-  oeCylindrical?: string | null;
-  oeAxis?: string | null;
-  oeDnp?: string | null;
+  // OD - Perto
+  odSphericalNear?: string | null;
+  odCylindricalNear?: string | null;
+  odAxisNear?: string | null;
+  odDnpNear?: string | null;
+
+  // OE - Longe
+  oeSphericalFar?: string | null;
+  oeCylindricalFar?: string | null;
+  oeAxisFar?: string | null;
+  oeDnpFar?: string | null;
+
+  // OE - Perto
+  oeSphericalNear?: string | null;
+  oeCylindricalNear?: string | null;
+  oeAxisNear?: string | null;
+  oeDnpNear?: string | null;
+
+  // Películas
+  odPellicleFar?: string | null;
+  odPellicleNear?: string | null;
+  oePellicleFar?: string | null;
+  oePellicleNear?: string | null;
+
+  // Gerais
+  frameAndRef?: string | null;
+  lensType?: string | null;
+  notes?: string | null;
+
+  additionRight?: string | null;
   additionLeft?: string | null;
+  opticalCenterRight?: string | null;
   opticalCenterLeft?: string | null;
 
   isActive: boolean;
@@ -43,18 +67,36 @@ export type CreatePrescriptionPayload = {
   doctorName?: string;
   crm?: string;
 
-  odSpherical?: string;
-  odCylindrical?: string;
-  odAxis?: string;
-  odDnp?: string;
-  additionRight?: string;
-  opticalCenterRight?: string;
+  odSphericalFar?: string;
+  odCylindricalFar?: string;
+  odAxisFar?: string;
+  odDnpFar?: string;
+  odSphericalNear?: string;
+  odCylindricalNear?: string;
+  odAxisNear?: string;
+  odDnpNear?: string;
 
-  oeSpherical?: string;
-  oeCylindrical?: string;
-  oeAxis?: string;
-  oeDnp?: string;
+  oeSphericalFar?: string;
+  oeCylindricalFar?: string;
+  oeAxisFar?: string;
+  oeDnpFar?: string;
+  oeSphericalNear?: string;
+  oeCylindricalNear?: string;
+  oeAxisNear?: string;
+  oeDnpNear?: string;
+
+  odPellicleFar?: string;
+  odPellicleNear?: string;
+  oePellicleFar?: string;
+  oePellicleNear?: string;
+
+  frameAndRef?: string;
+  lensType?: string;
+  notes?: string;
+
+  additionRight?: string;
   additionLeft?: string;
+  opticalCenterRight?: string;
   opticalCenterLeft?: string;
 
   isActive?: boolean;
@@ -66,39 +108,51 @@ export type UpdatePrescriptionPayload = Partial<CreatePrescriptionPayload>;
 // 🔹 ENTIDADE: EXPIRING PRESCRIPTION
 // ==============================
 export type ExpiringPrescription = {
-  // 🔸 Dados do cliente
   clientId: number;
   clientName: string;
   phone01?: string | null;
 
-  // 🔸 Dados da prescrição (completo)
   id: number;
   prescriptionDate: string;
   doctorName?: string | null;
   crm?: string | null;
 
-  // Olho Direito (OD)
-  odSpherical?: string | null;
-  odCylindrical?: string | null;
-  odAxis?: string | null;
-  odDnp?: string | null;
-  additionRight?: string | null;
-  opticalCenterRight?: string | null;
+  odSphericalFar?: string | null;
+  odCylindricalFar?: string | null;
+  odAxisFar?: string | null;
+  odDnpFar?: string | null;
+  odSphericalNear?: string | null;
+  odCylindricalNear?: string | null;
+  odAxisNear?: string | null;
+  odDnpNear?: string | null;
 
-  // Olho Esquerdo (OE)
-  oeSpherical?: string | null;
-  oeCylindrical?: string | null;
-  oeAxis?: string | null;
-  oeDnp?: string | null;
+  oeSphericalFar?: string | null;
+  oeCylindricalFar?: string | null;
+  oeAxisFar?: string | null;
+  oeDnpFar?: string | null;
+  oeSphericalNear?: string | null;
+  oeCylindricalNear?: string | null;
+  oeAxisNear?: string | null;
+  oeDnpNear?: string | null;
+
+  odPellicleFar?: string | null;
+  odPellicleNear?: string | null;
+  oePellicleFar?: string | null;
+  oePellicleNear?: string | null;
+
+  frameAndRef?: string | null;
+  lensType?: string | null;
+  notes?: string | null;
+
+  additionRight?: string | null;
   additionLeft?: string | null;
+  opticalCenterRight?: string | null;
   opticalCenterLeft?: string | null;
 
-  // Metadados
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };
-
 
 // ==============================
 // 📦 RESPONSE TYPES
@@ -107,7 +161,6 @@ export type PrescriptionsResponse = ApiResponse<
   PaginatedResponse<Prescription>
 >;
 export type PrescriptionResponse = ApiResponse<Prescription>;
-
 export type ExpiringPrescriptionsResponse = ApiResponse<
   PaginatedResponse<ExpiringPrescription>
 >;

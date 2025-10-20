@@ -15,16 +15,10 @@ import {
 
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 
-// ==============================
-// 🔹 Página: Receitas do Cliente
-// ==============================
 export default function ClientPrescriptionsPage() {
     const { id } = useParams<{ id: string }>();
     const clientId = Number(id);
 
-    // ==============================
-    // 🔹 Estados locais
-    // ==============================
     const [page, setPage] = useState(0);
     const [limit, setLimit] = useState(5);
     const [selectedPrescription, setSelectedPrescription] =
@@ -35,28 +29,18 @@ export default function ClientPrescriptionsPage() {
 
     const { addNotification } = useNotification();
 
-    // ==============================
-    // 🔹 Hooks de dados
-    // ==============================
-    const {
-        data,
-        isLoading,
-        isFetching,
-        refetch,
-    } = useGetPrescriptionsByClientId({
-        clientId,
-        page: page + 1, // base-1
-        limit,
-    });
+    const { data, isLoading, isFetching, refetch } =
+        useGetPrescriptionsByClientId({
+            clientId,
+            page: page + 1,
+            limit,
+        });
 
     const deletePrescription = useDeletePrescription();
 
     const prescriptions = data?.data?.content ?? [];
     const total = data?.data?.totalElements ?? 0;
 
-    // ==============================
-    // 🔹 Handlers
-    // ==============================
     const handleOpenModal = (
         mode: "create" | "edit" | "view",
         prescription?: Prescription | null
@@ -85,13 +69,25 @@ export default function ClientPrescriptionsPage() {
         }
     };
 
-    // ==============================
-    // 🔹 Colunas da tabela
-    // ==============================
     const columns: ColumnDef<Prescription>[] = [
         { key: "id", label: "ID", width: 60 },
         { key: "doctorName", label: "Médico" },
         { key: "crm", label: "CRM" },
+        {
+            key: "frameAndRef",
+            label: "Armação e Ref",
+            render: (row) => row.frameAndRef || "-",
+        },
+        {
+            key: "lensType",
+            label: "Tipo de Lente",
+            render: (row) => row.lensType || "-",
+        },
+        {
+            key: "notes",
+            label: "Observações",
+            render: (row) => row.notes || "-",
+        },
         {
             key: "addition",
             label: "Adição",
@@ -114,9 +110,6 @@ export default function ClientPrescriptionsPage() {
         },
     ];
 
-    // ==============================
-    // 🔹 Render
-    // ==============================
     return (
         <Paper
             elevation={0}
@@ -127,7 +120,6 @@ export default function ClientPrescriptionsPage() {
                 p: 3,
             }}
         >
-            {/* Toolbar */}
             <PFTopToolbar
                 title="Receitas do Cliente"
                 onRefresh={() => refetch()}
@@ -135,7 +127,6 @@ export default function ClientPrescriptionsPage() {
                 addLabel="Nova Receita"
             />
 
-            {/* Tabela */}
             <PFTable
                 columns={columns}
                 rows={prescriptions}
@@ -154,7 +145,6 @@ export default function ClientPrescriptionsPage() {
                 }}
             />
 
-            {/* Modal de Receita */}
             <PrescriptionModal
                 open={modalOpen}
                 mode={modalMode}
@@ -179,7 +169,6 @@ export default function ClientPrescriptionsPage() {
                 onCreateNew={() => handleOpenModal("create")}
             />
 
-            {/* Confirmação de exclusão */}
             <PFConfirmDialog
                 open={confirmDelete}
                 title="Excluir Receita"
