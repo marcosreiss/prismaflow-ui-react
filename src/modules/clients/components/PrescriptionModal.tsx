@@ -98,6 +98,9 @@ export default function PrescriptionModal({
             <Divider sx={{ mb: 2 }} />
 
             <DialogContent dividers={isView && !!prescription} sx={{ px: 1.5, py: 2 }}>
+                {/* ===========================
+             VISUALIZAÇÃO (VIEW MODE)
+        ============================ */}
                 {isView && prescription && (
                     <Stack spacing={2}>
                         {(onEdit || onDelete) && (
@@ -126,7 +129,7 @@ export default function PrescriptionModal({
                             </Stack>
                         )}
 
-                        {(onEdit || onDelete) && <Divider sx={{ mb: 2 }} />}
+                        <Divider sx={{ my: 1 }} />
 
                         <Row label="Médico" value={prescription.doctorName} />
                         <Row label="CRM" value={prescription.crm} />
@@ -141,6 +144,7 @@ export default function PrescriptionModal({
                             }
                         />
 
+                        {/* ---------- GERAIS ---------- */}
                         <Divider sx={{ my: 2 }} />
                         <Typography fontWeight={600} fontSize={14}>
                             Informações Gerais
@@ -151,21 +155,49 @@ export default function PrescriptionModal({
                             <Row label="Observações" value={prescription.notes} />
                         </GridBlock>
 
+                        {/* ---------- GRAU DE LONGE ---------- */}
                         <Divider sx={{ my: 2 }} />
-                        <Typography fontWeight={600} fontSize={14}>
+                        <Typography fontWeight={600} fontSize={15}>
+                            Grau de Longe
+                        </Typography>
+
+                        <Typography fontWeight={500} fontSize={14} mt={1}>
                             Olho Direito (OD)
                         </Typography>
                         <GridBlock>
-                            <Row label="Esférico (Longe)" value={prescription.odSphericalFar} />
-                            <Row label="Cilíndrico (Longe)" value={prescription.odCylindricalFar} />
-                            <Row label="Eixo (Longe)" value={prescription.odAxisFar} />
-                            <Row label="DNP (Longe)" value={prescription.odDnpFar} />
-                            <Row label="Esférico (Perto)" value={prescription.odSphericalNear} />
-                            <Row label="Cilíndrico (Perto)" value={prescription.odCylindricalNear} />
-                            <Row label="Eixo (Perto)" value={prescription.odAxisNear} />
-                            <Row label="DNP (Perto)" value={prescription.odDnpNear} />
-                            <Row label="Película Longe" value={prescription.odPellicleFar} />
-                            <Row label="Película Perto" value={prescription.odPellicleNear} />
+                            <Row label="Esférico" value={prescription.odSphericalFar} />
+                            <Row label="Cilíndrico" value={prescription.odCylindricalFar} />
+                            <Row label="Eixo" value={prescription.odAxisFar} />
+                            <Row label="DNP" value={prescription.odDnpFar} />
+                            <Row label="Película" value={prescription.odPellicleFar} />
+                        </GridBlock>
+
+                        <Typography fontWeight={500} fontSize={14} mt={1}>
+                            Olho Esquerdo (OE)
+                        </Typography>
+                        <GridBlock>
+                            <Row label="Esférico" value={prescription.oeSphericalFar} />
+                            <Row label="Cilíndrico" value={prescription.oeCylindricalFar} />
+                            <Row label="Eixo" value={prescription.oeAxisFar} />
+                            <Row label="DNP" value={prescription.oeDnpFar} />
+                            <Row label="Película" value={prescription.oePellicleFar} />
+                        </GridBlock>
+
+                        {/* ---------- GRAU DE PERTO ---------- */}
+                        <Divider sx={{ my: 2 }} />
+                        <Typography fontWeight={600} fontSize={15}>
+                            Grau de Perto
+                        </Typography>
+
+                        <Typography fontWeight={500} fontSize={14} mt={1}>
+                            Olho Direito (OD)
+                        </Typography>
+                        <GridBlock>
+                            <Row label="Esférico" value={prescription.odSphericalNear} />
+                            <Row label="Cilíndrico" value={prescription.odCylindricalNear} />
+                            <Row label="Eixo" value={prescription.odAxisNear} />
+                            <Row label="DNP" value={prescription.odDnpNear} />
+                            <Row label="Película" value={prescription.odPellicleNear} />
                             <Row label="Adição" value={prescription.additionRight} />
                             <Row
                                 label="Centro Óptico"
@@ -173,21 +205,15 @@ export default function PrescriptionModal({
                             />
                         </GridBlock>
 
-                        <Divider sx={{ my: 2 }} />
-                        <Typography fontWeight={600} fontSize={14}>
+                        <Typography fontWeight={500} fontSize={14} mt={1}>
                             Olho Esquerdo (OE)
                         </Typography>
                         <GridBlock>
-                            <Row label="Esférico (Longe)" value={prescription.oeSphericalFar} />
-                            <Row label="Cilíndrico (Longe)" value={prescription.oeCylindricalFar} />
-                            <Row label="Eixo (Longe)" value={prescription.oeAxisFar} />
-                            <Row label="DNP (Longe)" value={prescription.oeDnpFar} />
-                            <Row label="Esférico (Perto)" value={prescription.oeSphericalNear} />
-                            <Row label="Cilíndrico (Perto)" value={prescription.oeCylindricalNear} />
-                            <Row label="Eixo (Perto)" value={prescription.oeAxisNear} />
-                            <Row label="DNP (Perto)" value={prescription.oeDnpNear} />
-                            <Row label="Película Longe" value={prescription.oePellicleFar} />
-                            <Row label="Película Perto" value={prescription.oePellicleNear} />
+                            <Row label="Esférico" value={prescription.oeSphericalNear} />
+                            <Row label="Cilíndrico" value={prescription.oeCylindricalNear} />
+                            <Row label="Eixo" value={prescription.oeAxisNear} />
+                            <Row label="DNP" value={prescription.oeDnpNear} />
+                            <Row label="Película" value={prescription.oePellicleNear} />
                             <Row label="Adição" value={prescription.additionLeft} />
                             <Row
                                 label="Centro Óptico"
@@ -206,6 +232,9 @@ export default function PrescriptionModal({
                     </Stack>
                 )}
 
+                {/* ===========================
+             FORMULÁRIO (CREATE / EDIT)
+        ============================ */}
                 {(isCreate || isEdit) && (
                     <FormProvider {...methods}>
                         <form
@@ -213,9 +242,7 @@ export default function PrescriptionModal({
                                 e.preventDefault();
                                 e.stopPropagation();
                                 handleSubmit(e);
-                                handleSubmit().then(() => {
-                                    onClose();
-                                });
+                                handleSubmit().then(() => onClose());
                             }}
                         >
                             <Stack spacing={2}>
@@ -238,17 +265,13 @@ export default function PrescriptionModal({
                                 </Section>
 
                                 <Section title="Data da Receita">
-                                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                                        <TextField
-                                            fullWidth
-                                            size="small"
-                                            type="date"
-                                            InputLabelProps={{ shrink: true }}
-                                            {...methods.register("prescriptionDate", {
-                                                required: true,
-                                            })}
-                                        />
-                                    </Stack>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        type="date"
+                                        InputLabelProps={{ shrink: true }}
+                                        {...methods.register("prescriptionDate", { required: true })}
+                                    />
                                 </Section>
 
                                 <Section title="Informações Gerais">
@@ -277,14 +300,19 @@ export default function PrescriptionModal({
                                     />
                                 </Section>
 
-                                <Section title="Olho Direito (OD)">
+                                {/* ---------- GRAU DE LONGE ---------- */}
+                                <Section title="Grau de Longe">
+                                    {/* OD */}
+                                    <Typography fontWeight={600} mb={1}>
+                                        Olho Direito (OD)
+                                    </Typography>
                                     <GridBlock>
                                         <Controller
                                             name="odSphericalFar"
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <SphericalInput
-                                                    label="Esférico (Longe)"
+                                                    label="Esférico"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -296,7 +324,7 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <CylindricalInput
-                                                    label="Cilíndrico (Longe)"
+                                                    label="Cilíndrico"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -308,7 +336,7 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <AxisInput
-                                                    label="Eixo (Longe)"
+                                                    label="Eixo"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -320,7 +348,31 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <DnpInput
-                                                    label="DNP (Longe)"
+                                                    label="DNP"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <TextField
+                                            size="small"
+                                            label="Película"
+                                            {...methods.register("odPellicleFar")}
+                                        />
+                                    </GridBlock>
+
+                                    {/* OE */}
+                                    <Typography fontWeight={600} mt={2} mb={1}>
+                                        Olho Esquerdo (OE)
+                                    </Typography>
+                                    <GridBlock>
+                                        <Controller
+                                            name="oeSphericalFar"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <SphericalInput
+                                                    label="Esférico"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -328,11 +380,62 @@ export default function PrescriptionModal({
                                             )}
                                         />
                                         <Controller
+                                            name="oeCylindricalFar"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <CylindricalInput
+                                                    label="Cilíndrico"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <Controller
+                                            name="oeAxisFar"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <AxisInput
+                                                    label="Eixo"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <Controller
+                                            name="oeDnpFar"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <DnpInput
+                                                    label="DNP"
+                                                    size="small"
+                                                    value={field.value ?? ""}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <TextField
+                                            size="small"
+                                            label="Película"
+                                            {...methods.register("oePellicleFar")}
+                                        />
+                                    </GridBlock>
+                                </Section>
+
+                                {/* ---------- GRAU DE PERTO ---------- */}
+                                <Section title="Grau de Perto">
+                                    {/* OD */}
+                                    <Typography fontWeight={600} mb={1}>
+                                        Olho Direito (OD)
+                                    </Typography>
+                                    <GridBlock>
+                                        <Controller
                                             name="odSphericalNear"
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <SphericalInput
-                                                    label="Esférico (Perto)"
+                                                    label="Esférico"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -344,7 +447,7 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <CylindricalInput
-                                                    label="Cilíndrico (Perto)"
+                                                    label="Cilíndrico"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -356,7 +459,7 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <AxisInput
-                                                    label="Eixo (Perto)"
+                                                    label="Eixo"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -368,7 +471,7 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <DnpInput
-                                                    label="DNP (Perto)"
+                                                    label="DNP"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -377,12 +480,7 @@ export default function PrescriptionModal({
                                         />
                                         <TextField
                                             size="small"
-                                            label="Película Longe"
-                                            {...methods.register("odPellicleFar")}
-                                        />
-                                        <TextField
-                                            size="small"
-                                            label="Película Perto"
+                                            label="Película"
                                             {...methods.register("odPellicleNear")}
                                         />
                                         <Controller
@@ -410,65 +508,18 @@ export default function PrescriptionModal({
                                             )}
                                         />
                                     </GridBlock>
-                                </Section>
 
-
-                                <Section title="Olho Esquerdo (OE)">
+                                    {/* OE */}
+                                    <Typography fontWeight={600} mt={2} mb={1}>
+                                        Olho Esquerdo (OE)
+                                    </Typography>
                                     <GridBlock>
-                                        <Controller
-                                            name="oeSphericalFar"
-                                            control={methods.control}
-                                            render={({ field }) => (
-                                                <SphericalInput
-                                                    label="Esférico (Longe)"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="oeCylindricalFar"
-                                            control={methods.control}
-                                            render={({ field }) => (
-                                                <CylindricalInput
-                                                    label="Cilíndrico (Longe)"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="oeAxisFar"
-                                            control={methods.control}
-                                            render={({ field }) => (
-                                                <AxisInput
-                                                    label="Eixo (Longe)"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="oeDnpFar"
-                                            control={methods.control}
-                                            render={({ field }) => (
-                                                <DnpInput
-                                                    label="DNP (Longe)"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                />
-                                            )}
-                                        />
                                         <Controller
                                             name="oeSphericalNear"
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <SphericalInput
-                                                    label="Esférico (Perto)"
+                                                    label="Esférico"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -480,7 +531,7 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <CylindricalInput
-                                                    label="Cilíndrico (Perto)"
+                                                    label="Cilíndrico"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -492,7 +543,7 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <AxisInput
-                                                    label="Eixo (Perto)"
+                                                    label="Eixo"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -504,7 +555,7 @@ export default function PrescriptionModal({
                                             control={methods.control}
                                             render={({ field }) => (
                                                 <DnpInput
-                                                    label="DNP (Perto)"
+                                                    label="DNP"
                                                     size="small"
                                                     value={field.value ?? ""}
                                                     onChange={field.onChange}
@@ -513,12 +564,7 @@ export default function PrescriptionModal({
                                         />
                                         <TextField
                                             size="small"
-                                            label="Película Longe"
-                                            {...methods.register("oePellicleFar")}
-                                        />
-                                        <TextField
-                                            size="small"
-                                            label="Película Perto"
+                                            label="Película"
                                             {...methods.register("oePellicleNear")}
                                         />
                                         <Controller
@@ -547,7 +593,6 @@ export default function PrescriptionModal({
                                         />
                                     </GridBlock>
                                 </Section>
-
                             </Stack>
 
                             <DialogActions sx={{ mt: 3, px: 0 }}>
