@@ -6,11 +6,14 @@ import PFDateToolbar from "../components/PFDateToolbar";
 import ExpiringPrescriptionMessageModal from "../components/ExpiringPrescriptionMessageModal";
 import PrescriptionModal from "../components/PrescriptionModal";
 
-import type { ExpiringPrescription, Prescription } from "../types/prescriptionTypes";
+import type {
+    ExpiringPrescription,
+    Prescription,
+} from "../types/prescriptionTypes";
 import { useGetExpiringPrescriptions } from "../hooks/usePrescription";
 
 // ==============================
-// 👓 Página de Receitas Vencidas
+// 👓 Página de Receitas Vencidas (Atualizada)
 // ==============================
 export default function ExpiringPrescriptionsPage() {
     // ==============================
@@ -18,7 +21,8 @@ export default function ExpiringPrescriptionsPage() {
     // ==============================
     const [page, setPage] = useState(0);
     const [limit, setLimit] = useState(50);
-    const [selectedPrescription, setSelectedPrescription] = useState<ExpiringPrescription | null>(null);
+    const [selectedPrescription, setSelectedPrescription] =
+        useState<ExpiringPrescription | null>(null);
     const [messageModalOpen, setMessageModalOpen] = useState(false);
     const [viewModalOpen, setViewModalOpen] = useState(false);
     const [date, setDate] = useState(() => {
@@ -39,7 +43,7 @@ export default function ExpiringPrescriptionsPage() {
     const total = data?.data?.totalElements || 0;
 
     // ==============================
-    // 🔹 Colunas da tabela
+    // 🔹 Colunas da tabela (mantidas simples)
     // ==============================
     const columns: ColumnDef<ExpiringPrescription>[] = [
         { key: "clientName", label: "Cliente" },
@@ -62,11 +66,7 @@ export default function ExpiringPrescriptionsPage() {
             label: "Ações",
             render: (row) => (
                 <Stack direction="row" spacing={1}>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleView(row)}
-                    >
+                    <Button size="small" variant="outlined" onClick={() => handleView(row)}>
                         Ver Detalhes
                     </Button>
                     <Button
@@ -105,29 +105,55 @@ export default function ExpiringPrescriptionsPage() {
         setSelectedPrescription(null);
     };
 
-    // logo acima do return()
+    // ==============================
+    // 🔹 Conversão para novo modelo Prescription
+    // ==============================
     const viewPrescription: Prescription | undefined = selectedPrescription
         ? {
             id: selectedPrescription.id,
             clientId: selectedPrescription.clientId,
-            prescriptionId: selectedPrescription.id, // <- corrige o campo exigido
+            prescriptionId: selectedPrescription.id,
             prescriptionDate: selectedPrescription.prescriptionDate,
-
             doctorName: selectedPrescription.doctorName ?? null,
             crm: selectedPrescription.crm ?? null,
 
-            odSpherical: selectedPrescription.odSpherical ?? null,
-            odCylindrical: selectedPrescription.odCylindrical ?? null,
-            odAxis: selectedPrescription.odAxis ?? null,
-            odDnp: selectedPrescription.odDnp ?? null,
-            additionRight: selectedPrescription.additionRight ?? null,
-            opticalCenterRight: selectedPrescription.opticalCenterRight ?? null,
+            // OD - Longe
+            odSphericalFar: selectedPrescription.odSphericalFar ?? null,
+            odCylindricalFar: selectedPrescription.odCylindricalFar ?? null,
+            odAxisFar: selectedPrescription.odAxisFar ?? null,
+            odDnpFar: selectedPrescription.odDnpFar ?? null,
 
-            oeSpherical: selectedPrescription.oeSpherical ?? null,
-            oeCylindrical: selectedPrescription.oeCylindrical ?? null,
-            oeAxis: selectedPrescription.oeAxis ?? null,
-            oeDnp: selectedPrescription.oeDnp ?? null,
+            // OD - Perto
+            odSphericalNear: selectedPrescription.odSphericalNear ?? null,
+            odCylindricalNear: selectedPrescription.odCylindricalNear ?? null,
+            odAxisNear: selectedPrescription.odAxisNear ?? null,
+            odDnpNear: selectedPrescription.odDnpNear ?? null,
+
+            // OE - Longe
+            oeSphericalFar: selectedPrescription.oeSphericalFar ?? null,
+            oeCylindricalFar: selectedPrescription.oeCylindricalFar ?? null,
+            oeAxisFar: selectedPrescription.oeAxisFar ?? null,
+            oeDnpFar: selectedPrescription.oeDnpFar ?? null,
+
+            // OE - Perto
+            oeSphericalNear: selectedPrescription.oeSphericalNear ?? null,
+            oeCylindricalNear: selectedPrescription.oeCylindricalNear ?? null,
+            oeAxisNear: selectedPrescription.oeAxisNear ?? null,
+            oeDnpNear: selectedPrescription.oeDnpNear ?? null,
+
+            // Películas
+            odPellicleFar: selectedPrescription.odPellicleFar ?? null,
+            odPellicleNear: selectedPrescription.odPellicleNear ?? null,
+            oePellicleFar: selectedPrescription.oePellicleFar ?? null,
+            oePellicleNear: selectedPrescription.oePellicleNear ?? null,
+
+            // Gerais
+            frameAndRef: selectedPrescription.frameAndRef ?? null,
+            lensType: selectedPrescription.lensType ?? null,
+            notes: selectedPrescription.notes ?? null,
+            additionRight: selectedPrescription.additionRight ?? null,
             additionLeft: selectedPrescription.additionLeft ?? null,
+            opticalCenterRight: selectedPrescription.opticalCenterRight ?? null,
             opticalCenterLeft: selectedPrescription.opticalCenterLeft ?? null,
 
             isActive: selectedPrescription.isActive,
@@ -135,7 +161,6 @@ export default function ExpiringPrescriptionsPage() {
             updatedAt: selectedPrescription.updatedAt,
         }
         : undefined;
-
 
     // ==============================
     // 🔹 Render

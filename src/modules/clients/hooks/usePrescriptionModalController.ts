@@ -49,14 +49,41 @@ export function usePrescriptionModalController({
       doctorName: "",
       crm: "",
       prescriptionDate: "",
-      odSpherical: "",
-      odCylindrical: "",
-      odAxis: "",
-      odDnp: "",
-      oeSpherical: "",
-      oeCylindrical: "",
-      oeAxis: "",
-      oeDnp: "",
+
+      // OD - Longe
+      odSphericalFar: "",
+      odCylindricalFar: "",
+      odAxisFar: "",
+      odDnpFar: "",
+
+      // OD - Perto
+      odSphericalNear: "",
+      odCylindricalNear: "",
+      odAxisNear: "",
+      odDnpNear: "",
+
+      // OE - Longe
+      oeSphericalFar: "",
+      oeCylindricalFar: "",
+      oeAxisFar: "",
+      oeDnpFar: "",
+
+      // OE - Perto
+      oeSphericalNear: "",
+      oeCylindricalNear: "",
+      oeAxisNear: "",
+      oeDnpNear: "",
+
+      // Películas
+      odPellicleFar: "",
+      odPellicleNear: "",
+      oePellicleFar: "",
+      oePellicleNear: "",
+
+      // Gerais
+      frameAndRef: "",
+      lensType: "",
+      notes: "",
       additionRight: "",
       additionLeft: "",
       opticalCenterRight: "",
@@ -109,14 +136,41 @@ export function usePrescriptionModalController({
           : "",
         doctorName: prescription.doctorName ?? "",
         crm: prescription.crm ?? "",
-        odSpherical: prescription.odSpherical ?? "",
-        odCylindrical: prescription.odCylindrical ?? "",
-        odAxis: prescription.odAxis ?? "",
-        odDnp: prescription.odDnp ?? "",
-        oeSpherical: prescription.oeSpherical ?? "",
-        oeCylindrical: prescription.oeCylindrical ?? "",
-        oeAxis: prescription.oeAxis ?? "",
-        oeDnp: prescription.oeDnp ?? "",
+
+        // OD - Longe
+        odSphericalFar: prescription.odSphericalFar ?? "",
+        odCylindricalFar: prescription.odCylindricalFar ?? "",
+        odAxisFar: prescription.odAxisFar ?? "",
+        odDnpFar: prescription.odDnpFar ?? "",
+
+        // OD - Perto
+        odSphericalNear: prescription.odSphericalNear ?? "",
+        odCylindricalNear: prescription.odCylindricalNear ?? "",
+        odAxisNear: prescription.odAxisNear ?? "",
+        odDnpNear: prescription.odDnpNear ?? "",
+
+        // OE - Longe
+        oeSphericalFar: prescription.oeSphericalFar ?? "",
+        oeCylindricalFar: prescription.oeCylindricalFar ?? "",
+        oeAxisFar: prescription.oeAxisFar ?? "",
+        oeDnpFar: prescription.oeDnpFar ?? "",
+
+        // OE - Perto
+        oeSphericalNear: prescription.oeSphericalNear ?? "",
+        oeCylindricalNear: prescription.oeCylindricalNear ?? "",
+        oeAxisNear: prescription.oeAxisNear ?? "",
+        oeDnpNear: prescription.oeDnpNear ?? "",
+
+        // Películas
+        odPellicleFar: prescription.odPellicleFar ?? "",
+        odPellicleNear: prescription.odPellicleNear ?? "",
+        oePellicleFar: prescription.oePellicleFar ?? "",
+        oePellicleNear: prescription.oePellicleNear ?? "",
+
+        // Gerais
+        frameAndRef: prescription.frameAndRef ?? "",
+        lensType: prescription.lensType ?? "",
+        notes: prescription.notes ?? "",
         additionRight: prescription.additionRight ?? "",
         additionLeft: prescription.additionLeft ?? "",
         opticalCenterRight: prescription.opticalCenterRight ?? "",
@@ -126,17 +180,44 @@ export function usePrescriptionModalController({
     } else {
       methods.reset({
         clientId: clientId ?? 0,
-        prescriptionDate: "",
         doctorName: "",
         crm: "",
-        odSpherical: "",
-        odCylindrical: "",
-        odAxis: "",
-        odDnp: "",
-        oeSpherical: "",
-        oeCylindrical: "",
-        oeAxis: "",
-        oeDnp: "",
+        prescriptionDate: "",
+
+        // OD - Longe
+        odSphericalFar: "",
+        odCylindricalFar: "",
+        odAxisFar: "",
+        odDnpFar: "",
+
+        // OD - Perto
+        odSphericalNear: "",
+        odCylindricalNear: "",
+        odAxisNear: "",
+        odDnpNear: "",
+
+        // OE - Longe
+        oeSphericalFar: "",
+        oeCylindricalFar: "",
+        oeAxisFar: "",
+        oeDnpFar: "",
+
+        // OE - Perto
+        oeSphericalNear: "",
+        oeCylindricalNear: "",
+        oeAxisNear: "",
+        oeDnpNear: "",
+
+        // Películas
+        odPellicleFar: "",
+        odPellicleNear: "",
+        oePellicleFar: "",
+        oePellicleNear: "",
+
+        // Gerais
+        frameAndRef: "",
+        lensType: "",
+        notes: "",
         additionRight: "",
         additionLeft: "",
         opticalCenterRight: "",
@@ -149,9 +230,6 @@ export function usePrescriptionModalController({
   // ==============================
   // 🔹 Submissão do formulário
   // ==============================
-  // ==============================
-  // 🔹 Submissão do formulário (VERSÃO CORRIGIDA)
-  // ==============================
   const handleSubmit = methods.handleSubmit(async (values) => {
     try {
       if (!clientId) {
@@ -159,19 +237,14 @@ export function usePrescriptionModalController({
         return;
       }
 
-      // AQUI ESTÁ A CORREÇÃO:
-      // 1. Criamos uma cópia dos dados do formulário para poder modificá-la.
       const dataToSend = { ...values };
 
-      // 2. Verificamos se a data foi preenchida e a convertemos para o formato ISO.
       if (dataToSend.prescriptionDate) {
-        // NOTA: Usamos T12:00:00 para evitar problemas de fuso horário (timezone)
-        // que poderiam fazer a data ser salva como o dia anterior.
-        // Esta é uma forma segura de lidar com datas sem hora específica.
-        dataToSend.prescriptionDate = new Date(`${dataToSend.prescriptionDate}T12:00:00.000Z`).toISOString();
+        dataToSend.prescriptionDate = new Date(
+          `${dataToSend.prescriptionDate}T12:00:00.000Z`
+        ).toISOString();
       }
 
-      // 3. Usamos o objeto 'dataToSend' com a data corrigida nas chamadas da API.
       if (isCreate) {
         const res = await createPrescription({
           ...dataToSend,
