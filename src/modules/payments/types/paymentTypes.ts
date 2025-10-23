@@ -24,8 +24,9 @@ export const PaymentStatusLabels: Record<PaymentStatus, string> = {
   CANCELED: "Cancelado",
 };
 
+
 // ==============================
-// 🔹 ENTIDADE: PAYMENT
+// 🔹 ENTIDADE PRINCIPAL: PAYMENT
 // ==============================
 export type Payment = {
   id: number;
@@ -45,8 +46,12 @@ export type Payment = {
   tenantId: string;
   createdAt: string;
   updatedAt: string;
-
-  // 🔹 Relações
+  sale?: {
+    id: number;
+    total: number;
+    clientName?: string;
+  };
+  // Relações
   installments?: PaymentInstallment[];
 };
 
@@ -68,7 +73,7 @@ export type PaymentInstallment = {
 };
 
 // ==============================
-// 🔹 TIPOS PARA TABELAS E LISTAGENS
+// 🔹 TIPOS PARA TABELAS E LISTAGENS (Estava perfeito)
 // ==============================
 export type PaymentListItem = {
   id: number;
@@ -78,68 +83,165 @@ export type PaymentListItem = {
   total: number;
   status: PaymentStatus;
   createdAt: string;
+  updatedAt: string;
+
+  // Para conversão fácil
+  discount?: number;
+  downPayment?: number;
+  installmentsTotal?: number | null;
+  paidAmount?: number;
+  installmentsPaid?: number;
+  lastPaymentAt?: string | null;
+  firstDueDate?: string | null;
+  isActive?: boolean;
+  branchId?: string;
+  tenantId?: string;
+  installments?: PaymentInstallment[];
+  sale?: {
+    id: number;
+    total: number;
+    client?: {
+      name: string;
+    };
+  };
+};
+
+// Helper type para conversão
+export type PaymentFromListItem = PaymentListItem & {
+  discount: number;
+  downPayment: number;
+  installmentsTotal: number | null;
+  paidAmount: number;
+  installmentsPaid: number;
+  lastPaymentAt: string | null;
+  firstDueDate: string | null;
+  isActive: boolean;
+  branchId: string;
+  tenantId: string;
+  installments: PaymentInstallment[];
 };
 
 // ==============================
-// 🔹 TIPOS COMPLETOS (para página de detalhes)
+// 🔹 TIPO COMPLETO (Estava perfeito)
 // ==============================
 export type PaymentDetails = Payment & {
   installments: PaymentInstallment[];
   sale?: {
     id: number;
     total: number;
-    clientName: string;
   };
+  clientName: string;
 };
 
 // ==============================
-// 🔹 PAYLOADS
+// 🔹 PAYLOADS (Refatorado para reutilizar o tipo Payment)
 // ==============================
-export type CreatePaymentPayload = {
-  saleId: number;
-  method: PaymentMethod;
-  status: PaymentStatus; // Adicionado
-  total: number;
-  discount: number; // Mudado de opcional para obrigatório
-  downPayment: number; // Mudado de opcional para obrigatório
-  installmentsTotal: number; // Mudado de opcional para obrigatório
-  paidAmount: number; // Adicionado
-  installmentsPaid: number; // Adicionado
-  firstDueDate?: string;
-  branchId: string;
-  tenantId: string; // Adicionado
 
-  // Parcelamento opcional
+
+export type CreatePaymentPayload = Omit<
+  Payment,
+  | 'id'
+  | 'isActive'
+  | 'lastPaymentAt'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'installments'
+> & {
   installments?: {
     sequence: number;
     amount: number;
     dueDate: string;
   }[];
+  // ✅ CORRIGIDO: Permitir undefined
+  firstDueDate?: string | null | undefined;
 };
 
-// No paymentTypes.ts
-export type UpdatePaymentPayload = {
-  method?: PaymentMethod;
+
+export type UpdatePaymentPayload = Partial<
+  Pick<
+    Payment,
+    | 'method'
+    | 'status'
+    | 'total'
+    | 'discount'
+    | 'downPayment'
+    | 'installmentsTotal'
+    | 'firstDueDate'
+  >
+>;
+
+
+// ==============================
+// 🔹 TIPOS AUXILIARES PARA FORMULÁRIOS (Refatorado)
+// ==============================
+
+export type PaymentFormValues = Pick<
+  CreatePaymentPayload, // Derivado do payload de criação
+  | 'saleId'
+  | 'method'
+  | 'status'
+  | 'total'
+  | 'discount'
+  | 'downPayment'
+  | 'installmentsTotal'
+  | 'firstDueDate'
+> & {
+  // Sobrescreve 'firstDueDate' para garantir que não seja opcional no form
+  firstDueDate: string;
+  // Adiciona o tipo para as parcelas no formulário, se necessário
+  // installments: { amount: number; dueDate: string; }[];
+};
+
+// Adicione esses tipos no seu arquivo de tipos
+export type PaymentFilters = {
   status?: PaymentStatus;
-  total?: number;
-  discount?: number;
-  downPayment?: number;
-  installmentsTotal?: number;
-  firstDueDate?: string;
+  method?: PaymentMethod;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  clientSearch?: string; // 🆕 ADICIONE ESTA LINHA
 };
 
+export type PaymentListQuery = PaymentFilters & {
+  page: number;
+  limit: number;
+};
+
+// paymentTypes.ts - ADICIONE ESTES TIPOS
+
 // ==============================
-// 🔹 TIPOS AUXILIARES PARA FORMULÁRIOS
+// 🔹 TIPOS PARA API RESPONSE (Detalhes)
 // ==============================
-export type PaymentFormValues = {
-  saleId: number; // Adicionado
-  method: PaymentMethod;
-  status: PaymentStatus; // Adicionado
+export type PaymentApiDetailResponse = {
+  id: number;
+  saleId: number;
+  method: PaymentMethod | null;
+  status: PaymentStatus;
   total: number;
   discount: number;
   downPayment: number;
-  installmentsTotal: number;
-  firstDueDate: string;
-  // installments: PaymentInstallment[]; // Removido se não for usado no form
+  installmentsTotal: number | null;
+  paidAmount: number;
+  installmentsPaid: number;
+  lastPaymentAt: string | null;
+  firstDueDate: string | null;
+  isActive: boolean;
+  branchId: string;
+  tenantId: string;
+  createdAt: string;
+  updatedAt: string;
+  installments?: PaymentInstallment[];
+  sale?: {
+    id: number;
+    subtotal: number;
+    discount: number;
+    total: number;
+    notes: string | null;
+    clientName: string; // ✅ CORRETO: clientName está aqui
+    client?: {
+      id: number;
+      name: string;
+    };
+  };
+  clientName?: string; // Caso venha direto do backend
 };
-
