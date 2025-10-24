@@ -1,9 +1,12 @@
-import React from "react";
-import TextField, { type TextFieldProps } from "@mui/material/TextField";
+import React, { useMemo, useState } from "react";
+import { Autocomplete, TextField, createFilterOptions } from "@mui/material";
 
-type Props = Omit<TextFieldProps, "value" | "onChange"> & {
-    value: string;
-    onChange: (v: string) => void;
+type Props = {
+    value: string | null;
+    onChange: (v: string | null) => void;
+    label?: string;
+    placeholder?: string;
+    size?: "small" | "medium";
 };
 
 const formatter = new Intl.NumberFormat("pt-BR", {
@@ -11,75 +14,105 @@ const formatter = new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 2,
 });
 
-function isZeroString(v: string): boolean {
-    if (!v) return false;
-    const normalized = v.replace(",", ".").replace(/[+-]/g, "").trim();
-    return normalized === "0.00" || normalized === "0";
-}
+// Agora inclui 0.00 no começo da lista
+const generateAdditionOptions = (): string[] => {
+    const options: string[] = [];
+    for (let i = 0; i <= 3.5; i += 0.25) {
+        options.push(`+${formatter.format(i)}`);
+    }
+    return options;
+};
 
-export default function AdditionInput({ value, onChange, ...rest }: Props) {
-    const [display, setDisplay] = React.useState(value);
+const filterOptions = createFilterOptions<string>({
+    matchFrom: "any",
+    limit: 100,
+});
 
-    React.useEffect(() => {
-        if (isZeroString(value)) {
-            setDisplay("");
-            return;
+export default function AdditionInputAutocomplete({
+    value,
+    onChange,
+    label = "Adição",
+    placeholder = "+0.00",
+    size = "small",
+}: Props) {
+    const ADDITION_OPTIONS = useMemo(() => generateAdditionOptions(), []);
+    const [inputValue, setInputValue] = useState(value ?? "");
+
+    const handleInputChange = (
+        _event: React.SyntheticEvent,
+        newInput: string,
+        reason: string
+    ) => {
+        if (reason === "input") {
+            // permite +0,00 e valores até duas casas decimais
+            if (newInput.match(/^[+]?(\d{0,1})([.,]\d{0,2})?$/)) {
+                setInputValue(newInput);
+                onChange(newInput);
+            }
+        } else if (reason === "clear") {
+            setInputValue("");
+            onChange(null);
         }
-        setDisplay(value);
-    }, [value]);
-
-    const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const raw = e.target.value;
-        const digits = raw.replace(/[^0-9]/g, "");
-
-        // 1️⃣ campo vazio
-        if (!raw.trim()) {
-            setDisplay("");
-            onChange("");
-            return;
-        }
-
-        // 2️⃣ sem dígitos válidos
-        if (!digits) {
-            setDisplay("");
-            onChange("");
-            return;
-        }
-
-        // 3️⃣ interpreta como centavos
-        let num = parseInt(digits, 10) / 100;
-
-        // 4️⃣ limite prático (0–20)
-        num = Math.max(0, Math.min(20, num));
-
-        // 5️⃣ limpa se zero
-        if (num === 0) {
-            setDisplay("");
-            onChange("");
-            return;
-        }
-
-        // 6️⃣ formata com sinal +
-        const formatted = `+${formatter.format(num)}`;
-
-        setDisplay(formatted);
-        onChange(formatted);
     };
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        e.target.select();
+    const handleChange = (
+        _event: React.SyntheticEvent,
+        newValue: string | null
+    ) => {
+        setInputValue(newValue ?? "");
+        onChange(newValue);
+    };
+
+    const handleBlur = () => {
+        setTimeout(() => {
+            if (!inputValue) {
+                onChange(null);
+                return;
+            }
+
+            const normalized = parseFloat(
+                inputValue.replace(",", ".").replace(/[^\d.]/g, "")
+            );
+            if (isNaN(normalized)) {
+                setInputValue("");
+                onChange(null);
+                return;
+            }
+
+            // Novo limite: 0.00 a 3.50
+            const clamped = Math.min(Math.max(0, normalized), 3.5);
+            const rounded = Math.round(clamped * 4) / 4;
+
+            const formatted = `+${formatter.format(rounded)}`;
+            setInputValue(formatted);
+            onChange(formatted);
+        }, 0);
     };
 
     return (
-        <TextField
-            {...rest}
-            value={display}
+        <Autocomplete
+            freeSolo
+            autoSelect
+            disableClearable={false}
+            options={ADDITION_OPTIONS}
+            filterOptions={filterOptions}
+            value={value ?? ""}
+            inputValue={inputValue}
+            onInputChange={handleInputChange}
             onChange={handleChange}
-            onFocus={handleFocus}
-            inputProps={{
-                inputMode: "decimal",
-                placeholder: "+0.25",
-            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label={label}
+                    placeholder={placeholder}
+                    size={size}
+                    onBlur={handleBlur}
+                    inputProps={{
+                        ...params.inputProps,
+                        inputMode: "decimal",
+                    }}
+                />
+            )}
         />
     );
 }

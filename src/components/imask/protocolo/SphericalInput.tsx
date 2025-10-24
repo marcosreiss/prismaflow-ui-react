@@ -1,9 +1,12 @@
-import React from "react";
-import TextField, { type TextFieldProps } from "@mui/material/TextField";
+import React, { useMemo, useState } from "react";
+import { Autocomplete, TextField, createFilterOptions } from "@mui/material";
 
-type Props = Omit<TextFieldProps, "value" | "onChange"> & {
-    value: string;
-    onChange: (v: string) => void;
+type Props = {
+    value: string | null;
+    onChange: (v: string | null) => void;
+    label?: string;
+    placeholder?: string;
+    size?: "small" | "medium";
 };
 
 const formatter = new Intl.NumberFormat("pt-BR", {
@@ -11,99 +14,107 @@ const formatter = new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 2,
 });
 
-function isZeroString(v: string): boolean {
-    // considera +0,00, -0,00, 0,00, +0.00, -0.00, 0.00, etc.
-    if (!v) return false;
-    const normalized = v.replace(",", ".").replace(/[+-]/g, "").trim();
-    return normalized === "0.00" || normalized === "0";
-}
+const generateGrauOptions = () => {
+    const options: string[] = [];
+    for (let i = -40; i <= 40; i += 0.25) {
+        const formatted = `${i >= 0 ? "+" : ""}${formatter.format(i)}`;
+        options.push(formatted);
+    }
+    return options;
+};
 
-export default function SphericalInput({ value, onChange, ...rest }: Props) {
-    const [display, setDisplay] = React.useState(value);
+const filterOptions = createFilterOptions<string>({
+    matchFrom: "any",
+    limit: 100,
+});
 
-    React.useEffect(() => {
-        console.log("[useEffect] external value changed:", value);
-        if (isZeroString(value)) {
-            console.log("→ RESETTING display (zero detected)");
-            setDisplay("");
-            return;
+export default function SphericalInputAutocomplete({
+    value,
+    onChange,
+    label = "Esférico (ESF)",
+    placeholder = "+0.00",
+    size = "small",
+}: Props) {
+    const GRAU_OPTIONS = useMemo(() => generateGrauOptions(), []);
+    const [inputValue, setInputValue] = useState(value ?? "");
+
+    const handleInputChange = (
+        _event: React.SyntheticEvent,
+        newInput: string,
+        reason: string
+    ) => {
+        if (reason === "input") {
+            // permite digitação de sinal e até duas casas decimais
+            if (newInput.match(/^[+-]?\d{0,2}([,.]\d{0,2})?$/)) {
+                setInputValue(newInput);
+                onChange(newInput);
+            }
+        } else if (reason === "clear") {
+            setInputValue("");
+            onChange(null);
         }
-        setDisplay(value);
-    }, [value]);
-
-    const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const raw = e.target.value;
-        const hasMinus = raw.trim().startsWith("-");
-        const hasPlus = raw.trim().startsWith("+");
-        const digits = raw.replace(/[^0-9]/g, "");
-
-        console.groupCollapsed("[handleChange]");
-        console.log("raw:", raw);
-        console.log("hasMinus:", hasMinus, "hasPlus:", hasPlus);
-        console.log("digits:", digits);
-
-        if (raw === "") {
-            console.log("→ EMPTY FIELD");
-            setDisplay("");
-            onChange("");
-            console.groupEnd();
-            return;
-        }
-
-        if ((hasMinus || hasPlus) && digits.length === 0) {
-            console.log("→ ONLY SIGN");
-            const sign = hasMinus ? "-" : "+";
-            setDisplay(sign);
-            onChange(sign);
-            console.groupEnd();
-            return;
-        }
-
-        if (!digits) {
-            console.log("→ NO DIGITS");
-            setDisplay("");
-            onChange("");
-            console.groupEnd();
-            return;
-        }
-
-        let num = parseInt(digits, 10) / 100;
-        if (hasMinus) num *= -1;
-
-        num = Math.max(-20, Math.min(20, num));
-
-        const formatted = `${num >= 0 ? "+" : ""}${formatter.format(num)}`;
-        console.log("→ FORMATTED VALUE:", formatted, "(num:", num, ")");
-
-        // 🔹 zera se valor for +0,00 ou -0,00
-        if (isZeroString(formatted)) {
-            console.log("→ ZERO DETECTED, clearing input");
-            setDisplay("");
-            onChange("");
-            console.groupEnd();
-            return;
-        }
-
-        setDisplay(formatted);
-        onChange(formatted);
-        console.groupEnd();
     };
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        console.log("[handleFocus]");
-        e.target.select();
+    const handleChange = (
+        _event: React.SyntheticEvent,
+        newValue: string | null
+    ) => {
+        setInputValue(newValue ?? "");
+        onChange(newValue);
+    };
+
+    const handleBlur = () => {
+        // atraso evita conflito de eventos internos do Autocomplete
+        setTimeout(() => {
+            if (!inputValue) {
+                onChange(null);
+                return;
+            }
+
+            const normalized = parseFloat(
+                inputValue.replace(",", ".").replace(/[^\d.-]/g, "")
+            );
+            if (isNaN(normalized)) {
+                setInputValue("");
+                onChange(null);
+                return;
+            }
+
+            // Corta valor entre -40 e +40
+            let clamped = Math.min(Math.max(normalized, -40), 40);
+            // Passo de 0.25
+            clamped = Math.round(clamped * 4) / 4;
+
+            const formatted = `${clamped >= 0 ? "+" : ""}${formatter.format(clamped)}`;
+            setInputValue(formatted);
+            onChange(formatted);
+        }, 0);
     };
 
     return (
-        <TextField
-            {...rest}
-            value={display}
+        <Autocomplete
+            freeSolo
+            autoSelect
+            disableClearable={false}
+            options={GRAU_OPTIONS}
+            filterOptions={filterOptions}
+            value={value ?? ""}
+            inputValue={inputValue}
+            onInputChange={handleInputChange}
             onChange={handleChange}
-            onFocus={handleFocus}
-            inputProps={{
-                inputMode: "decimal",
-                placeholder: "-15.00",
-            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label={label}
+                    placeholder={placeholder}
+                    size={size}
+                    onBlur={handleBlur}
+                    inputProps={{
+                        ...params.inputProps,
+                        inputMode: "decimal",
+                    }}
+                />
+            )}
         />
     );
 }

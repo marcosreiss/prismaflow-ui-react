@@ -1,110 +1,145 @@
-import React from "react";
-import TextField, { type TextFieldProps } from "@mui/material/TextField";
+import React, { useMemo, useState } from "react";
+import { Autocomplete, TextField, createFilterOptions } from "@mui/material";
 
-type Props = Omit<TextFieldProps, "value" | "onChange"> & {
-    value: string;
-    onChange: (v: string) => void;
+type Props = {
+    value: string | null;
+    onChange: (v: string | null) => void;
+    label?: string;
+    placeholder?: string;
+    size?: "small" | "medium";
 };
 
+// formato oftálmico com duas casas decimais
 const formatter = new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
 });
 
-function isZeroString(v: string): boolean {
-    if (!v) return false;
-    const normalized = v.replace(",", ".").replace(/[+-]/g, "").trim();
-    return normalized === "0.00" || normalized === "0";
-}
+// opções entre 0 e -8, passo 0.25
+const generateCylOptions = () => {
+    const opts: string[] = [];
+    for (let i = 0; i >= -8; i -= 0.25) {
+        opts.push(formatter.format(i));
+    }
+    return opts;
+};
 
-export default function CylindricalInput({ value, onChange, ...rest }: Props) {
-    const [display, setDisplay] = React.useState(value);
+const filterOptions = createFilterOptions<string>({
+    matchFrom: "any",
+    limit: 100,
+});
 
-    React.useEffect(() => {
-        console.log("[useEffect] external value changed:", value);
-        if (isZeroString(value)) {
-            console.log("→ RESETTING display (zero detected)");
-            setDisplay("");
-            return;
+export default function CylindricalInputAutocomplete({
+    value,
+    onChange,
+    label = "Cilíndrico (CIL)",
+    placeholder = "-0,25",
+    size = "small",
+}: Props) {
+    const CYL_OPTIONS = useMemo(() => generateCylOptions(), []);
+    const [inputValue, setInputValue] = useState(value ?? "");
+    const [error, setError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+
+    const handleInputChange = (
+        _event: React.SyntheticEvent,
+        newInputValue: string,
+        reason: string
+    ) => {
+        if (reason === "input") {
+            // permite números negativos com vírgula ou ponto
+            if (
+                newInputValue.match(/^[-]?\d{0,2}([,.]\d{0,2})?$/) ||
+                newInputValue === ""
+            ) {
+                setError(false);
+                setErrorMsg("");
+                setInputValue(newInputValue);
+                onChange(newInputValue);
+            } else {
+                setError(true);
+                setErrorMsg("Formato inválido");
+            }
+        } else if (reason === "clear") {
+            setError(false);
+            setErrorMsg("");
+            setInputValue("");
+            onChange(null);
         }
-        setDisplay(value);
-    }, [value]);
-
-    const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const raw = e.target.value;
-        const digits = raw.replace(/[^0-9]/g, "");
-
-        console.groupCollapsed("[handleChange - Cylindrical]");
-        console.log("raw:", raw);
-        console.log("digits:", digits);
-
-        // 1️⃣ campo totalmente vazio
-        if (raw === "") {
-            console.log("→ EMPTY FIELD");
-            setDisplay("");
-            onChange("");
-            console.groupEnd();
-            return;
-        }
-
-        // 2️⃣ só "-" e nada mais (usuário começou a digitar)
-        if (raw.trim() === "-") {
-            console.log("→ ONLY SIGN");
-            setDisplay("-");
-            onChange("-");
-            console.groupEnd();
-            return;
-        }
-
-        // 3️⃣ se não há dígitos válidos
-        if (!digits) {
-            console.log("→ NO DIGITS");
-            setDisplay("");
-            onChange("");
-            console.groupEnd();
-            return;
-        }
-
-        // 4️⃣ converte para centavos e força sempre negativo
-        let num = parseInt(digits, 10) / 100;
-        num *= -1;
-
-        // aplica limite (ex: até -20.00, opcional)
-        num = Math.max(-20, Math.min(0, num));
-
-        const formatted = formatter.format(num);
-        console.log("→ FORMATTED VALUE:", formatted, "(num:", num, ")");
-
-        // 5️⃣ limpa se for zero
-        if (isZeroString(formatted)) {
-            console.log("→ ZERO DETECTED, clearing input");
-            setDisplay("");
-            onChange("");
-            console.groupEnd();
-            return;
-        }
-
-        const final = `-${formatted.replace("-", "")}`; // garante sinal negativo
-        setDisplay(final);
-        onChange(final);
-        console.groupEnd();
     };
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        console.log("[handleFocus]");
-        e.target.select();
+    const handleChange = (
+        _event: React.SyntheticEvent,
+        newValue: string | null
+    ) => {
+        setError(false);
+        setErrorMsg("");
+        setInputValue(newValue ?? "");
+        onChange(newValue);
+    };
+
+    const handleBlur = () => {
+        setTimeout(() => {
+            if (!inputValue || inputValue.trim() === "" || inputValue === "-") {
+                // se vazio ou sinal isolado, volta para 0.00
+                const formatted = formatter.format(0);
+                setInputValue(formatted);
+                onChange(formatted);
+                setError(false);
+                setErrorMsg("");
+                return;
+            }
+
+            const raw = inputValue.replace(",", ".").replace(/[^\d.-]/g, "");
+            const num = parseFloat(raw);
+
+            if (isNaN(num)) {
+                const formatted = formatter.format(0);
+                setInputValue(formatted);
+                onChange(formatted);
+                setError(false);
+                setErrorMsg("");
+                return;
+            }
+
+            // Limita entre -8 e 0, ajusta passo
+            let clamped = Math.max(Math.min(num, 0), -8);
+            clamped = Math.round(clamped * 4) / 4;
+
+            const formatted = formatter.format(clamped);
+            setInputValue(formatted);
+            onChange(formatted);
+            setError(false);
+            setErrorMsg("");
+        }, 0);
     };
 
     return (
-        <TextField
-            {...rest}
-            value={display}
+        <Autocomplete
+            freeSolo
+            autoSelect
+            disableClearable={false}
+            options={CYL_OPTIONS}
+            filterOptions={filterOptions}
+            value={value ?? ""}
+            inputValue={inputValue}
+            onInputChange={handleInputChange}
             onChange={handleChange}
-            onFocus={handleFocus}
-            inputProps={{
-                inputMode: "decimal",
-                placeholder: "-0.25",
-            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label={label}
+                    placeholder={placeholder}
+                    size={size}
+                    error={error}
+                    helperText={error ? errorMsg : ""}
+                    onBlur={handleBlur}
+                    inputProps={{
+                        ...params.inputProps,
+                        inputMode: "decimal",
+                    }}
+                />
+            )}
         />
     );
 }

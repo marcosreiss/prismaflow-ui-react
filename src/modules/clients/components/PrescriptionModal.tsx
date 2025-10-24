@@ -11,6 +11,7 @@ import {
     Button,
     CircularProgress,
     IconButton,
+    MenuItem,
 } from "@mui/material";
 import { X, Pencil, Trash2 } from "lucide-react";
 import { FormProvider, Controller } from "react-hook-form";
@@ -282,11 +283,27 @@ export default function PrescriptionModal({
                                             label="Armação e Ref"
                                             {...methods.register("frameAndRef")}
                                         />
-                                        <TextField
-                                            fullWidth
-                                            size="small"
-                                            label="Tipo de Lente"
-                                            {...methods.register("lensType")}
+                                        <Controller
+                                            name="lensType"
+                                            control={methods.control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    {...field}
+                                                    select
+                                                    fullWidth
+                                                    size="small"
+                                                    label="Tipo de Lente"
+                                                    helperText="Selecione um tipo de lente válido"
+                                                >
+                                                    <MenuItem value="">Selecione...</MenuItem>
+                                                    <MenuItem value="monofocal">Monofocal</MenuItem>
+                                                    <MenuItem value="bifocal">Bifocal</MenuItem>
+                                                    <MenuItem value="multifocal">Multifocal</MenuItem>
+                                                    <MenuItem value="ocupacional">Ocupacional</MenuItem>
+                                                    <MenuItem value="fotossensivel">Fotossensível</MenuItem>
+                                                    <MenuItem value="comFiltroAzul">Com Filtro Azul</MenuItem>
+                                                </TextField>
+                                            )}
                                         />
                                     </Stack>
                                     <TextField

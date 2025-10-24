@@ -1,86 +1,104 @@
-import React from "react";
-import TextField, { type TextFieldProps } from "@mui/material/TextField";
+import React, { useMemo, useState } from "react";
+import {
+    Autocomplete,
+    TextField,
+    createFilterOptions,
+    type AutocompleteInputChangeReason,
+} from "@mui/material";
 
-type Props = Omit<TextFieldProps, "value" | "onChange"> & {
-    value: string;
-    onChange: (v: string) => void;
+type Props = {
+    value: string | null;
+    onChange: (v: string | null) => void;
+    label?: string;
+    placeholder?: string;
+    size?: "small" | "medium";
+    disabled?: boolean;
 };
 
-function isZeroString(v: string): boolean {
-    if (!v) return false;
-    const normalized = v.replace(/[^\d]/g, "");
-    return normalized === "0";
-}
+// Gera lista de opções de 0º a 180º
+const generateAxisOptions = (): string[] => {
+    return Array.from({ length: 181 }, (_, i) => `${i}º`);
+};
 
-export default function AxisInput({ value, onChange, ...rest }: Props) {
-    const inputRef = React.useRef<HTMLInputElement | null>(null);
-    const [display, setDisplay] = React.useState(value);
+const filterOptions = createFilterOptions<string>({
+    matchFrom: "any",
+    limit: 100,
+});
 
-    React.useEffect(() => {
-        if (isZeroString(value)) {
-            setDisplay("");
-            return;
-        }
-        setDisplay(value);
-    }, [value]);
+export default function AxisInputAutocomplete({
+    value,
+    onChange,
+    label = "Eixo (°)",
+    placeholder = "0°",
+    size = "small",
+    disabled = false,
+}: Props) {
+    const AXIS_OPTIONS = useMemo(generateAxisOptions, []);
+    const [inputValue, setInputValue] = useState(value || "");
 
-    const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const raw = e.target.value.replace(/º/g, "");
-        const digits = raw.replace(/[^0-9]/g, "");
-
-        // Campo vazio
-        if (!raw.trim()) {
-            setDisplay("");
-            onChange("");
-            return;
-        }
-
-        // Digitação parcial
-        if (!digits) {
-            setDisplay(raw);
-            onChange(raw);
+    const handleInputChange = (
+        _event: React.SyntheticEvent,
+        newInputValue: string,
+        reason: AutocompleteInputChangeReason
+    ) => {
+        if (reason === "clear" || newInputValue === "") {
+            setInputValue("");
+            onChange(null);
             return;
         }
 
-        let num = parseInt(digits, 10);
-        num = Math.max(0, Math.min(180, num));
-
-        if (num === 0) {
-            setDisplay("");
-            onChange("");
-            return;
-        }
-
-        const formatted = `${num}º`;
-        setDisplay(formatted);
-        onChange(formatted);
-
-        // ⚡ força cursor antes do símbolo "º"
-        requestAnimationFrame(() => {
-            const el = inputRef.current;
-            if (el) {
-                const pos = formatted.length - 1; // antes do "º"
-                el.setSelectionRange(pos, pos);
+        if (reason === "input") {
+            const digits = newInputValue.replace(/[^0-9]/g, "");
+            if (!digits) {
+                setInputValue("");
+                onChange(null);
+                return;
             }
-        });
+
+            const num = Math.min(Math.max(parseInt(digits, 10), 0), 180);
+            const formatted = `${num}º`;
+            setInputValue(formatted);
+            onChange(formatted);
+        }
+
+        if (reason === "reset" || reason === "selectOption") {
+            setInputValue(newInputValue);
+            onChange(newInputValue);
+        }
     };
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        // seleciona tudo ao focar
-        e.target.select();
+    const handleChange = (
+        _event: React.SyntheticEvent,
+        newValue: string | null
+    ) => {
+        setInputValue(newValue || "");
+        onChange(newValue);
     };
 
     return (
-        <TextField
-            {...rest}
-            inputRef={inputRef}
-            value={display}
+        <Autocomplete
+            freeSolo
+            size={size}
+            disabled={disabled}
+            options={AXIS_OPTIONS}
+            filterOptions={filterOptions}
+            isOptionEqualToValue={(option, val) => option === val}
+            value={value || null}
+            inputValue={inputValue}
+            onInputChange={handleInputChange}
             onChange={handleChange}
-            onFocus={handleFocus}
-            inputProps={{
-                inputMode: "numeric",
-                placeholder: "0º",
-            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label={label}
+                    placeholder={placeholder}
+                    type="text"
+                    inputProps={{
+                        ...params.inputProps,
+                        inputMode: "numeric",
+                    }}
+                />
+            )}
         />
     );
 }

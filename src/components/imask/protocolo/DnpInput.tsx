@@ -1,83 +1,129 @@
-import React from "react";
-import TextField, { type TextFieldProps } from "@mui/material/TextField";
+import React, { useMemo, useState } from "react";
+import {
+    Autocomplete,
+    TextField,
+    createFilterOptions,
+    type AutocompleteInputChangeReason,
+} from "@mui/material";
 
-type Props = Omit<TextFieldProps, "value" | "onChange"> & {
-    value: string;
-    onChange: (v: string) => void;
+type Props = {
+    value: string | null;
+    onChange: (v: string | null) => void;
+    label?: string;
+    placeholder?: string;
+    size?: "small" | "medium";
+    disabled?: boolean;
 };
 
-const formatter = new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
+const generateDnpOptions = (): string[] => {
+    const options: string[] = [];
+    for (let i = 25; i <= 40; i += 0.5) {
+        options.push(i.toFixed(1).replace(".", ",")); // vírgula padrão pt‑BR
+    }
+    return options;
+};
+
+const filterOptions = createFilterOptions<string>({
+    matchFrom: "any",
+    limit: 100,
 });
 
-function isZeroString(v: string): boolean {
-    if (!v) return false;
-    const normalized = v.replace(",", ".").replace(/[^\d.]/g, "");
-    return normalized === "0" || normalized === "0.0";
-}
+export default function DnpInputAutocomplete({
+    value,
+    onChange,
+    label = "DNP (mm)",
+    placeholder = "30,0",
+    size = "small",
+    disabled = false,
+}: Props) {
+    const DNP_OPTIONS = useMemo(() => generateDnpOptions(), []);
+    const [inputValue, setInputValue] = useState(value ?? "");
 
-export default function DnpInput({ value, onChange, ...rest }: Props) {
-    const [display, setDisplay] = React.useState(value);
-
-    React.useEffect(() => {
-        if (isZeroString(value)) {
-            setDisplay("");
-            return;
-        }
-        setDisplay(value);
-    }, [value]);
-
-    const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const raw = e.target.value;
-        const digits = raw.replace(/[^0-9]/g, "");
-
-        // 1️⃣ Campo vazio
-        if (!raw.trim()) {
-            setDisplay("");
-            onChange("");
+    const handleInputChange = (
+        _event: React.SyntheticEvent,
+        newInputValue: string,
+        reason: AutocompleteInputChangeReason
+    ) => {
+        if (reason === "clear" || newInputValue === "") {
+            setInputValue("");
+            onChange(null);
             return;
         }
 
-        // 2️⃣ Nenhum dígito
-        if (!digits) {
-            setDisplay("");
-            onChange("");
+        if (reason === "input") {
+            const parsed = newInputValue.replace(",", ".").replace(/[^\d.]/g, "");
+            if (!parsed) {
+                setInputValue("");
+                onChange(null);
+                return;
+            }
+
+            // permite digitação parcial como "2", "28", "29.5"
+            const partial = parsed.match(/^\d{0,2}(\.\d{0,1})?$/);
+            if (partial) setInputValue(newInputValue);
             return;
         }
 
-        // 3️⃣ Converte para décimos
-        let num = parseInt(digits, 10) / 10;
-        num = Math.max(0, Math.min(99.9, num)); // limite sensato
-
-        // 4️⃣ Se 0 → limpa
-        if (num === 0) {
-            setDisplay("");
-            onChange("");
-            return;
+        if (reason === "selectOption") {
+            setInputValue(newInputValue);
+            onChange(newInputValue);
         }
-
-        // 5️⃣ Formata com uma casa decimal
-        const formatted = formatter.format(num);
-
-        setDisplay(formatted);
-        onChange(formatted);
     };
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        e.target.select();
+    const handleBlur = () => {
+        // atraso garante execução após o Autocomplete atualizar internamente
+        setTimeout(() => {
+            const raw = inputValue.replace(",", ".").replace(/[^\d.]/g, "");
+            const num = parseFloat(raw);
+
+            if (isNaN(num)) {
+                setInputValue("");
+                onChange(null);
+                return;
+            }
+
+            let clamped = Math.min(Math.max(num, 25), 40);
+            clamped = Math.round(clamped * 2) / 2; // passo de 0.5
+
+            const formatted = clamped.toFixed(1).replace(".", ",");
+            setInputValue(formatted);
+            onChange(formatted);
+        }, 0);
+    };
+
+    const handleChange = (
+        _event: React.SyntheticEvent,
+        newValue: string | null
+    ) => {
+        setInputValue(newValue ?? "");
+        onChange(newValue);
     };
 
     return (
-        <TextField
-            {...rest}
-            value={display}
+        <Autocomplete
+            freeSolo
+            autoSelect
+            disableClearable={false}
+            size={size}
+            disabled={disabled}
+            options={DNP_OPTIONS}
+            filterOptions={filterOptions}
+            value={value ?? ""}
+            inputValue={inputValue}
+            onInputChange={handleInputChange}
             onChange={handleChange}
-            onFocus={handleFocus}
-            inputProps={{
-                inputMode: "decimal",
-                placeholder: "0,0",
-            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label={label}
+                    placeholder={placeholder}
+                    onBlur={handleBlur}
+                    inputProps={{
+                        ...params.inputProps,
+                        inputMode: "decimal",
+                    }}
+                />
+            )}
         />
     );
 }
