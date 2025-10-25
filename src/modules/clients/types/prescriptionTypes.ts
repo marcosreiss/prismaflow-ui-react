@@ -1,3 +1,5 @@
+// types/prescriptionTypes.ts
+
 import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 
 // ==============================
@@ -6,7 +8,6 @@ import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 export type Prescription = {
   id: number;
   clientId: number;
-  prescriptionId: number;
   prescriptionDate: string;
 
   doctorName?: string | null;
@@ -60,86 +61,78 @@ export type Prescription = {
 // ==============================
 // 📨 PAYLOADS (REQUEST)
 // ==============================
-export type CreatePrescriptionPayload = {
-  clientId: number;
-  prescriptionId: number;
-  prescriptionDate: string;
-  doctorName?: string;
-  crm?: string;
 
-  odSphericalFar?: string;
-  odCylindricalFar?: string;
-  odAxisFar?: string;
-  odDnpFar?: string;
-  odSphericalNear?: string;
-  odCylindricalNear?: string;
-  odAxisNear?: string;
-  odDnpNear?: string;
-
-  oeSphericalFar?: string;
-  oeCylindricalFar?: string;
-  oeAxisFar?: string;
-  oeDnpFar?: string;
-  oeSphericalNear?: string;
-  oeCylindricalNear?: string;
-  oeAxisNear?: string;
-  oeDnpNear?: string;
-
-  odPellicleFar?: string;
-  odPellicleNear?: string;
-  oePellicleFar?: string;
-  oePellicleNear?: string;
-
-  frameAndRef?: string;
-  lensType?: string;
-  notes?: string;
-
-  additionRight?: string;
-  additionLeft?: string;
-  opticalCenterRight?: string;
-  opticalCenterLeft?: string;
-
-  isActive?: boolean;
+/**
+ * Payload para CRIAR uma nova receita
+ * - Não inclui: id, createdAt, updatedAt (gerados pelo backend)
+ * - clientId e prescriptionDate são obrigatórios
+ * - lensType é obrigatório e não pode ser null
+ * - Demais campos são opcionais
+ */
+export type CreatePrescriptionPayload = Omit<
+  Prescription,
+  'id' | 'createdAt' | 'updatedAt' | 'lensType'
+> & {
+  clientId: number;           // obrigatório
+  prescriptionDate: string;   // obrigatório
+  lensType: string;           // 👈 NOVO: obrigatório e não-nullable
 };
 
-export type UpdatePrescriptionPayload = Partial<CreatePrescriptionPayload>;
+/**
+ * Payload para ATUALIZAR uma receita existente
+ * - Todos os campos são opcionais (atualização parcial)
+ * - clientId não pode ser alterado (removido do payload)
+ */
+export type UpdatePrescriptionPayload = Partial<
+  Omit<Prescription, 'id' | 'clientId' | 'createdAt' | 'updatedAt'>
+>;
 
 // ==============================
 // 🔹 ENTIDADE: EXPIRING PRESCRIPTION
 // ==============================
 export type ExpiringPrescription = {
+  // Dados do cliente
   clientId: number;
   clientName: string;
   phone01?: string | null;
 
+  // Dados da receita
   id: number;
   prescriptionDate: string;
   doctorName?: string | null;
   crm?: string | null;
 
+  // OD - Longe
   odSphericalFar?: string | null;
   odCylindricalFar?: string | null;
   odAxisFar?: string | null;
   odDnpFar?: string | null;
+
+  // OD - Perto
   odSphericalNear?: string | null;
   odCylindricalNear?: string | null;
   odAxisNear?: string | null;
   odDnpNear?: string | null;
 
+  // OE - Longe
   oeSphericalFar?: string | null;
   oeCylindricalFar?: string | null;
   oeAxisFar?: string | null;
   oeDnpFar?: string | null;
+
+  // OE - Perto
   oeSphericalNear?: string | null;
   oeCylindricalNear?: string | null;
   oeAxisNear?: string | null;
   oeDnpNear?: string | null;
 
+  // Películas
   odPellicleFar?: string | null;
   odPellicleNear?: string | null;
   oePellicleFar?: string | null;
   oePellicleNear?: string | null;
 
+  // Gerais
   frameAndRef?: string | null;
   lensType?: string | null;
   notes?: string | null;
