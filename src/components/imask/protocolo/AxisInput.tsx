@@ -91,11 +91,6 @@ export default function AxisInputAutocomplete({
     onValidationChange,
 }: Props) {
 
-    console.log("🔍 AxisInput props:", {
-        disabled,
-        helperText,
-        value,
-    });
 
     const [inputValue, setInputValue] = useState(value ?? "");
     const [touched, setTouched] = useState(false);
