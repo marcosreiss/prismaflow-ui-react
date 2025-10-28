@@ -23,16 +23,23 @@ export const useGetClients = ({
   page,
   limit,
   search,
+  branchId,
 }: {
   page: number;
   limit: number;
   search?: string;
+  branchId?: string;
 }) => {
   return useQuery<ClientsResponse, AxiosError<ApiResponse<null>>>({
-    queryKey: ["clients", page, limit, search],
+    queryKey: ["clients", page, limit, search, branchId],
     queryFn: async () => {
       const { data } = await baseApi.get<ClientsResponse>("/api/clients", {
-        params: { page, limit, search: search || "" },
+        params: {
+          page,
+          limit,
+          search: search || undefined,
+          branchId: branchId || undefined,
+        },
       });
       return data;
     },
