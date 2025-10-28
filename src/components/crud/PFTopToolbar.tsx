@@ -12,8 +12,11 @@ type PFTopToolbarProps = {
     addLabel?: string;
     backUrl?: string;
 
-    /** 🆕 Permite ações extras, como “Excluir selecionados” */
+    /** 🆕 Permite ações extras, como "Excluir selecionados" */
     actionsExtra?: ReactNode;
+
+    /** 🆕 Permite adicionar filtros customizados para cada entidade */
+    filters?: ReactNode;
 };
 
 export default function PFTopToolbar({
@@ -23,7 +26,8 @@ export default function PFTopToolbar({
     onAdd,
     addLabel = "Adicionar novo",
     backUrl,
-    actionsExtra, // 🆕
+    actionsExtra,
+    filters, // 🆕
 }: PFTopToolbarProps) {
     const router = useRouter();
     const [search, setSearch] = useState("");
@@ -57,7 +61,7 @@ export default function PFTopToolbar({
                 <Typography variant="h6">{title}</Typography>
             </Box>
 
-            {/* Direita: search + refresh + add + extras */}
+            {/* Direita: filters + search + refresh + add + extras */}
             <Box
                 sx={{
                     display: "flex",
@@ -68,6 +72,9 @@ export default function PFTopToolbar({
                     mt: { xs: 2, sm: 0 },
                 }}
             >
+                {/* 🆕 Filtros customizados (ex: Select de filial) */}
+                {filters}
+
                 {onSearch && (
                     <TextField
                         size="small"
@@ -96,7 +103,7 @@ export default function PFTopToolbar({
                     </Button>
                 )}
 
-                {/* 🆕 Ações extras (ex: Excluir selecionados) */}
+                {/* Ações extras (ex: Excluir selecionados) */}
                 {actionsExtra}
 
                 {onAdd && (
