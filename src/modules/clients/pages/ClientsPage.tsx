@@ -1,11 +1,11 @@
-import { Paper, Button } from "@mui/material";
+import { Button, FormControl, InputLabel, MenuItem, Paper, Select } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
-
 import ClientDrawer from "../components/ClientDrawer";
 import { useClientPageController } from "../hooks/useClientPageController";
 import type { Client } from "../types/clientTypes";
+import { useSelectBranches } from "@/modules/branch/useBranch";
 
 // ==============================
 // 🔹 Página principal de Clientes
@@ -13,7 +13,6 @@ import type { Client } from "../types/clientTypes";
 export default function ClientsPage() {
     // Controller
     const controller = useClientPageController();
-
     const {
         // dados e estados
         clients,
@@ -22,6 +21,7 @@ export default function ClientsPage() {
         isFetching,
         page,
         limit,
+        branchId, // 🆕
         drawerOpen,
         drawerMode,
         selectedClient,
@@ -34,6 +34,7 @@ export default function ClientsPage() {
         setPage,
         setLimit,
         setSearch,
+        setBranchId, // 🆕
         setConfirmDelete,
         setConfirmDeleteSelected,
         handleOpenDrawer,
@@ -46,6 +47,10 @@ export default function ClientsPage() {
         deleteClient,
         addNotification,
     } = controller;
+
+    // 🆕 Hook para buscar filiais
+    const { data: branchesData } = useSelectBranches();
+    const branches = branchesData?.data || [];
 
     // ==============================
     // 🔹 Colunas da tabela
@@ -95,6 +100,24 @@ export default function ClientsPage() {
                 onRefresh={() => refetch()}
                 onAdd={() => handleOpenDrawer("create")}
                 addLabel="Novo cliente"
+                filters={ // 🆕 Filtro de filiais
+                    <FormControl size="small" sx={{ minWidth: 180, }}>
+                        <InputLabel>Filial</InputLabel>
+                        <Select
+                            value={branchId}
+                            label="Filial"
+                            onChange={(e) => setBranchId(e.target.value)}
+                            sx={{borderRadius: 2}}
+                        >
+                            <MenuItem value="">Todas as filiais</MenuItem>
+                            {branches.map((branch) => (
+                                <MenuItem key={branch.id} value={branch.id}>
+                                    {branch.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                }
                 actionsExtra={
                     selectedIds.length > 0 && (
                         <Button
@@ -142,9 +165,9 @@ export default function ClientsPage() {
             {/* Drawer de Cliente */}
             <ClientDrawer
                 open={drawerOpen}
+                onClose={handleCloseDrawer}
                 mode={drawerMode}
                 client={selectedClient}
-                onClose={handleCloseDrawer}
                 onEdit={() => handleOpenDrawer("edit", selectedClient)}
                 onDelete={(client) => {
                     controller.setSelectedClient(client);

@@ -16,6 +16,9 @@ export function useClientPageController() {
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(5);
   const [search, setSearch] = useState("");
+  const [branchId, setBranchId] = useState<string>("");
+
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<"create" | "edit" | "view">(
     "view"
@@ -36,6 +39,7 @@ export function useClientPageController() {
     page: page + 1, // base-1
     limit,
     search,
+    branchId: branchId || undefined,
   });
 
   const deleteClient = useDeleteClient();
@@ -128,6 +132,7 @@ export function useClientPageController() {
     page,
     limit,
     search,
+    branchId,
     drawerOpen,
     drawerMode,
     selectedClient,
@@ -146,6 +151,7 @@ export function useClientPageController() {
     setPage,
     setLimit,
     setSearch,
+    setBranchId,
     setDrawerOpen,
     setDrawerMode,
     setSelectedClient,
