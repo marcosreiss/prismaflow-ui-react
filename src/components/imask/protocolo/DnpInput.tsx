@@ -1,247 +1,75 @@
-import React, { useEffect, useState } from "react";
-import { Autocomplete, TextField, createFilterOptions } from "@mui/material";
+import React from "react";
+import { TextField, MenuItem } from "@mui/material";
 
 type Props = {
     value: string | null;
     onChange: (v: string | null) => void;
     label?: string;
     placeholder?: string;
-    helperText?: string; // 👈 NOVA PROP
     size?: "small" | "medium";
-    disabled?: boolean;
-    required?: boolean;
-    onValidationChange?: (isValid: boolean) => void;
+    helperText?: string;
 };
 
-type ValidationResult = {
-    isValid: boolean;
-    message: string;
-};
+const DNP_OPTIONS = [
+    "25,0",
+    "25,5",
+    "26,0",
+    "26,5",
+    "27,0",
+    "27,5",
+    "28,0",
+    "28,5",
+    "29,0",
+    "29,5",
+    "30,0",
+    "30,5",
+    "31,0",
+    "31,5",
+    "32,0",
+    "32,5",
+    "33,0",
+    "33,5",
+    "34,0",
+    "34,5",
+    "35,0",
+    "35,5",
+    "36,0",
+    "36,5",
+    "37,0",
+    "37,5",
+    "38,0",
+    "38,5",
+    "39,0",
+    "39,5",
+    "40,0"
+];
 
-const MIN_VALUE = 25;
-const MAX_VALUE = 40;
-const STEP = 0.5;
-
-const DNP_OPTIONS = (() => {
-    const options: string[] = [];
-    for (let i = MIN_VALUE; i <= MAX_VALUE; i += STEP) {
-        options.push(i.toFixed(1).replace(".", ","));
-    }
-    return options;
-})();
-
-const filterOptions = createFilterOptions<string>({
-    matchFrom: "any",
-    limit: 100,
-});
-
-const parseDnpValue = (input: string): number => {
-    const normalized = input.replace(",", ".").replace(/[^\d.]/g, "");
-    return parseFloat(normalized);
-};
-
-const formatDnpValue = (value: number): string => {
-    return value.toFixed(1).replace(".", ",");
-};
-
-const roundToStep = (value: number, step: number): number => {
-    return Math.round(value / step) * step;
-};
-
-const validateDnpValue = (
-    value: string,
-    touched: boolean,
-    required: boolean
-): ValidationResult => {
-    // Campo vazio
-    if (!value || value.trim() === "") {
-        if (!required) {
-            return { isValid: true, message: "" };
-        }
-        return {
-            isValid: false,
-            message: touched ? "Campo obrigatório" : "",
-        };
-    }
-
-    const parsed = parseDnpValue(value);
-
-    // Não é número
-    if (isNaN(parsed)) {
-        return { isValid: false, message: touched ? "Valor inválido" : "" };
-    }
-
-    // Fora do range
-    if (parsed < MIN_VALUE || parsed > MAX_VALUE) {
-        return {
-            isValid: false,
-            message: touched
-                ? `Valor deve estar entre ${formatDnpValue(MIN_VALUE)} e ${formatDnpValue(MAX_VALUE)}`
-                : "",
-        };
-    }
-
-    // Valida incremento de 0.5 (apenas se touched)
-    if (touched) {
-        const remainder = Math.abs((parsed * 10) % (STEP * 10));
-        if (remainder > 0.01) {
-            return {
-                isValid: false,
-                message: `Use incrementos de ${STEP.toFixed(1).replace(".", ",")} (ex: 28,5, 30,0)`,
-            };
-        }
-    }
-
-    return { isValid: true, message: "" };
-};
-
-export default function DnpInputAutocomplete({
+const DnpInput: React.FC<Props> = ({
     value,
     onChange,
     label = "DNP (mm)",
-    placeholder = "30,0",
-    size = "small",
-    helperText, // 👈 NOVA PROP
-    disabled = false,
-    required = false,
-    onValidationChange,
-}: Props) {
-    const [inputValue, setInputValue] = useState(value ?? "");
-    const [touched, setTouched] = useState(false);
-
-    useEffect(() => {
-        setInputValue(value ?? "");
-    }, [value]);
-
-    const validation = validateDnpValue(inputValue, touched, required);
-
-    // Notifica validação ao pai
-    useEffect(() => {
-        onValidationChange?.(validation.isValid);
-    }, [validation.isValid, onValidationChange]);
-
-    // 👇 FUNÇÃO ATUALIZADA: Prioriza erros, depois helperText customizado
-    const getHelperText = (): string => {
-        // Prioridade 1: Erro de validação com sugestão
-        if (touched && !validation.isValid && validation.message) {
-            // Se erro de incremento, adiciona sugestão
-            if (inputValue) {
-                const parsed = parseDnpValue(inputValue);
-
-                if (!isNaN(parsed) && parsed >= MIN_VALUE && parsed <= MAX_VALUE) {
-                    const remainder = Math.abs((parsed * 10) % (STEP * 10));
-
-                    if (remainder > 0.01) {
-                        const rounded = roundToStep(parsed, STEP);
-                        const formatted = formatDnpValue(rounded);
-                        return `${validation.message}. Sugestão: ${formatted}`;
-                    }
-                }
-            }
-
-            return validation.message;
-        }
-
-        // Prioridade 2: helperText customizado
-        if (helperText) {
-            return helperText;
-        }
-
-        // Prioridade 3: Vazio
-        return "";
-    };
-
-    const handleInputChange = (
-        _event: React.SyntheticEvent,
-        newInput: string,
-        reason: string
-    ) => {
-        if (reason === "input") {
-            setInputValue(newInput);
-            onChange(newInput || null);
-        } else if (reason === "clear") {
-            setInputValue("");
-            onChange(null);
-            setTouched(true);
-        }
-    };
-
-    const handleChange = (
-        _event: React.SyntheticEvent,
-        newValue: string | null
-    ) => {
-        if (newValue) {
-            const parsed = parseDnpValue(newValue);
-
-            // Se for válido, formata
-            if (!isNaN(parsed) && parsed >= MIN_VALUE && parsed <= MAX_VALUE) {
-                const rounded = roundToStep(parsed, STEP);
-                const formatted = formatDnpValue(rounded);
-                setInputValue(formatted);
-                onChange(formatted);
-            } else {
-                // Mantém valor inválido para mostrar erro
-                setInputValue(newValue);
-                onChange(newValue);
-            }
-        } else {
-            setInputValue("");
-            onChange(null);
-        }
-        setTouched(true);
-    };
-
-    const handleBlur = () => {
-        setTouched(true);
-
-        // Só formata se JÁ for múltiplo válido de 0.5
-        if (inputValue && inputValue.trim() !== "") {
-            const parsed = parseDnpValue(inputValue);
-
-            if (!isNaN(parsed) && parsed >= MIN_VALUE && parsed <= MAX_VALUE) {
-                const remainder = Math.abs((parsed * 10) % (STEP * 10));
-
-                // Só formata se já for múltiplo válido
-                if (remainder < 0.01) {
-                    const formatted = formatDnpValue(parsed);
-                    setInputValue(formatted);
-                    onChange(formatted);
-                }
-                // Se não for múltiplo, não faz nada (usuário verá erro + sugestão)
-            }
-        }
-    };
-
+    placeholder = "",
+    size = "medium",
+    helperText = "",
+}) => {
     return (
-        <Autocomplete
-            freeSolo
-            autoSelect
-            disableClearable={false}
+        <TextField
+            select
+            fullWidth
             size={size}
-            disabled={disabled}
-            options={DNP_OPTIONS}
-            filterOptions={filterOptions}
             value={value ?? ""}
-            inputValue={inputValue}
-            onInputChange={handleInputChange}
-            onChange={handleChange}
-            renderInput={(params) => (
-                <TextField
-                    {...params}
-                    label={label}
-                    placeholder={placeholder}
-                    size={size}
-                    required={required}
-                    disabled={disabled}
-                    onBlur={handleBlur}
-                    error={!disabled && touched && !validation.isValid}
-                    helperText={getHelperText()} // 👈 MUDANÇA
-                    inputProps={{
-                        ...params.inputProps,
-                        inputMode: "decimal",
-                    }}
-                />
-            )}
-        />
+            onChange={(e) => onChange(e.target.value)}
+            label={label}
+            placeholder={placeholder}
+            helperText={helperText}
+            variant="outlined"
+        >
+            <MenuItem value="">Selecione</MenuItem>
+            {DNP_OPTIONS.map((option) => (
+                <MenuItem key={option} value={option}>{option}</MenuItem>
+            ))}
+        </TextField>
     );
-}
+};
+
+export default DnpInput;
