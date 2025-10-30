@@ -54,6 +54,13 @@ export type Prescription = {
   opticalCenterLeft?: string | null;
 
   isActive: boolean;
+
+  // Campos de auditoria e multi-tenancy
+  tenantId: string;
+  branchId: string;
+  createdById?: string | null;
+  updatedById?: string | null;
+
   createdAt: string;
   updatedAt: string;
 };
@@ -64,27 +71,44 @@ export type Prescription = {
 
 /**
  * Payload para CRIAR uma nova receita
- * - Não inclui: id, createdAt, updatedAt (gerados pelo backend)
+ * - Não inclui: id, tenantId, branchId, createdById, updatedById, createdAt, updatedAt (gerenciados pelo backend)
  * - clientId e prescriptionDate são obrigatórios
  * - lensType é obrigatório e não pode ser null
  * - Demais campos são opcionais
  */
 export type CreatePrescriptionPayload = Omit<
   Prescription,
-  'id' | 'createdAt' | 'updatedAt' | 'lensType'
+  | "id"
+  | "tenantId"
+  | "branchId"
+  | "createdById"
+  | "updatedById"
+  | "createdAt"
+  | "updatedAt"
+  | "lensType"
 > & {
-  clientId: number;           // obrigatório
-  prescriptionDate: string;   // obrigatório
-  lensType: string;           // 👈 NOVO: obrigatório e não-nullable
+  clientId: number;
+  prescriptionDate: string;
+  lensType: string;
 };
 
 /**
  * Payload para ATUALIZAR uma receita existente
  * - Todos os campos são opcionais (atualização parcial)
- * - clientId não pode ser alterado (removido do payload)
+ * - clientId, tenantId, branchId não podem ser alterados
  */
 export type UpdatePrescriptionPayload = Partial<
-  Omit<Prescription, 'id' | 'clientId' | 'createdAt' | 'updatedAt'>
+  Omit<
+    Prescription,
+    | "id"
+    | "clientId"
+    | "tenantId"
+    | "branchId"
+    | "createdById"
+    | "updatedById"
+    | "createdAt"
+    | "updatedAt"
+  >
 >;
 
 // ==============================
@@ -143,6 +167,13 @@ export type ExpiringPrescription = {
   opticalCenterLeft?: string | null;
 
   isActive: boolean;
+
+  // Campos de auditoria e multi-tenancy
+  tenantId: string;
+  branchId: string;
+  createdById?: string | null;
+  updatedById?: string | null;
+
   createdAt: string;
   updatedAt: string;
 };
