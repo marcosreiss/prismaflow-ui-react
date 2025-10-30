@@ -112,7 +112,6 @@ export default function ExpiringPrescriptionsPage() {
         ? {
             id: selectedPrescription.id,
             clientId: selectedPrescription.clientId,
-            prescriptionId: selectedPrescription.id,
             prescriptionDate: selectedPrescription.prescriptionDate,
             doctorName: selectedPrescription.doctorName ?? null,
             crm: selectedPrescription.crm ?? null,
@@ -155,8 +154,10 @@ export default function ExpiringPrescriptionsPage() {
             additionLeft: selectedPrescription.additionLeft ?? null,
             opticalCenterRight: selectedPrescription.opticalCenterRight ?? null,
             opticalCenterLeft: selectedPrescription.opticalCenterLeft ?? null,
-
             isActive: selectedPrescription.isActive,
+            // required multi-tenant/audit fields
+            tenantId: selectedPrescription.tenantId,
+            branchId: selectedPrescription.branchId,
             createdAt: selectedPrescription.createdAt,
             updatedAt: selectedPrescription.updatedAt,
         }
