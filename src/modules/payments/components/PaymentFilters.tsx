@@ -11,19 +11,21 @@ import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentTypes"
 import type { PaymentStatus, PaymentMethod } from "../types/paymentTypes";
 
 // ==============================
-// 🔹 Tipagens
+// 🔹 Tipagens Atualizadas
 // ==============================
 interface PaymentFiltersProps {
     status: PaymentStatus | '';
     method: PaymentMethod | '';
     dateRange: { start: string; end: string };
+    clientSearch: string; // 🆕 NOVO
     onStatusChange: (status: PaymentStatus | '') => void;
     onMethodChange: (method: PaymentMethod | '') => void;
     onDateChange: (dateRange: { start: string; end: string }) => void;
+    onClientSearchChange: (clientSearch: string) => void; // 🆕 NOVO
 }
 
 // ==============================
-// 🔹 Componente Principal
+// 🔹 Componente Principal Atualizado
 // ==============================
 export default function PaymentFilters({
     status,
@@ -32,6 +34,7 @@ export default function PaymentFilters({
     onStatusChange,
     onMethodChange,
     onDateChange,
+    onClientSearchChange, // 🆕 NOVO
 }: PaymentFiltersProps) {
 
     // Limpar todos os filtros
@@ -39,9 +42,10 @@ export default function PaymentFilters({
         onStatusChange('');
         onMethodChange('');
         onDateChange({ start: '', end: '' });
+        onClientSearchChange(''); // 🆕 LIMPAR BUSCA POR CLIENTE
     };
 
-    // Verificar se há algum filtro ativo
+    // Verificar se há algum filtro ativo (atualizado)
     const hasActiveFilters = status || method || dateRange.start || dateRange.end;
 
     return (
@@ -88,13 +92,13 @@ export default function PaymentFilters({
                     )}
                 </Box>
 
-                {/* Filtros em grid responsivo */}
+                {/* Filtros em grid responsivo ATUALIZADO */}
                 <Box sx={{
                     display: 'grid',
                     gridTemplateColumns: {
                         xs: '1fr',
                         sm: '1fr 1fr',
-                        md: '140px 180px 1fr'
+                        md: '140px 180px 1fr 1fr' // 🆕 MAIS UMA COLUNA
                     },
                     gap: 2,
                     alignItems: 'start'

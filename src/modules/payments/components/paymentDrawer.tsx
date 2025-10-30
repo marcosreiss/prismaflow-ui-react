@@ -30,6 +30,7 @@ interface PaymentDrawerProps {
     open: boolean;
     mode: "create" | "edit" | "view";
     payment?: PaymentDetails | null;
+    paymentId: number | null; // ✅ Agora passa o ID em vez do objeto completo
     onClose: () => void;
     onEdit: () => void;
     onDelete: (payment: Payment) => void;
@@ -229,10 +230,8 @@ export default function PaymentDrawer({
 
                         {/* Dados do pagamento */}
                         <PaymentView
-                            payment={currentPayment}
-                            onProcessInstallment={(installmentId, paidAmount) =>
-                                onProcessInstallment(currentPayment.id, installmentId, paidAmount)
-                            }
+                            paymentId={payment?.id} // ✅ Passa o ID para buscar da API
+                        // onProcessInstallment={onProcessInstallment}
                         />
 
                         <Divider sx={{ my: 3 }} />

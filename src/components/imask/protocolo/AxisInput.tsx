@@ -1,86 +1,216 @@
-import React from "react";
-import TextField, { type TextFieldProps } from "@mui/material/TextField";
+import React, { useEffect, useState } from "react";
+import {
+    Autocomplete,
+    TextField,
+    createFilterOptions,
+    type AutocompleteInputChangeReason,
+} from "@mui/material";
 
-type Props = Omit<TextFieldProps, "value" | "onChange"> & {
-    value: string;
-    onChange: (v: string) => void;
+type Props = {
+    value: string | null;
+    onChange: (v: string | null) => void;
+    label?: string;
+    placeholder?: string;
+    helperText?: string; // 👈 Prop para mensagem customizada
+    size?: "small" | "medium";
+    disabled?: boolean;
+    required?: boolean;
+    onValidationChange?: (isValid: boolean) => void;
 };
 
-function isZeroString(v: string): boolean {
-    if (!v) return false;
-    const normalized = v.replace(/[^\d]/g, "");
-    return normalized === "0";
-}
+type ValidationResult = {
+    isValid: boolean;
+    message: string;
+};
 
-export default function AxisInput({ value, onChange, ...rest }: Props) {
-    const inputRef = React.useRef<HTMLInputElement | null>(null);
-    const [display, setDisplay] = React.useState(value);
+const MIN_VALUE = 0;
+const MAX_VALUE = 180;
 
-    React.useEffect(() => {
-        if (isZeroString(value)) {
-            setDisplay("");
-            return;
+// Gera lista de opções de 0° a 180°
+const AXIS_OPTIONS = Array.from({ length: 181 }, (_, i) => `${i}°`);
+
+const filterOptions = createFilterOptions<string>({
+    matchFrom: "any",
+    limit: 100,
+});
+
+const parseAxisValue = (input: string): number => {
+    const digits = input.replace(/[^\d]/g, "");
+    return parseInt(digits, 10);
+};
+
+const formatAxisValue = (value: number): string => {
+    return `${value}°`;
+};
+
+const validateAxisValue = (
+    value: string,
+    touched: boolean,
+    required: boolean
+): ValidationResult => {
+    // Campo vazio
+    if (!value || value.trim() === "") {
+        if (!required) {
+            return { isValid: true, message: "" };
         }
-        setDisplay(value);
+        return {
+            isValid: false,
+            message: touched ? "Campo obrigatório" : "",
+        };
+    }
+
+    const parsed = parseAxisValue(value);
+
+    // Não é número
+    if (isNaN(parsed)) {
+        return { isValid: false, message: touched ? "Valor inválido" : "" };
+    }
+
+    // Fora do range
+    if (parsed < MIN_VALUE || parsed > MAX_VALUE) {
+        return {
+            isValid: false,
+            message: touched
+                ? `Valor deve estar entre ${MIN_VALUE}° e ${MAX_VALUE}°`
+                : "",
+        };
+    }
+
+    return { isValid: true, message: "" };
+};
+
+export default function AxisInputAutocomplete({
+    value,
+    onChange,
+    label = "Eixo (°)",
+    placeholder = "0°",
+    size = "small",
+    helperText, // 👈 Recebe helperText customizado
+    disabled = false,
+    required = false,
+    onValidationChange,
+}: Props) {
+
+
+    const [inputValue, setInputValue] = useState(value ?? "");
+    const [touched, setTouched] = useState(false);
+
+    useEffect(() => {
+        setInputValue(value ?? "");
     }, [value]);
 
-    const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const raw = e.target.value.replace(/º/g, "");
-        const digits = raw.replace(/[^0-9]/g, "");
+    const validation = validateAxisValue(inputValue, touched, required);
 
-        // Campo vazio
-        if (!raw.trim()) {
-            setDisplay("");
-            onChange("");
-            return;
+    // Notifica validação ao pai
+    useEffect(() => {
+        onValidationChange?.(validation.isValid);
+    }, [validation.isValid, onValidationChange]);
+
+    // ✅ LÓGICA: Prioriza helperText customizado quando desabilitado
+    const getHelperText = (): string => {
+        // 1. Se campo desabilitado E helperText foi passado → usa helperText
+        if (disabled && helperText) {
+            return helperText;
         }
 
-        // Digitação parcial
-        if (!digits) {
-            setDisplay(raw);
-            onChange(raw);
-            return;
+        // 2. Se campo habilitado E tem erro de validação → mostra erro
+        if (!disabled && touched && !validation.isValid) {
+            return validation.message;
         }
 
-        let num = parseInt(digits, 10);
-        num = Math.max(0, Math.min(180, num));
-
-        if (num === 0) {
-            setDisplay("");
-            onChange("");
-            return;
-        }
-
-        const formatted = `${num}º`;
-        setDisplay(formatted);
-        onChange(formatted);
-
-        // ⚡ força cursor antes do símbolo "º"
-        requestAnimationFrame(() => {
-            const el = inputRef.current;
-            if (el) {
-                const pos = formatted.length - 1; // antes do "º"
-                el.setSelectionRange(pos, pos);
-            }
-        });
+        // 3. Caso contrário → vazio
+        return "";
     };
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        // seleciona tudo ao focar
-        e.target.select();
+    const handleInputChange = (
+        _event: React.SyntheticEvent,
+        newInputValue: string,
+        reason: AutocompleteInputChangeReason
+    ) => {
+        if (reason === "clear" || newInputValue === "") {
+            setInputValue("");
+            onChange(null);
+            return;
+        }
+
+        if (reason === "input") {
+            const digits = newInputValue.replace(/[^\d]/g, "");
+
+            if (!digits) {
+                setInputValue("");
+                onChange(null);
+                return;
+            }
+
+            // Limita entre 0 e 180
+            const num = Math.min(Math.max(parseInt(digits, 10), MIN_VALUE), MAX_VALUE);
+            const formatted = formatAxisValue(num);
+
+            setInputValue(formatted);
+            onChange(formatted);
+        }
+
+        if (reason === "reset" || reason === "selectOption") {
+            setInputValue(newInputValue);
+            onChange(newInputValue);
+        }
+    };
+
+    const handleChange = (
+        _event: React.SyntheticEvent,
+        newValue: string | null
+    ) => {
+        setInputValue(newValue ?? "");
+        onChange(newValue);
+        setTouched(true);
+    };
+
+    const handleBlur = () => {
+        setTouched(true);
+
+        // Formata valor ao perder foco
+        if (inputValue && inputValue.trim() !== "") {
+            const parsed = parseAxisValue(inputValue);
+
+            if (!isNaN(parsed) && parsed >= MIN_VALUE && parsed <= MAX_VALUE) {
+                const formatted = formatAxisValue(parsed);
+                setInputValue(formatted);
+                onChange(formatted);
+            }
+        }
     };
 
     return (
-        <TextField
-            {...rest}
-            inputRef={inputRef}
-            value={display}
+        <Autocomplete
+            freeSolo
+            autoSelect
+            disableClearable={false}
+            size={size}
+            disabled={disabled}
+            options={AXIS_OPTIONS}
+            filterOptions={filterOptions}
+            isOptionEqualToValue={(option, val) => option === val}
+            value={value ?? ""}
+            inputValue={inputValue}
+            onInputChange={handleInputChange}
             onChange={handleChange}
-            onFocus={handleFocus}
-            inputProps={{
-                inputMode: "numeric",
-                placeholder: "0º",
-            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label={label}
+                    placeholder={placeholder}
+                    size={size}
+                    required={required}
+                    disabled={disabled}
+                    onBlur={handleBlur}
+                    error={!disabled && touched && !validation.isValid} // 👈 Erro só se habilitado
+                    helperText={getHelperText()} // 👈 Usa função customizada
+                    inputProps={{
+                        ...params.inputProps,
+                        inputMode: "numeric",
+                    }}
+                />
+            )}
         />
     );
 }

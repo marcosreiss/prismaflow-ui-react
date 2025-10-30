@@ -32,7 +32,7 @@ interface UsePaymentDrawerControllerProps {
     onUpdated: (payment: Payment) => void;
     onEdit: () => void;
     onDelete: (payment: Payment) => void;
-    onUpdateStatus: (paymentId: number, status: PaymentStatus) => void; // Mude string para PaymentStatus
+    onUpdateStatus: (paymentId: number, status: PaymentStatus) => void;
     onProcessInstallment: (paymentId: number, installmentId: number, paidAmount: number) => void;
     onCreateNew: () => void;
 }
@@ -68,10 +68,11 @@ export function usePaymentDrawerController({
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
     const [showInstallments, setShowInstallments] = useState(false);
 
+    // ✅ TODAS as hooks no topo
     const { mutateAsync: createPayment, isPending: creating } = useCreatePayment();
     const { mutateAsync: updatePayment, isPending: updating } = useUpdatePayment();
-    const { mutateAsync: updateStatus, isPending: updatingStatus } = useUpdatePaymentStatus();
-    const { mutateAsync: processInstallment, isPending: processingInstallment } = useProcessPaymentInstallment();
+    const { mutateAsync: updateStatus } = useUpdatePaymentStatus();
+    const { mutateAsync: processInstallment } = useProcessPaymentInstallment();
 
     // ==========================
     // 🔹 Formulário
@@ -79,8 +80,8 @@ export function usePaymentDrawerController({
     const methods = useForm<PaymentFormValues>({
         defaultValues: {
             saleId: 0,
-            method: "MONEY" as PaymentMethod,
-            status: "PENDING" as PaymentStatus,
+            method: "MONEY",
+            status: "PENDING",
             total: 0,
             discount: 0,
             downPayment: 0,
@@ -89,19 +90,14 @@ export function usePaymentDrawerController({
         },
     });
 
-    const { watch, setValue, reset } = methods;
+    const { watch, setValue, reset, handleSubmit } = methods;
 
     // ==========================
-    // 🔹 Vendas (autocomplete) - CORRIGIDO
+    // 🔹 Vendas (autocomplete)
     // ==========================
-    const { data: saleData } = useGetSales(
-        1,     // page
-        100,   // limit
-        undefined // clientId (opcional)
-    );
+    const { data: saleData } = useGetSales(1, 100);
 
     const saleOptions = useMemo(() => {
-        // Baseado na estrutura do SalesResponse
         if (saleData?.data?.content) {
             return saleData.data.content;
         }
@@ -121,14 +117,11 @@ export function usePaymentDrawerController({
                 discount: payment.discount,
                 downPayment: payment.downPayment,
                 installmentsTotal: payment.installmentsTotal || 0,
-                firstDueDate: payment.firstDueDate || new Date().toISOString().split('T')[0],
+                firstDueDate: payment.firstDueDate ? payment.firstDueDate.split('T')[0] : new Date().toISOString().split('T')[0],
             });
 
-            // Encontrar a venda correspondente
             const sale = saleOptions.find((s: Sale) => s.id === payment.saleId);
             setSelectedSale(sale || null);
-
-            // Mostrar campos de parcelamento se necessário
             setShowInstallments(payment.method === "INSTALLMENT");
         } else if (mode === "create") {
             reset({
@@ -156,27 +149,23 @@ export function usePaymentDrawerController({
     // 🔹 Cálculos automáticos
     // ==========================
     useEffect(() => {
-        // Mostrar/ocultar campos de parcelamento
         setShowInstallments(method === "INSTALLMENT");
 
         if (method === "INSTALLMENT") {
-            // Calcular valor total das parcelas (total - entrada - desconto)
             const installmentsValue = total - discount - downPayment;
             if (installmentsValue > 0) {
                 setValue("installmentsTotal", installmentsValue);
             }
         } else {
-            // Resetar campos de parcelamento para outros métodos
             setValue("downPayment", 0);
             setValue("installmentsTotal", 0);
         }
     }, [method, total, discount, downPayment, setValue]);
 
-
     // ==========================
     // 🔹 Submit
     // ==========================
-    const handleSubmit = methods.handleSubmit(async (values) => {
+    const onSubmit = handleSubmit(async (values) => {
         try {
             if (values.total <= 0) {
                 addNotification("Valor total deve ser maior que zero.", "error");
@@ -189,7 +178,7 @@ export function usePaymentDrawerController({
             }
 
             if (mode === "create") {
-                // Payload para criação
+                // ✅ Payload corrigido
                 const payload: CreatePaymentPayload = {
                     saleId: values.saleId,
                     method: values.method,
@@ -197,22 +186,15 @@ export function usePaymentDrawerController({
                     total: Math.max(0, values.total),
                     discount: Math.max(0, values.discount),
                     downPayment: Math.max(0, values.downPayment),
-                    installmentsTotal: Math.max(0, values.installmentsTotal),
+                    installmentsTotal: values.method === "INSTALLMENT" ? Math.max(0, values.installmentsTotal) : 0,
                     paidAmount: 0,
                     installmentsPaid: 0,
                     branchId: "br_01j9xyz72h",
                     tenantId: "ten_01j8b32v7x",
-                    ...(values.method === "INSTALLMENT" && {
-                        firstDueDate: values.firstDueDate ? new Date(values.firstDueDate).toISOString() : undefined,
+                    ...(values.method === "INSTALLMENT" && values.firstDueDate && {
+                        firstDueDate: new Date(values.firstDueDate).toISOString(),
                     }),
-                };
-
-                // Para métodos que não são INSTALLMENT, ajustar campos
-                if (values.method !== "INSTALLMENT") {
-                    payload.downPayment = 0;
-                    payload.installmentsTotal = 0;
-                    payload.firstDueDate = undefined;
-                }
+                } as CreatePaymentPayload;
 
                 const res = await createPayment(payload);
                 if (res?.data) {
@@ -220,31 +202,24 @@ export function usePaymentDrawerController({
                     addNotification("Pagamento criado com sucesso!", "success");
                 }
             } else if (mode === "edit" && payment) {
-                // Payload para atualização - APENAS campos permitidos
                 const updatePayload: UpdatePaymentPayload = {
                     method: values.method,
                     status: values.status,
                     total: Math.max(0, values.total),
                     discount: Math.max(0, values.discount),
-                    // NÃO incluir: id, saleId, branchId, tenantId
                 };
 
-                // Apenas adicionar campos de parcelamento se for INSTALLMENT
                 if (values.method === "INSTALLMENT") {
                     updatePayload.downPayment = Math.max(0, values.downPayment);
                     updatePayload.installmentsTotal = Math.max(0, values.installmentsTotal);
-                    updatePayload.firstDueDate = values.firstDueDate ? new Date(values.firstDueDate).toISOString() : undefined;
+                    if (values.firstDueDate) {
+                        updatePayload.firstDueDate = new Date(values.firstDueDate).toISOString();
+                    }
                 } else {
-                    // Para outros métodos, garantir valores zerados
                     updatePayload.downPayment = 0;
                     updatePayload.installmentsTotal = 0;
                     updatePayload.firstDueDate = undefined;
                 }
-
-                // Remover campos que são 0
-                if (updatePayload.discount === 0) delete updatePayload.discount;
-                if (updatePayload.downPayment === 0) delete updatePayload.downPayment;
-                if (updatePayload.installmentsTotal === 0) delete updatePayload.installmentsTotal;
 
                 const res = await updatePayment({
                     id: payment.id,
@@ -257,20 +232,18 @@ export function usePaymentDrawerController({
             }
         } catch (error) {
             const axiosErr = error as AxiosError<ApiResponse<null>>;
-            const message =
-                axiosErr.response?.data?.message ?? "Erro ao salvar pagamento.";
+            const message = axiosErr.response?.data?.message ?? "Erro ao salvar pagamento.";
             addNotification(message, "error");
         }
     });
 
     // ==========================
-    // 🔹 Handlers específicos para pagamentos
+    // 🔹 Handlers específicos para pagamentos - CORRIGIDOS
     // ==========================
     const handleSaleChange = (sale: Sale | null) => {
         setSelectedSale(sale);
         if (sale) {
             setValue("saleId", sale.id);
-            // Se estiver criando, preencher o total com o valor da venda
             if (mode === "create") {
                 setValue("total", sale.total);
             }
@@ -282,7 +255,8 @@ export function usePaymentDrawerController({
         }
     };
 
-    const handleMethodChange = (methodValue: PaymentMethod) => { // Mude string para PaymentMethod
+    const handleMethodChange = (methodValue: PaymentMethod) => {
+        setValue("method", methodValue);
         setShowInstallments(methodValue === "INSTALLMENT");
     };
 
@@ -293,22 +267,14 @@ export function usePaymentDrawerController({
                     id: payment.id,
                     status: statusValue
                 });
-                addNotification("Status do pagamento atualizado!", "success");
 
-                // 🔄 ATUALIZAR O PAYMENT LOCAL COM OS NOVOS DADOS
                 if (res?.data) {
-                    const updatedPayment = {
-                        ...payment,
-                        ...res.data, // Usa os dados atualizados da resposta
-                        status: statusValue
-                    };
-                    onUpdated(updatedPayment as Payment);
+                    addNotification("Status do pagamento atualizado!", "success");
+                    onUpdateStatus(payment.id, statusValue);
                 }
-
             } catch (error) {
                 const axiosErr = error as AxiosError<ApiResponse<null>>;
-                const message =
-                    axiosErr.response?.data?.message ?? "Erro ao atualizar status.";
+                const message = axiosErr.response?.data?.message ?? "Erro ao atualizar status.";
                 addNotification(message, "error");
             }
         }
@@ -324,13 +290,10 @@ export function usePaymentDrawerController({
                 paidAmount
             });
             addNotification("Parcela processada com sucesso!", "success");
-
-            // Chamar callback para atualizar a UI
             onProcessInstallment(payment.id, installmentId, paidAmount);
         } catch (error) {
             const axiosErr = error as AxiosError<ApiResponse<null>>;
-            const message =
-                axiosErr.response?.data?.message ?? "Erro ao processar parcela.";
+            const message = axiosErr.response?.data?.message ?? "Erro ao processar parcela.";
             addNotification(message, "error");
         }
     };
@@ -341,13 +304,11 @@ export function usePaymentDrawerController({
     return {
         // form
         methods,
-        handleSubmit,
+        handleSubmit: onSubmit,
 
         // estados
         creating,
         updating,
-        updatingStatus,
-        processingInstallment,
         selectedSale,
         showInstallments,
 
@@ -356,7 +317,7 @@ export function usePaymentDrawerController({
         mode,
         payment,
 
-        // callbacks vindos do drawer/pai
+        // callbacks
         onEdit,
         onDelete,
         onUpdateStatus,

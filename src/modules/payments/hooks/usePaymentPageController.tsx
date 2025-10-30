@@ -1,99 +1,150 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/utils/apiResponse";
 import { useNotification } from "@/context/NotificationContext";
 import { useGetPayments, useDeletePayment, useUpdatePaymentStatus, useProcessPaymentInstallment } from "./usePayments";
-import type { Payment, PaymentDetails, PaymentStatus, PaymentListItem, PaymentMethod } from "../types/paymentTypes";
+import type { Payment, PaymentDetails, PaymentStatus, PaymentListItem, PaymentFilters } from "../types/paymentTypes";
 
 // ==============================
-// 🔹 Hook principal
+// 🔹 Hook principal - Versão Melhorada
 // ==============================
 export function usePaymentPageController() {
     // ==========================
     // 🔹 Estados locais
     // ==========================
     const [page, setPage] = useState(0);
-    const [limit, setLimit] = useState(5);
+    const [limit, setLimit] = useState(10); // Aumentado para melhor UX
     const [search, setSearch] = useState("");
 
+    // Estados de UI
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [drawerMode, setDrawerMode] = useState<"create" | "edit" | "view">(
-        "view"
-    );
+    const [drawerMode, setDrawerMode] = useState<"create" | "edit" | "view">("view");
     const [selectedPayment, setSelectedPayment] = useState<PaymentDetails | null>(null);
 
+    // Estados de confirmação
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
     const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
-    // 🔄 NOVOS ESTADOS DE FILTRO
-    const [statusFilter, setStatusFilter] = useState<PaymentStatus | ''>('');
-    const [methodFilter, setMethodFilter] = useState<PaymentMethod | ''>('');
-    const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({
-        start: '',
-        end: ''
+    // 🔄 Estados de filtro centralizados
+    // No usePaymentPageController.tsx - ATUALIZE:
+
+    // 🔄 Estados de filtro centralizados (ATUALIZADO)
+    const [filters, setFilters] = useState<PaymentFilters>({
+        status: undefined,
+        method: undefined,
+        startDate: '',
+        endDate: '',
+        clientSearch: '', // 🆕 NOVO
     });
 
+    const queryParams = useMemo(() => ({
+        page: page + 1,
+        limit,
+        ...(filters.status && { status: filters.status }),
+        ...(filters.method && { method: filters.method }),
+        ...(filters.startDate && { startDate: filters.startDate }),
+        ...(filters.endDate && { endDate: filters.endDate }),
+        ...(filters.clientSearch && { clientName: filters.clientSearch }), // Só essa linha para nome do cliente!
+    }), [page, limit, filters]);
+
+
+    // 🔄 Limpar filtros (ATUALIZADO)
+    const handleClearFilters = useCallback(() => {
+        setFilters({
+            status: undefined,
+            method: undefined,
+            startDate: '',
+            endDate: '',
+            clientSearch: '', // 🆕 NOVO
+        });
+        setSearch('');
+        setPage(0);
+    }, []);
+
     const { addNotification } = useNotification();
+
+    // const queryParams = useMemo(() => ({
+    //     page: page + 1,
+    //     limit,
+    //     ...(search && { search }),
+    //     ...(filters.status && { status: filters.status }),
+    //     ...(filters.method && { method: filters.method }),
+    //     ...(filters.startDate && { startDate: filters.startDate }),
+    //     ...(filters.endDate && { endDate: filters.endDate })
+    // }), [page, limit, search, filters]);
 
     // ==========================
     // 🔹 Hooks de dados
     // ==========================
-    const { data, isLoading, isFetching, refetch } = useGetPayments({
-        page: page + 1,
-        limit,
-        search,
-        status: statusFilter ? statusFilter : undefined,
-        method: methodFilter ? methodFilter : undefined,
-        startDate: dateFilter.start ? dateFilter.start : undefined,
-        endDate: dateFilter.end ? dateFilter.end : undefined
-    });
+    const {
+        data,
+        isLoading,
+        isFetching,
+        refetch,
+        error
+    } = useGetPayments(queryParams);
 
     const deletePayment = useDeletePayment();
     const updatePaymentStatus = useUpdatePaymentStatus();
     const processPaymentInstallment = useProcessPaymentInstallment();
 
     // ==========================
-    // 🔹 Drawer handlers
+    // 🔹 Notificações de erro
     // ==========================
-    const handleOpenDrawer = (
+    useEffect(() => {
+        if (error) {
+            const axiosErr = error as AxiosError<ApiResponse<null>>;
+            const message = axiosErr.response?.data?.message ?? "Erro ao carregar pagamentos.";
+            addNotification(message, "error");
+        }
+    }, [error, addNotification]);
+
+    // ==========================
+    // 🔹 Drawer handlers (otimizados com useCallback)
+    // ==========================
+    const handleOpenDrawer = useCallback((
         mode: "create" | "edit" | "view",
         payment?: Payment | PaymentListItem | null
     ) => {
         setDrawerMode(mode);
         setSelectedPayment(payment as PaymentDetails ?? null);
         setDrawerOpen(true);
-    };
+    }, []);
 
-    const handleCloseDrawer = () => {
+    const handleCloseDrawer = useCallback(() => {
         setDrawerOpen(false);
-        setSelectedPayment(null);
-    };
+        // Pequeno delay para animação do drawer fechar
+        setTimeout(() => {
+            setSelectedPayment(null);
+        }, 300);
+    }, []);
 
     // ==========================
     // 🔹 Drawer: ações internas
     // ==========================
-    const handleDrawerEdit = () => {
+    const handleDrawerEdit = useCallback(() => {
         if (!selectedPayment) return;
         handleOpenDrawer("edit", selectedPayment);
-    };
+    }, [selectedPayment, handleOpenDrawer]);
 
-    const handleDrawerDelete = (payment: Payment | PaymentListItem) => {
+    const handleDrawerDelete = useCallback((payment: Payment | PaymentListItem) => {
         setSelectedPayment(payment as PaymentDetails);
         setConfirmDelete(true);
-    };
+    }, []);
 
-    const handleDrawerCreateNew = () => {
+    const handleDrawerCreateNew = useCallback(() => {
         setSelectedPayment(null);
         handleOpenDrawer("create");
-    };
+    }, [handleOpenDrawer]);
 
     // ==========================
     // 🔹 Exclusão individual
     // ==========================
     const handleDelete = async () => {
         if (!selectedPayment) return;
+
         try {
             const res = await deletePayment.mutateAsync(selectedPayment.id);
             addNotification(res.message, "success");
@@ -102,8 +153,7 @@ export function usePaymentPageController() {
             refetch();
         } catch (err) {
             const axiosErr = err as AxiosError<ApiResponse<null>>;
-            const message =
-                axiosErr.response?.data?.message ?? "Erro ao excluir pagamento.";
+            const message = axiosErr.response?.data?.message ?? "Erro ao excluir pagamento.";
             addNotification(message, "error");
         }
     };
@@ -113,13 +163,15 @@ export function usePaymentPageController() {
     // ==========================
     const handleUpdateStatus = async (paymentId: number, status: PaymentStatus) => {
         try {
-            const res = await updatePaymentStatus.mutateAsync({ id: paymentId, status: status });
+            const res = await updatePaymentStatus.mutateAsync({
+                id: paymentId,
+                status
+            });
             addNotification(res.message, "success");
             refetch();
         } catch (err) {
             const axiosErr = err as AxiosError<ApiResponse<null>>;
-            const message =
-                axiosErr.response?.data?.message ?? "Erro ao atualizar status.";
+            const message = axiosErr.response?.data?.message ?? "Erro ao atualizar status.";
             addNotification(message, "error");
         }
     };
@@ -127,7 +179,11 @@ export function usePaymentPageController() {
     // ==========================
     // 🔹 Processamento de parcela
     // ==========================
-    const handleProcessInstallment = async (paymentId: number, installmentId: number, paidAmount: number) => {
+    const handleProcessInstallment = async (
+        paymentId: number,
+        installmentId: number,
+        paidAmount: number
+    ) => {
         try {
             const res = await processPaymentInstallment.mutateAsync({
                 paymentId,
@@ -138,8 +194,7 @@ export function usePaymentPageController() {
             refetch();
         } catch (err) {
             const axiosErr = err as AxiosError<ApiResponse<null>>;
-            const message =
-                axiosErr.response?.data?.message ?? "Erro ao processar parcela.";
+            const message = axiosErr.response?.data?.message ?? "Erro ao processar parcela.";
             addNotification(message, "error");
         }
     };
@@ -147,51 +202,139 @@ export function usePaymentPageController() {
     // ==========================
     // 🔹 Seleção de linhas
     // ==========================
-    const handleSelectRow = (id: string | number, checked: boolean) => {
-        setSelectedIds((prev) =>
-            checked ? [...prev, id as number] : prev.filter((i) => i !== id)
+    const handleSelectRow = useCallback((id: string | number, checked: boolean) => {
+        setSelectedIds(prev =>
+            checked
+                ? [...prev, id as number]
+                : prev.filter(i => i !== id)
         );
-    };
+    }, []);
 
-    const handleSelectAll = (
+    const handleSelectAll = useCallback((
         checked: boolean,
         currentPageIds: (string | number)[]
     ) => {
         setSelectedIds(checked ? (currentPageIds as number[]) : []);
-    };
+    }, []);
 
     // ==========================
-    // 🔹 Exclusão em massa
+    // 🔹 Exclusão em massa otimizada
     // ==========================
     const handleDeleteSelected = async () => {
+        if (selectedIds.length === 0) return;
+
         setConfirmDeleteSelected(false);
         setDeletingIds(selectedIds);
 
-        for (const id of selectedIds) {
-            try {
-                const res = await deletePayment.mutateAsync(id);
-                addNotification(res.message, "success");
-            } catch {
-                addNotification(`Erro ao excluir pagamento ${id}`, "error");
-            }
-        }
+        try {
+            // Executa todas as exclusões em paralelo
+            const deletePromises = selectedIds.map(id =>
+                deletePayment.mutateAsync(id)
+            );
 
-        setDeletingIds([]);
-        setSelectedIds([]);
-        refetch();
+            const results = await Promise.allSettled(deletePromises);
+
+            // Processa resultados
+            let successCount = 0;
+            results.forEach((result, index) => {
+                if (result.status === 'fulfilled') {
+                    successCount++;
+                    addNotification(result.value.message, "success");
+                } else {
+                    addNotification(`Erro ao excluir pagamento ${selectedIds[index]}`, "error");
+                }
+            });
+
+            if (successCount > 0) {
+                addNotification(`${successCount} pagamento(s) excluído(s) com sucesso`, "success");
+            }
+
+        } catch (err) {
+            const axiosErr = err as AxiosError<ApiResponse<null>>;
+            const message = axiosErr?.response?.data?.message ?? "Erro ao excluir pagamentos selecionados";
+            addNotification(message, "error");
+        } finally {
+            setDeletingIds([]);
+            setSelectedIds([]);
+            refetch();
+        }
     };
+
+    // ==========================
+    // 🔹 Filtros otimizados
+    // ==========================
+    const handleFilterChange = useCallback((newFilters: Partial<PaymentFilters>) => {
+        setFilters(prev => ({ ...prev, ...newFilters }));
+        setPage(0); // Reset para primeira página ao filtrar
+    }, []);
+
+    // const handleClearFilters = useCallback(() => {
+    //     setFilters({
+    //         status: undefined,
+    //         method: undefined,
+    //         startDate: '',
+    //         endDate: ''
+    //     });
+    //     setSearch('');
+    //     setPage(0);
+    // }, []);
 
     // ==========================
     // 🔹 Dados derivados
     // ==========================
-    const payments = data?.data?.content ?? [];
+
+
+    const payments: PaymentDetails[] = useMemo(() => {
+        if (!data?.data?.content) return [];
+
+        return data.data.content.map((item: PaymentListItem) => {
+            // ✅ Estratégia flexível para clientName
+            const clientName = item.sale?.client?.name || "Cliente não informado";
+            // ✅ Mapeia PaymentListItem para PaymentDetails
+            return {
+                // Campos do PaymentListItem
+                id: item.id,
+                saleId: item.saleId,
+                method: item.method,
+                status: item.status,
+                total: item.total,
+                clientName,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+
+                // Campos padrão que não existem em PaymentListItem
+                discount: 0,
+                downPayment: 0,
+                installmentsTotal: null,
+                paidAmount: 0,
+                installmentsPaid: 0,
+                lastPaymentAt: null,
+                firstDueDate: null,
+                isActive: true,
+                branchId: "",
+                tenantId: "",
+                installments: [],
+
+                // Campo sale opcional
+                sale: undefined
+            };
+        });
+    }, [data?.data?.content]);
+
     const total = data?.data?.totalElements ?? 0;
+
+    // ==========================
+    // 🔹 Indicadores de loading
+    // ==========================
+    const isDeleting = deletePayment.isPending;
+    const isUpdatingStatus = updatePaymentStatus.isPending;
+    const isProcessingInstallment = processPaymentInstallment.isPending;
 
     // ==========================
     // 🔹 Retorno do controller
     // ==========================
     return {
-        // estados base
+        // Estados base
         page,
         limit,
         search,
@@ -202,19 +345,18 @@ export function usePaymentPageController() {
         selectedIds,
         confirmDeleteSelected,
         deletingIds,
+        filters,
 
-        // 🔄 NOVOS ESTADOS DE FILTRO
-        statusFilter,
-        methodFilter,
-        dateFilter,
-
-        // dados de API
+        // Dados de API
         payments,
-        total,
         isLoading,
+        total,
         isFetching,
+        isDeleting,
+        isUpdatingStatus,
+        isProcessingInstallment,
 
-        // mutações / helpers
+        // Setters básicos
         setPage,
         setLimit,
         setSearch,
@@ -224,11 +366,11 @@ export function usePaymentPageController() {
         setConfirmDelete,
         setConfirmDeleteSelected,
 
-        // 🔄 NOVAS FUNÇÕES DE FILTRO
-        setStatusFilter,
-        setMethodFilter,
-        setDateFilter,
+        // Handlers de filtro
+        handleFilterChange,
+        handleClearFilters,
 
+        // Handlers principais
         handleOpenDrawer,
         handleCloseDrawer,
         handleDelete,
@@ -236,16 +378,20 @@ export function usePaymentPageController() {
         handleSelectAll,
         handleDeleteSelected,
         refetch,
-        deletePayment,
-        addNotification,
 
-        // 🔹 Ações específicas para pagamentos
+        // Ações específicas para pagamentos
         handleUpdateStatus,
         handleProcessInstallment,
 
-        // 🔹 Ações passadas ao Drawer
+        // Ações do drawer
         handleDrawerEdit,
         handleDrawerDelete,
         handleDrawerCreateNew,
+
+        // Utilitários
+        addNotification,
+        hasSelectedItems: selectedIds.length > 0,
+        selectedCount: selectedIds.length,
+        isAnyMutationPending: isDeleting || isUpdatingStatus || isProcessingInstallment
     };
 }

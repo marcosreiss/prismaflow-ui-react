@@ -4,7 +4,7 @@ import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFDateToolbar from "../components/PFDateToolbar";
 
 import ExpiringPrescriptionMessageModal from "../components/ExpiringPrescriptionMessageModal";
-import PrescriptionModal from "../components/PrescriptionModal";
+import PrescriptionModal from "../components/prescriptionModal/PrescriptionModal";
 
 import type {
     ExpiringPrescription,

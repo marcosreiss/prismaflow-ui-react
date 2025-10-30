@@ -12,7 +12,7 @@ import {
 import { User, Plus, XCircle } from "lucide-react";
 import dayjs from "dayjs";
 
-import PrescriptionModal from "@/modules/clients/components/PrescriptionModal";
+import PrescriptionModal from "@/modules/clients/components/prescriptionModal/PrescriptionModal";
 import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import { useGetClients } from "@/modules/clients/hooks/useClient";

@@ -1,3 +1,5 @@
+// components/imask/protocolo/PellicleInput.tsx
+
 import React, { useEffect, useState } from "react";
 import { Autocomplete, TextField, createFilterOptions } from "@mui/material";
 
@@ -6,7 +8,6 @@ type Props = {
     onChange: (v: string | null) => void;
     label?: string;
     placeholder?: string;
-    helperText?: string; // 👈 NOVA PROP
     size?: "small" | "medium";
     disabled?: boolean;
     required?: boolean;
@@ -18,14 +19,22 @@ type ValidationResult = {
     message: string;
 };
 
-const MIN_VALUE = 25;
-const MAX_VALUE = 40;
-const STEP = 0.5;
+// Formato com duas casas decimais (padrão pt-BR)
+const formatter = new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
 
-const DNP_OPTIONS = (() => {
+// RN05: Película sempre positiva (0 a 4)
+const MIN_VALUE = 0;
+const MAX_VALUE = 4;
+const STEP = 0.25;
+
+// Gera opções de 0.00 até 4.00 com passo de 0.25
+const PELLICLE_OPTIONS = (() => {
     const options: string[] = [];
     for (let i = MIN_VALUE; i <= MAX_VALUE; i += STEP) {
-        options.push(i.toFixed(1).replace(".", ","));
+        options.push(formatter.format(i));
     }
     return options;
 })();
@@ -35,20 +44,20 @@ const filterOptions = createFilterOptions<string>({
     limit: 100,
 });
 
-const parseDnpValue = (input: string): number => {
+const parsePellicleValue = (input: string): number => {
     const normalized = input.replace(",", ".").replace(/[^\d.]/g, "");
     return parseFloat(normalized);
 };
 
-const formatDnpValue = (value: number): string => {
-    return value.toFixed(1).replace(".", ",");
+const formatPellicleValue = (value: number): string => {
+    return formatter.format(value);
 };
 
 const roundToStep = (value: number, step: number): number => {
     return Math.round(value / step) * step;
 };
 
-const validateDnpValue = (
+const validatePellicleValue = (
     value: string,
     touched: boolean,
     required: boolean
@@ -64,30 +73,30 @@ const validateDnpValue = (
         };
     }
 
-    const parsed = parseDnpValue(value);
+    const parsed = parsePellicleValue(value);
 
     // Não é número
     if (isNaN(parsed)) {
         return { isValid: false, message: touched ? "Valor inválido" : "" };
     }
 
-    // Fora do range
+    // RN05: Deve ser positivo (>= 0) e <= 4
     if (parsed < MIN_VALUE || parsed > MAX_VALUE) {
         return {
             isValid: false,
             message: touched
-                ? `Valor deve estar entre ${formatDnpValue(MIN_VALUE)} e ${formatDnpValue(MAX_VALUE)}`
+                ? `Valor deve estar entre ${formatPellicleValue(MIN_VALUE)} e ${formatPellicleValue(MAX_VALUE)}`
                 : "",
         };
     }
 
-    // Valida incremento de 0.5 (apenas se touched)
+    // Valida incremento de 0.25 (apenas se touched)
     if (touched) {
-        const remainder = Math.abs((parsed * 10) % (STEP * 10));
+        const remainder = Math.abs((parsed * 100) % (STEP * 100));
         if (remainder > 0.01) {
             return {
                 isValid: false,
-                message: `Use incrementos de ${STEP.toFixed(1).replace(".", ",")} (ex: 28,5, 30,0)`,
+                message: `Use incrementos de ${formatter.format(STEP)} (ex: 1,00, 1,25, 1,50)`,
             };
         }
     }
@@ -95,13 +104,12 @@ const validateDnpValue = (
     return { isValid: true, message: "" };
 };
 
-export default function DnpInputAutocomplete({
+export default function PellicleInput({
     value,
     onChange,
-    label = "DNP (mm)",
-    placeholder = "30,0",
+    label = "Película",
+    placeholder = "0,00",
     size = "small",
-    helperText, // 👈 NOVA PROP
     disabled = false,
     required = false,
     onValidationChange,
@@ -113,42 +121,32 @@ export default function DnpInputAutocomplete({
         setInputValue(value ?? "");
     }, [value]);
 
-    const validation = validateDnpValue(inputValue, touched, required);
+    const validation = validatePellicleValue(inputValue, touched, required);
 
     // Notifica validação ao pai
     useEffect(() => {
         onValidationChange?.(validation.isValid);
     }, [validation.isValid, onValidationChange]);
 
-    // 👇 FUNÇÃO ATUALIZADA: Prioriza erros, depois helperText customizado
+    // Cria helper text com sugestão
     const getHelperText = (): string => {
-        // Prioridade 1: Erro de validação com sugestão
-        if (touched && !validation.isValid && validation.message) {
-            // Se erro de incremento, adiciona sugestão
-            if (inputValue) {
-                const parsed = parseDnpValue(inputValue);
+        if (!validation.message) return "";
 
-                if (!isNaN(parsed) && parsed >= MIN_VALUE && parsed <= MAX_VALUE) {
-                    const remainder = Math.abs((parsed * 10) % (STEP * 10));
+        if (touched && inputValue) {
+            const parsed = parsePellicleValue(inputValue);
 
-                    if (remainder > 0.01) {
-                        const rounded = roundToStep(parsed, STEP);
-                        const formatted = formatDnpValue(rounded);
-                        return `${validation.message}. Sugestão: ${formatted}`;
-                    }
+            if (!isNaN(parsed) && parsed >= MIN_VALUE && parsed <= MAX_VALUE) {
+                const remainder = Math.abs((parsed * 100) % (STEP * 100));
+
+                if (remainder > 0.01) {
+                    const rounded = roundToStep(parsed, STEP);
+                    const formatted = formatPellicleValue(rounded);
+                    return `${validation.message}. Sugestão: ${formatted}`;
                 }
             }
-
-            return validation.message;
         }
 
-        // Prioridade 2: helperText customizado
-        if (helperText) {
-            return helperText;
-        }
-
-        // Prioridade 3: Vazio
-        return "";
+        return validation.message;
     };
 
     const handleInputChange = (
@@ -171,12 +169,12 @@ export default function DnpInputAutocomplete({
         newValue: string | null
     ) => {
         if (newValue) {
-            const parsed = parseDnpValue(newValue);
+            const parsed = parsePellicleValue(newValue);
 
             // Se for válido, formata
             if (!isNaN(parsed) && parsed >= MIN_VALUE && parsed <= MAX_VALUE) {
                 const rounded = roundToStep(parsed, STEP);
-                const formatted = formatDnpValue(rounded);
+                const formatted = formatPellicleValue(rounded);
                 setInputValue(formatted);
                 onChange(formatted);
             } else {
@@ -194,16 +192,16 @@ export default function DnpInputAutocomplete({
     const handleBlur = () => {
         setTouched(true);
 
-        // Só formata se JÁ for múltiplo válido de 0.5
+        // Só formata se JÁ for múltiplo válido de 0.25
         if (inputValue && inputValue.trim() !== "") {
-            const parsed = parseDnpValue(inputValue);
+            const parsed = parsePellicleValue(inputValue);
 
             if (!isNaN(parsed) && parsed >= MIN_VALUE && parsed <= MAX_VALUE) {
-                const remainder = Math.abs((parsed * 10) % (STEP * 10));
+                const remainder = Math.abs((parsed * 100) % (STEP * 100));
 
                 // Só formata se já for múltiplo válido
                 if (remainder < 0.01) {
-                    const formatted = formatDnpValue(parsed);
+                    const formatted = formatPellicleValue(parsed);
                     setInputValue(formatted);
                     onChange(formatted);
                 }
@@ -217,9 +215,8 @@ export default function DnpInputAutocomplete({
             freeSolo
             autoSelect
             disableClearable={false}
-            size={size}
             disabled={disabled}
-            options={DNP_OPTIONS}
+            options={PELLICLE_OPTIONS}
             filterOptions={filterOptions}
             value={value ?? ""}
             inputValue={inputValue}
@@ -232,10 +229,9 @@ export default function DnpInputAutocomplete({
                     placeholder={placeholder}
                     size={size}
                     required={required}
-                    disabled={disabled}
                     onBlur={handleBlur}
-                    error={!disabled && touched && !validation.isValid}
-                    helperText={getHelperText()} // 👈 MUDANÇA
+                    error={touched && !validation.isValid}
+                    helperText={getHelperText()}
                     inputProps={{
                         ...params.inputProps,
                         inputMode: "decimal",

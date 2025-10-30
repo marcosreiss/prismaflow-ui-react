@@ -15,6 +15,7 @@ import type {
     UpdatePaymentPayload,
     PaymentStatus,
     PaymentMethod,
+    PaymentApiDetailResponse,
 } from "../types/paymentTypes";
 import type { ApiResponse } from "@/utils/apiResponse";
 
@@ -24,7 +25,7 @@ import type { ApiResponse } from "@/utils/apiResponse";
 export const useGetPayments = ({
     page,
     limit,
-    search,
+    clientName,
     status,
     method,
     startDate,
@@ -32,7 +33,7 @@ export const useGetPayments = ({
 }: {
     page: number;
     limit: number;
-    search?: string;
+    clientName?: string;
     status?: PaymentStatus;
     method?: PaymentMethod;
     startDate?: string;
@@ -48,7 +49,7 @@ export const useGetPayments = ({
         }>,
         AxiosError<ApiResponse<null>>
     >({
-        queryKey: ["payments", page, limit, search, status, method, startDate, endDate], // 🔄 ATUALIZAR
+        queryKey: ["payments", page, limit, clientName, status, method, startDate, endDate], // 🔄 ATUALIZAR
         queryFn: async () => {
             const { data } = await baseApi.get<
                 ApiResponse<{
@@ -62,7 +63,7 @@ export const useGetPayments = ({
                 params: {
                     page,
                     limit,
-                    search: search || "",
+                    clientName: clientName || "",
                     status: status || "",
                     method: method || "",
                     startDate: startDate || "",    // 🔄 ADICIONAR
@@ -163,18 +164,72 @@ export const useDeletePayment = () => {
 // =============================
 // 🔹 HOOK: GET PAYMENT BY ID
 // =============================
+
 export const useGetPaymentById = (id?: number) => {
     return useQuery<ApiResponse<PaymentDetails>, AxiosError<ApiResponse<null>>>({
-        queryKey: ["payment", id],
+        queryKey: ["payment", "details", id],
         queryFn: async () => {
-            const { data } = await baseApi.get<ApiResponse<PaymentDetails>>(
+            const { data } = await baseApi.get<ApiResponse<PaymentApiDetailResponse>>(
                 `/api/payments/${id}`
             );
-            return data;
+
+            // ✅ Mapear para garantir que clientName esteja preenchido
+            if (data.data) {
+                const paymentDetails = mapApiResponseToPaymentDetails(data.data);
+                return {
+                    ...data,
+                    data: paymentDetails
+                };
+            }
+
+            return data as ApiResponse<PaymentDetails>;
         },
         enabled: !!id,
+        staleTime: 5 * 60 * 1000, // 5 minutos
     });
 };
+
+// 🔹 Função auxiliar para mapeamento
+
+function mapApiResponseToPaymentDetails(apiData: PaymentApiDetailResponse): PaymentDetails {
+    // ✅ Agora temos type safety
+    const clientName =
+        apiData.sale?.clientName || // ← PRIMEIRO: busca em sale.clientName
+        apiData.sale?.client?.name || // ← DEPOIS: busca em sale.client.name (fallback)
+        apiData.clientName || // ← fallback adicional
+        "Cliente não informado";
+
+    return {
+        // Campos básicos
+        id: apiData.id,
+        saleId: apiData.saleId,
+        method: apiData.method,
+        status: apiData.status,
+        total: apiData.total,
+        discount: apiData.discount,
+        downPayment: apiData.downPayment,
+        installmentsTotal: apiData.installmentsTotal,
+        paidAmount: apiData.paidAmount,
+        installmentsPaid: apiData.installmentsPaid,
+        lastPaymentAt: apiData.lastPaymentAt,
+        firstDueDate: apiData.firstDueDate,
+        isActive: apiData.isActive,
+        branchId: apiData.branchId,
+        tenantId: apiData.tenantId,
+        createdAt: apiData.createdAt,
+        updatedAt: apiData.updatedAt,
+
+        // Relações
+        installments: apiData.installments || [],
+
+        // Campos específicos do PaymentDetails
+        clientName,
+        sale: apiData.sale ? {
+            id: apiData.sale.id,
+            total: apiData.sale.total
+        } : undefined
+    };
+}
 
 // =============================
 // 🔹 HOOK: GET PAYMENTS BY SALE ID

@@ -7,7 +7,7 @@ import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import { useNotification } from "@/context/NotificationContext";
 
-import PrescriptionModal from "@/modules/clients/components/PrescriptionModal";
+import PrescriptionModal from "@/modules/clients/components/prescriptionModal/PrescriptionModal";
 import {
     useGetPrescriptionsByClientId,
     useDeletePrescription,
