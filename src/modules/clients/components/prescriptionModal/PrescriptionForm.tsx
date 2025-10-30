@@ -571,9 +571,6 @@ function PrescriptionFormContent({
 
                 {/* ========== ADIÇÃO E CENTRO ÓPTICO (SEMPRE VISÍVEL FORA DAS TABS) ========== */}
                 <Box>
-                    <Typography variant="h6" fontWeight={600} mb={2}>
-                        Adição e Centro Óptico
-                    </Typography>
 
                     {/* Centro Óptico */}
                     <Box>
