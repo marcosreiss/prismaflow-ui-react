@@ -6,7 +6,7 @@ import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import { usePaymentPageController } from "./hooks/usePaymentPageController";
 import type { PaymentListItem, PaymentFromListItem } from "./types/paymentTypes";
 import PaymentFilters from "./components/PaymentFilters";
-import PaymentDrawer from "./components/PaymentDrawer";
+import PaymentDrawer from "./components/paymentDrawer";
 
 // ==============================
 // 🔹 Página principal de pagamentos
