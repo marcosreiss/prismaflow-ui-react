@@ -20,10 +20,8 @@ import SphericalInput from "@/components/imask/protocolo/SphericalInput";
 import AxisInput from "@/components/imask/protocolo/AxisInput";
 import OpticalCenterInput from "@/components/imask/protocolo/OpticalCenterInput";
 import PellicleInput from "@/components/imask/protocolo/PellicleInput";
-import { useFieldRules } from "../../hooks/useFieldRules";
 import { usePrescriptionValidation } from "../../hooks/usePrescriptionValidation";
 import type { CreatePrescriptionPayload } from "../../types/prescriptionTypes";
-import { useNotification } from "@/context/NotificationContext";
 
 type PrescriptionControllerType = {
     methods: UseFormReturn<CreatePrescriptionPayload>;
@@ -68,68 +66,6 @@ type PrescriptionFormContentProps = {
     handleSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
 };
 
-function getFieldLabel(fieldName: string): string {
-    const fieldLabels: Record<string, string> = {
-        doctorName: "Nome do médico",
-        crm: "CRM",
-        prescriptionDate: "Data da receita",
-        lensType: "Tipo de lente",
-        frameAndRef: "Armação e Ref",
-        notes: "Observações",
-        odSphericalFar: "OD Esférico Longe",
-        odCylindricalFar: "OD Cilíndrico Longe",
-        odAxisFar: "OD Eixo Longe",
-        odDnpFar: "OD DNP Longe",
-        oeSphericalFar: "OE Esférico Longe",
-        oeCylindricalFar: "OE Cilíndrico Longe",
-        oeAxisFar: "OE Eixo Longe",
-        oeDnpFar: "OE DNP Longe",
-        odSphericalNear: "OD Esférico Perto",
-        odCylindricalNear: "OD Cilíndrico Perto",
-        odAxisNear: "OD Eixo Perto",
-        odDnpNear: "OD DNP Perto",
-        oeSphericalNear: "OE Esférico Perto",
-        oeCylindricalNear: "OE Cilíndrico Perto",
-        oeAxisNear: "OE Eixo Perto",
-        oeDnpNear: "OE DNP Perto",
-        additionRight: "Adição OD",
-        additionLeft: "Adição OE",
-        opticalCenterRight: "Centro Óptico OD",
-        opticalCenterLeft: "Centro Óptico OE",
-        odPellicleFar: "OD Película Longe",
-        odPellicleNear: "OD Película Perto",
-        oePellicleFar: "OE Película Longe",
-        oePellicleNear: "OE Película Perto",
-    };
-
-    return fieldLabels[fieldName] || fieldName;
-}
-
-function getFirstErrorMessage(errors: Record<string, unknown>): string | null {
-    if (!errors || Object.keys(errors).length === 0) return null;
-
-    for (const [fieldName, error] of Object.entries(errors)) {
-        if (error && typeof error === 'object' && 'message' in error && error.message) {
-            const fieldLabel = getFieldLabel(fieldName);
-            return `${fieldLabel}: ${error.message}`;
-        }
-    }
-
-    return null;
-}
-
-function countErrors(errors: Record<string, unknown>): number {
-    if (!errors || Object.keys(errors).length === 0) return 0;
-
-    let count = 0;
-    for (const value of Object.values(errors)) {
-        if (value && typeof value === 'object' && 'message' in value) {
-            count++;
-        }
-    }
-    return count;
-}
-
 function PrescriptionFormContent({
     inputRef,
     creating,
@@ -138,31 +74,12 @@ function PrescriptionFormContent({
     onClose,
     handleSubmit,
 }: PrescriptionFormContentProps) {
-    const { control, register, formState, trigger } = useFormContext<CreatePrescriptionPayload>();
-    const fieldRules = useFieldRules();
+    const { control, register, formState } = useFormContext<CreatePrescriptionPayload>();
     const validation = usePrescriptionValidation();
-    const { addNotification } = useNotification();
     const [currentTab, setCurrentTab] = useState(0);
 
     const handleFormSubmit = async (e?: React.BaseSyntheticEvent) => {
         e?.preventDefault();
-
-        const isValid = await trigger(undefined, { shouldFocus: true });
-
-        if (!isValid) {
-            const firstError = getFirstErrorMessage(formState.errors);
-            const errorCount = countErrors(formState.errors);
-
-            if (firstError && errorCount > 1) {
-                addNotification(`${firstError} (e mais ${errorCount - 1} campo(s) para corrigir)`, "error");
-            } else if (firstError) {
-                addNotification(firstError, "error");
-            } else {
-                addNotification("Existem campos obrigatórios ou inválidos no formulário.", "error");
-            }
-            return;
-        }
-
         handleSubmit(e);
     };
 
@@ -286,7 +203,7 @@ function PrescriptionFormContent({
                         sx={{ borderBottom: 1, borderColor: 'divider' }}
                     >
                         <Tab label="Grau de Longe" />
-                        {fieldRules.showNearVision && <Tab label="Grau de Perto" />}
+                        <Tab label="Grau de Perto" />
                     </Tabs>
 
                     {/* TAB 0: GRAU DE LONGE */}
@@ -336,11 +253,8 @@ function PrescriptionFormContent({
                                                 size="small"
                                                 value={field.value ?? ""}
                                                 onChange={field.onChange}
-                                                disabled={fieldRules.isOdAxisFarDisabled}
-                                                required={!fieldRules.isOdAxisFarDisabled}
                                                 helperText={
-                                                    fieldState.error?.message ||
-                                                    (fieldRules.isOdAxisFarDisabled ? "Desabilitado (Cilíndrico = 0)" : "")
+                                                    fieldState.error?.message
                                                 }
                                             />
                                         )}
@@ -359,20 +273,18 @@ function PrescriptionFormContent({
                                             />
                                         )}
                                     />
-                                    {fieldRules.showPellicle && (
-                                        <Controller
-                                            name="odPellicleFar"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <PellicleInput
-                                                    label="Película"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                />
-                                            )}
-                                        />
-                                    )}
+                                    <Controller
+                                        name="odPellicleFar"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <PellicleInput
+                                                label="Película"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
                                 </Box>
                             </Box>
 
@@ -422,11 +334,8 @@ function PrescriptionFormContent({
                                                 size="small"
                                                 value={field.value ?? ""}
                                                 onChange={field.onChange}
-                                                disabled={fieldRules.isOeAxisFarDisabled}
-                                                required={!fieldRules.isOeAxisFarDisabled}
                                                 helperText={
-                                                    fieldState.error?.message ||
-                                                    (fieldRules.isOeAxisFarDisabled ? "Desabilitado (Cilíndrico = 0)" : "")
+                                                    fieldState.error?.message
                                                 }
                                             />
                                         )}
@@ -445,236 +354,217 @@ function PrescriptionFormContent({
                                             />
                                         )}
                                     />
-                                    {fieldRules.showPellicle && (
-                                        <Controller
-                                            name="oePellicleFar"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <PellicleInput
-                                                    label="Película"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                />
-                                            )}
-                                        />
-                                    )}
+                                    <Controller
+                                        name="oePellicleFar"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <PellicleInput
+                                                label="Película"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
                                 </Box>
                             </Box>
                         </Stack>
                     </TabPanel>
 
                     {/* TAB 1: GRAU DE PERTO */}
-                    {fieldRules.showNearVision && (
-                        <TabPanel value={currentTab} index={1}>
-                            <Stack spacing={3}>
-                                {/* OD - Olho Direito */}
-                                <Box>
-                                    <Typography variant="subtitle2" fontWeight={600} mb={2}>
-                                        Olho Direito (OD)
-                                    </Typography>
-                                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2 }}>
-                                        <Controller
-                                            name="odSphericalNear"
-                                            control={control}
-                                            rules={{ validate: validation.validateOdSphericalNear }}
-                                            render={({ field, fieldState }) => (
-                                                <SphericalInput
-                                                    label="Esférico"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                    helperText={fieldState.error?.message}
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="odCylindricalNear"
-                                            control={control}
-                                            rules={{ validate: validation.validateOdCylindricalNear }}
-                                            render={({ field, fieldState }) => (
-                                                <CylindricalInput
-                                                    label="Cilíndrico"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                    helperText={fieldState.error?.message}
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="odAxisNear"
-                                            control={control}
-                                            rules={{ validate: validation.validateOdAxisNear }}
-                                            render={({ field, fieldState }) => (
-                                                <AxisInput
-                                                    label="Eixo"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                    disabled={fieldRules.isOdAxisNearDisabled}
-                                                    required={!fieldRules.isOdAxisNearDisabled}
-                                                    helperText={
-                                                        fieldState.error?.message ||
-                                                        (fieldRules.isOdAxisNearDisabled ? "Desabilitado (Cilíndrico = 0)" : "")
-                                                    }
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="odDnpNear"
-                                            control={control}
-                                            rules={{ validate: validation.validateDNP }}
-                                            render={({ field, fieldState }) => (
-                                                <DnpInput
-                                                    label="DNP"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                    helperText={fieldState.error?.message}
-                                                />
-                                            )}
-                                        />
-                                        {fieldRules.showPellicle && (
-                                            <Controller
-                                                name="odPellicleNear"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <PellicleInput
-                                                        label="Película"
-                                                        size="small"
-                                                        value={field.value ?? ""}
-                                                        onChange={field.onChange}
-                                                    />
-                                                )}
+                    <TabPanel value={currentTab} index={1}>
+                        <Stack spacing={3}>
+                            {/* OD - Olho Direito */}
+                            <Box>
+                                <Typography variant="subtitle2" fontWeight={600} mb={2}>
+                                    Olho Direito (OD)
+                                </Typography>
+                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2 }}>
+                                    <Controller
+                                        name="odSphericalNear"
+                                        control={control}
+                                        rules={{ validate: validation.validateOdSphericalNear }}
+                                        render={({ field, fieldState }) => (
+                                            <SphericalInput
+                                                label="Esférico"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={fieldState.error?.message}
                                             />
                                         )}
-                                        {/* ADIÇÃO OD AQUI */}
-                                        {fieldRules.showAddition && (
-                                            <Controller
-                                                name="additionRight"
-                                                control={control}
-                                                rules={{ validate: validation.validateAdditionRight }}
-                                                render={({ field, fieldState }) => (
-                                                    <AdditionInput
-                                                        label="Adição"
-                                                        size="small"
-                                                        value={field.value ?? ""}
-                                                        onChange={field.onChange}
-                                                        helperText={fieldState.error?.message}
-                                                    />
-                                                )}
+                                    />
+                                    <Controller
+                                        name="odCylindricalNear"
+                                        control={control}
+                                        rules={{ validate: validation.validateOdCylindricalNear }}
+                                        render={({ field, fieldState }) => (
+                                            <CylindricalInput
+                                                label="Cilíndrico"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={fieldState.error?.message}
                                             />
                                         )}
-                                    </Box>
+                                    />
+                                    <Controller
+                                        name="odAxisNear"
+                                        control={control}
+                                        rules={{ validate: validation.validateOdAxisNear }}
+                                        render={({ field, fieldState }) => (
+                                            <AxisInput
+                                                label="Eixo"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={
+                                                    fieldState.error?.message
+                                                }
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        name="odDnpNear"
+                                        control={control}
+                                        rules={{ validate: validation.validateDNP }}
+                                        render={({ field, fieldState }) => (
+                                            <DnpInput
+                                                label="DNP"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={fieldState.error?.message}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        name="odPellicleNear"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <PellicleInput
+                                                label="Película"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    {/* ADIÇÃO OD AQUI */}
+                                    <Controller
+                                        name="additionRight"
+                                        control={control}
+                                        rules={{ validate: validation.validateAdditionRight }}
+                                        render={({ field, fieldState }) => (
+                                            <AdditionInput
+                                                label="Adição"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={fieldState.error?.message}
+                                            />
+                                        )}
+                                    />
                                 </Box>
+                            </Box>
 
-                                <Divider />
+                            <Divider />
 
-                                {/* OE - Olho Esquerdo */}
-                                <Box>
-                                    <Typography variant="subtitle2" fontWeight={600} mb={2}>
-                                        Olho Esquerdo (OE)
-                                    </Typography>
-                                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2 }}>
-                                        <Controller
-                                            name="oeSphericalNear"
-                                            control={control}
-                                            rules={{ validate: validation.validateOeSphericalNear }}
-                                            render={({ field, fieldState }) => (
-                                                <SphericalInput
-                                                    label="Esférico"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                    helperText={fieldState.error?.message}
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="oeCylindricalNear"
-                                            control={control}
-                                            rules={{ validate: validation.validateOeCylindricalNear }}
-                                            render={({ field, fieldState }) => (
-                                                <CylindricalInput
-                                                    label="Cilíndrico"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                    helperText={fieldState.error?.message}
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="oeAxisNear"
-                                            control={control}
-                                            rules={{ validate: validation.validateOeAxisNear }}
-                                            render={({ field, fieldState }) => (
-                                                <AxisInput
-                                                    label="Eixo"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                    disabled={fieldRules.isOeAxisNearDisabled}
-                                                    required={!fieldRules.isOeAxisNearDisabled}
-                                                    helperText={
-                                                        fieldState.error?.message ||
-                                                        (fieldRules.isOeAxisNearDisabled ? "Desabilitado (Cilíndrico = 0)" : "")
-                                                    }
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="oeDnpNear"
-                                            control={control}
-                                            rules={{ validate: validation.validateDNP }}
-                                            render={({ field, fieldState }) => (
-                                                <DnpInput
-                                                    label="DNP"
-                                                    size="small"
-                                                    value={field.value ?? ""}
-                                                    onChange={field.onChange}
-                                                    helperText={fieldState.error?.message}
-                                                />
-                                            )}
-                                        />
-                                        {fieldRules.showPellicle && (
-                                            <Controller
-                                                name="oePellicleNear"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <PellicleInput
-                                                        label="Película"
-                                                        size="small"
-                                                        value={field.value ?? ""}
-                                                        onChange={field.onChange}
-                                                    />
-                                                )}
+                            {/* OE - Olho Esquerdo */}
+                            <Box>
+                                <Typography variant="subtitle2" fontWeight={600} mb={2}>
+                                    Olho Esquerdo (OE)
+                                </Typography>
+                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2 }}>
+                                    <Controller
+                                        name="oeSphericalNear"
+                                        control={control}
+                                        rules={{ validate: validation.validateOeSphericalNear }}
+                                        render={({ field, fieldState }) => (
+                                            <SphericalInput
+                                                label="Esférico"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={fieldState.error?.message}
                                             />
                                         )}
-                                        {/* ADIÇÃO OE AQUI */}
-                                        {fieldRules.showAddition && (
-                                            <Controller
-                                                name="additionLeft"
-                                                control={control}
-                                                rules={{ validate: validation.validateAdditionLeft }}
-                                                render={({ field, fieldState }) => (
-                                                    <AdditionInput
-                                                        label="Adição"
-                                                        size="small"
-                                                        value={field.value ?? ""}
-                                                        onChange={field.onChange}
-                                                        helperText={fieldState.error?.message}
-                                                    />
-                                                )}
+                                    />
+                                    <Controller
+                                        name="oeCylindricalNear"
+                                        control={control}
+                                        rules={{ validate: validation.validateOeCylindricalNear }}
+                                        render={({ field, fieldState }) => (
+                                            <CylindricalInput
+                                                label="Cilíndrico"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={fieldState.error?.message}
                                             />
                                         )}
-                                    </Box>
+                                    />
+                                    <Controller
+                                        name="oeAxisNear"
+                                        control={control}
+                                        rules={{ validate: validation.validateOeAxisNear }}
+                                        render={({ field, fieldState }) => (
+                                            <AxisInput
+                                                label="Eixo"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={
+                                                    fieldState.error?.message
+                                                }
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        name="oeDnpNear"
+                                        control={control}
+                                        rules={{ validate: validation.validateDNP }}
+                                        render={({ field, fieldState }) => (
+                                            <DnpInput
+                                                label="DNP"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={fieldState.error?.message}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        name="oePellicleNear"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <PellicleInput
+                                                label="Película"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    {/* ADIÇÃO OE AQUI */}
+                                    <Controller
+                                        name="additionLeft"
+                                        control={control}
+                                        rules={{ validate: validation.validateAdditionLeft }}
+                                        render={({ field, fieldState }) => (
+                                            <AdditionInput
+                                                label="Adição"
+                                                size="small"
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                helperText={fieldState.error?.message}
+                                            />
+                                        )}
+                                    />
                                 </Box>
-                            </Stack>
-                        </TabPanel>
-                    )}
-
+                            </Box>
+                        </Stack>
+                    </TabPanel>
                 </Box>
 
                 <Divider />
@@ -684,48 +574,6 @@ function PrescriptionFormContent({
                     <Typography variant="h6" fontWeight={600} mb={2}>
                         Adição e Centro Óptico
                     </Typography>
-
-                    {/* Adição */}
-                    {fieldRules.showAddition && (
-                        <Box mb={3}>
-                            <Typography variant="subtitle2" fontWeight={600} mb={1}>
-                                Adição (ADD)
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-                                Valor único aplicado para correção de presbiopia
-                            </Typography>
-                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 2 }}>
-                                <Controller
-                                    name="additionRight"
-                                    control={control}
-                                    rules={{ validate: validation.validateAdditionRight }}
-                                    render={({ field, fieldState }) => (
-                                        <AdditionInput
-                                            label="Adição OD"
-                                            size="small"
-                                            value={field.value ?? ""}
-                                            onChange={field.onChange}
-                                            helperText={fieldState.error?.message}
-                                        />
-                                    )}
-                                />
-                                <Controller
-                                    name="additionLeft"
-                                    control={control}
-                                    rules={{ validate: validation.validateAdditionLeft }}
-                                    render={({ field, fieldState }) => (
-                                        <AdditionInput
-                                            label="Adição OE"
-                                            size="small"
-                                            value={field.value ?? ""}
-                                            onChange={field.onChange}
-                                            helperText={fieldState.error?.message}
-                                        />
-                                    )}
-                                />
-                            </Box>
-                        </Box>
-                    )}
 
                     {/* Centro Óptico */}
                     <Box>
