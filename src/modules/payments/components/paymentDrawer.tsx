@@ -30,12 +30,12 @@ interface PaymentDrawerProps {
     open: boolean;
     mode: "create" | "edit" | "view";
     payment?: PaymentDetails | null;
-    paymentId: number | null; // ✅ Agora passa o ID em vez do objeto completo
+    paymentId: number | null;
     onClose: () => void;
     onEdit: () => void;
     onDelete: (payment: Payment) => void;
-    onUpdateStatus: (paymentId: number, status: PaymentStatus) => void;
-    onProcessInstallment: (paymentId: number, installmentId: number, paidAmount: number) => void;
+    onUpdateStatus: (paymentId: number, status: PaymentStatus, reason?: string) => void; // ✅ ATUALIZADO
+    onPayInstallment: (installmentId: number, paidAmount: number, paidAt?: string) => void; // ✅ ATUALIZADO
     onCreated: (payment: Payment) => void;
     onUpdated: (payment: Payment) => void;
     onCreateNew: () => void;
@@ -52,12 +52,14 @@ export default function PaymentDrawer({
     onEdit,
     onDelete,
     onUpdateStatus,
-    onProcessInstallment,
+    onPayInstallment, // ✅ ATUALIZADO
     onCreated,
     onUpdated,
     onCreateNew,
 }: PaymentDrawerProps) {
-    // Controller
+    // ==============================
+    // 🔹 Controller
+    // ==============================
     const controller = usePaymentDrawerController({
         mode,
         payment,
@@ -66,7 +68,7 @@ export default function PaymentDrawer({
         onEdit,
         onDelete,
         onUpdateStatus,
-        onProcessInstallment,
+        onPayInstallment, // ✅ ATUALIZADO
         onCreateNew,
     });
 
@@ -81,21 +83,25 @@ export default function PaymentDrawer({
         showInstallments,
         handleMethodChange,
         handleStatusChange,
+        handlePayInstallment, // ✅ ADICIONAR
     } = controller;
 
     const isCreate = mode === "create";
     const isEdit = mode === "edit";
     const isView = mode === "view";
 
-    // Estado local para o payment atualizado
+    // ==============================
+    // 🔹 Estado local para payment atualizado
+    // ==============================
     const [currentPayment, setCurrentPayment] = useState<PaymentDetails | null>(payment || null);
 
-    // Atualizar currentPayment quando o payment prop mudar
     useEffect(() => {
         setCurrentPayment(payment || null);
     }, [payment]);
 
-    // Foco no primeiro input ao abrir em modo create/edit
+    // ==============================
+    // 🔹 Foco no primeiro input ao abrir
+    // ==============================
     useEffect(() => {
         if (open && (isCreate || isEdit)) {
             const firstInput = document.querySelector<HTMLInputElement>("input[name='total']");
@@ -103,22 +109,22 @@ export default function PaymentDrawer({
         }
     }, [open, isCreate, isEdit]);
 
-    // Função para atualizar status com refresh imediato
+    // ==============================
+    // 🔹 Atualizar status com refresh imediato
+    // ==============================
     const handleUpdateStatusWithRefresh = async (paymentId: number, status: PaymentStatus) => {
         try {
             await onUpdateStatus(paymentId, status);
 
-            // 🔄 ATUALIZAR LOCALMENTE IMEDIATAMENTE
+            // Atualizar localmente
             if (currentPayment && currentPayment.id === paymentId) {
                 const updatedPayment = {
                     ...currentPayment,
                     status: status,
-                    // Atualizar campos que mudam no status CONFIRMED
                     ...(status === "CONFIRMED" && {
                         paidAmount: currentPayment.total - (currentPayment.discount || 0),
                         lastPaymentAt: new Date().toISOString()
                     }),
-                    // Resetar campos se voltar para PENDING
                     ...(status === "PENDING" && {
                         paidAmount: 0,
                         lastPaymentAt: null
@@ -126,7 +132,6 @@ export default function PaymentDrawer({
                 };
                 setCurrentPayment(updatedPayment);
 
-                // Notificar o controller sobre a atualização
                 if (onUpdated) {
                     onUpdated(updatedPayment as Payment);
                 }
@@ -155,7 +160,9 @@ export default function PaymentDrawer({
                 },
             }}
         >
-            {/* Header */}
+            {/* ========================================= */}
+            {/* 🔹 Header */}
+            {/* ========================================= */}
             <Box
                 sx={{
                     display: "flex",
@@ -179,7 +186,9 @@ export default function PaymentDrawer({
 
             <Divider sx={{ mb: 2 }} />
 
-            {/* Conteúdo principal */}
+            {/* ========================================= */}
+            {/* 🔹 Conteúdo principal */}
+            {/* ========================================= */}
             <Box
                 sx={{
                     flexGrow: 1,
@@ -188,9 +197,9 @@ export default function PaymentDrawer({
                     pb: 3,
                 }}
             >
-                {/* ========================== */}
-                {/* 🔸 MODO VIEW */}
-                {/* ========================== */}
+                {/* ========================================= */}
+                {/* 🔹 MODO VIEW */}
+                {/* ========================================= */}
                 {isView && currentPayment && (
                     <Box>
                         {/* Ações */}
@@ -213,7 +222,7 @@ export default function PaymentDrawer({
                                 Remover
                             </Button>
 
-                            {/* Status Actions - APENAS CONFIRMAR PAGAMENTOS PENDENTES */}
+                            {/* Confirmar apenas pagamentos pendentes */}
                             {currentPayment.status === "PENDING" && (
                                 <Button
                                     size="small"
@@ -230,13 +239,13 @@ export default function PaymentDrawer({
 
                         {/* Dados do pagamento */}
                         <PaymentView
-                            paymentId={payment?.id} // ✅ Passa o ID para buscar da API
-                        // onProcessInstallment={onProcessInstallment}
+                            paymentId={payment?.id}
+                            onPayInstallment={handlePayInstallment} // ✅ ATUALIZADO
                         />
 
                         <Divider sx={{ my: 3 }} />
 
-                        {/* Botão de adicionar novo pagamento */}
+                        {/* Botão de adicionar novo */}
                         <Button
                             variant="contained"
                             fullWidth
@@ -248,9 +257,9 @@ export default function PaymentDrawer({
                     </Box>
                 )}
 
-                {/* ========================== */}
-                {/* 🔸 MODO CREATE / EDIT */}
-                {/* ========================== */}
+                {/* ========================================= */}
+                {/* 🔹 MODO CREATE / EDIT */}
+                {/* ========================================= */}
                 {(isCreate || isEdit) && (
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit}>
@@ -383,6 +392,7 @@ export default function PaymentDrawer({
                                             )}
                                         />
 
+                                        {/* ✅ CORRIGIDO: Campos de parcelamento */}
                                         {showInstallments && (
                                             <>
                                                 <Controller
@@ -391,22 +401,30 @@ export default function PaymentDrawer({
                                                     render={({ field }) => (
                                                         <CurrencyInput
                                                             {...field}
-                                                            label="Entrada"
+                                                            label="Entrada (Sinal)"
                                                             fullWidth
                                                             size="small"
                                                         />
                                                     )}
                                                 />
 
+                                                {/* ✅ CORRIGIDO: installmentsTotal é NÚMERO, não valor */}
                                                 <Controller
                                                     name="installmentsTotal"
                                                     control={methods.control}
                                                     render={({ field }) => (
-                                                        <CurrencyInput
+                                                        <TextField
                                                             {...field}
-                                                            label="Valor Total das Parcelas"
+                                                            type="number"
+                                                            label="Número de Parcelas"
                                                             fullWidth
                                                             size="small"
+                                                            inputProps={{
+                                                                min: 1,
+                                                                max: 99,
+                                                                step: 1
+                                                            }}
+                                                            helperText="Quantidade de parcelas"
                                                         />
                                                     )}
                                                 />
