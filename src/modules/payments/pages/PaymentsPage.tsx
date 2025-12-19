@@ -2,11 +2,11 @@ import { Paper, Button, Box } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
+import PaymentDrawer from "../components/paymentDrawer";
+import PaymentFilters from "../components/PaymentFilters";
+import { usePaymentPageController } from "../hooks/usePaymentPageController";
+import type { PaymentListItem, PaymentFromListItem } from "../types/paymentTypes";
 
-import { usePaymentPageController } from "./hooks/usePaymentPageController";
-import type { PaymentListItem, PaymentFromListItem } from "./types/paymentTypes";
-import PaymentFilters from "./components/PaymentFilters";
-import PaymentDrawer from "./components/paymentDrawer";
 
 // ==============================
 // 🔹 Página principal de pagamentos

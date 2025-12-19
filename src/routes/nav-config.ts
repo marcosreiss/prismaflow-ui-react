@@ -27,5 +27,20 @@ export const navData: NavItem[] = [
     ],
   },
   { title: "Vendas", path: "/sales", icon: "DollarSign" },
-  { title: "Pagamentos", path: "/payments", icon: "CreditCard" },
+  {
+    title: "Pagamentos", // ✅ ATUALIZADO: agora com submenu
+    icon: "CreditCard",
+    children: [
+      {
+        title: "Lista de Pagamentos",
+        path: "/payments",
+        icon: "List",
+      },
+      {
+        title: "Parcelas Vencidas", // ✅ NOVO
+        path: "/overdue-installments",
+        icon: "AlertCircle",
+      },
+    ],
+  },
 ];
