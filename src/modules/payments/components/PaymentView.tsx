@@ -1,23 +1,41 @@
 // components/PaymentView.tsx
-import { Box, Stack, Typography, Chip, CircularProgress, Alert, Button } from "@mui/material";
-import { useMemo } from "react";
-import type { PaymentStatus } from "../types/paymentTypes";
+import { Box, Stack, Typography, Chip, CircularProgress, Alert } from "@mui/material";
+import { useMemo, useState } from "react";
+import type { PaymentStatus, PaymentInstallment } from "../types/paymentTypes";
 import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentTypes";
 import { useGetPaymentById } from "../hooks/usePayments";
-import { DollarSign } from "lucide-react";
+import InstallmentsTable from "./InstallmentsTable";
+import PayInstallmentDialog from "./PayInstallmentDialog";
+import EditInstallmentDialog from "./EditInstallmentDialog";
 
 // ==============================
 // 🔹 Props
 // ==============================
 interface PaymentViewProps {
     paymentId: number | undefined;
-    onPayInstallment?: (installmentId: number, paidAmount: number, paidAt?: string) => void; // ✅ ATUALIZADO
+    onPayInstallment?: (installmentId: number, paidAmount: number, paidAt?: string) => void;
+    onEditInstallment?: (installmentId: number, data: {
+        sequence?: number;
+        amount?: number;
+        dueDate?: string;
+    }) => Promise<void>;
 }
 
 // ==============================
 // 🔹 Componente principal
 // ==============================
-export default function PaymentView({ paymentId, onPayInstallment }: PaymentViewProps) {
+export default function PaymentView({
+    paymentId,
+    onPayInstallment,
+    onEditInstallment
+}: PaymentViewProps) {
+    // ==============================
+    // 🔹 Estados para dialogs
+    // ==============================
+    const [payDialogOpen, setPayDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [selectedInstallment, setSelectedInstallment] = useState<PaymentInstallment | null>(null);
+
     // ==============================
     // 🔹 Buscar dados do pagamento
     // ==============================
@@ -80,12 +98,55 @@ export default function PaymentView({ paymentId, onPayInstallment }: PaymentView
     };
 
     // ==============================
-    // 🔹 Handler para pagar parcela
+    // 🔹 Handlers para pagar parcela
     // ==============================
-    const handlePayInstallment = (installmentId: number, amount: number) => {
-        if (onPayInstallment) {
-            onPayInstallment(installmentId, amount);
+    const handleOpenPayDialog = (installmentId: number) => {
+        const installment = payment?.installments?.find(i => i.id === installmentId);
+        if (installment) {
+            setSelectedInstallment(installment);
+            setPayDialogOpen(true);
         }
+    };
+
+    const handleConfirmPay = async (installmentId: number, paidAmount: number, paidAt?: string) => {
+        if (onPayInstallment) {
+            await onPayInstallment(installmentId, paidAmount, paidAt);
+        }
+        setPayDialogOpen(false);
+        setSelectedInstallment(null);
+    };
+
+    const handleClosePayDialog = () => {
+        setPayDialogOpen(false);
+        setSelectedInstallment(null);
+    };
+
+    // ==============================
+    // 🔹 Handlers para editar parcela
+    // ==============================
+    const handleOpenEditDialog = (installment: PaymentInstallment) => {
+        setSelectedInstallment(installment);
+        setEditDialogOpen(true);
+    };
+
+    const handleConfirmEdit = async (
+        installmentId: number,
+        data: {
+            sequence?: number;
+            amount?: number;
+            dueDate?: string;
+        }
+    ) => {
+        if (onEditInstallment) {
+            await onEditInstallment(installmentId, data);
+        }
+        setEditDialogOpen(false);
+        setSelectedInstallment(null);
+    };
+
+    const handleCloseEditDialog = () => {
+        setEditDialogOpen(false);
+        setSelectedInstallment(null);
     };
 
     // ==============================
@@ -130,174 +191,144 @@ export default function PaymentView({ paymentId, onPayInstallment }: PaymentView
     // 🔹 Render principal
     // ==============================
     return (
-        <Stack spacing={2}>
-            {/* ========================================= */}
-            {/* 🔹 Informações Básicas */}
-            {/* ========================================= */}
-            <Box component="section">
-                <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                    Informações Básicas
-                </Typography>
-                <Stack spacing={1}>
-                    <Row label="ID" value={payment.id} />
-                    <Row label="Venda ID" value={payment.saleId} />
-                    <Row label="Cliente" value={payment.clientName || "-"} />
-                    <Row
-                        label="Status"
-                        value={
-                            <Chip
-                                label={PaymentStatusLabels[payment.status]}
-                                color={getStatusColor(payment.status)}
-                                size="small"
-                            />
-                        }
-                    />
-                    <Row
-                        label="Método"
-                        value={payment.method ? PaymentMethodLabels[payment.method] : "-"}
-                    />
-                </Stack>
-            </Box>
-
-            {/* ========================================= */}
-            {/* 🔹 Valores */}
-            {/* ========================================= */}
-            <Box component="section">
-                <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                    Valores
-                </Typography>
-                <Stack spacing={1}>
-                    <Row label="Valor Total" value={formatCurrency(payment.total)} />
-                    <Row label="Desconto" value={formatCurrency(payment.discount)} />
-                    <Row label="Valor Pago" value={formatCurrency(payment.paidAmount)} />
-                    <Row label="Valor Pendente" value={formatCurrency(pendingAmount)} />
-
-                    {payment.method === "INSTALLMENT" && (
-                        <>
-                            <Row label="Entrada" value={formatCurrency(payment.downPayment)} />
-                            <Row label="Número de Parcelas" value={payment.installmentsTotal} />
-                            <Row label="Parcelas Pagas" value={`${payment.installmentsPaid} de ${payment.installmentsTotal}`} />
-                        </>
-                    )}
-                </Stack>
-            </Box>
-
-            {/* ========================================= */}
-            {/* 🔹 Datas */}
-            {/* ========================================= */}
-            <Box component="section">
-                <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                    Datas
-                </Typography>
-                <Stack spacing={1}>
-                    <Row label="Criado em" value={formatDate(payment.createdAt)} />
-                    <Row label="Última atualização" value={formatDate(payment.updatedAt)} />
-                    <Row label="Último pagamento" value={formatDate(payment.lastPaymentAt)} />
-
-                    {payment.method === "INSTALLMENT" && payment.firstDueDate && (
-                        <Row label="Primeiro vencimento" value={formatDate(payment.firstDueDate)} />
-                    )}
-                </Stack>
-            </Box>
-
-            {/* ========================================= */}
-            {/* 🔹 Resumo do Parcelamento */}
-            {/* ========================================= */}
-            {hasInstallments && installmentStats && (
+        <>
+            <Stack spacing={2}>
+                {/* ========================================= */}
+                {/* 🔹 Informações Básicas */}
+                {/* ========================================= */}
                 <Box component="section">
                     <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                        Resumo do Parcelamento
+                        Informações Básicas
                     </Typography>
                     <Stack spacing={1}>
-                        <Row label="Total de Parcelas" value={installmentStats.totalInstallments} />
+                        <Row label="ID" value={payment.id} />
+                        <Row label="Venda ID" value={payment.saleId} />
+                        <Row label="Cliente" value={payment.clientName || "-"} />
                         <Row
-                            label="Parcelas Pagas"
-                            value={`${installmentStats.paidInstallments} de ${installmentStats.totalInstallments}`}
+                            label="Status"
+                            value={
+                                <Chip
+                                    label={PaymentStatusLabels[payment.status]}
+                                    color={getStatusColor(payment.status)}
+                                    size="small"
+                                />
+                            }
                         />
                         <Row
-                            label="Valor Total Pago"
-                            value={formatCurrency(installmentStats.totalPaid)}
-                        />
-                        <Row
-                            label="Valor Pendente"
-                            value={formatCurrency(installmentStats.totalPending)}
+                            label="Método"
+                            value={payment.method ? PaymentMethodLabels[payment.method] : "-"}
                         />
                     </Stack>
                 </Box>
-            )}
 
-            {/* ========================================= */}
-            {/* 🔹 Detalhes das Parcelas (com ações) */}
-            {/* ========================================= */}
-            {hasInstallments && (
+                {/* ========================================= */}
+                {/* 🔹 Valores */}
+                {/* ========================================= */}
                 <Box component="section">
                     <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                        Detalhes das Parcelas
+                        Valores
                     </Typography>
-                    <Stack spacing={1.5}>
-                        {payment.installments.map((installment) => {
-                            const isPaid = installment.paidAmount >= installment.amount;
-                            const remainingAmount = installment.amount - installment.paidAmount;
+                    <Stack spacing={1}>
+                        <Row label="Valor Total" value={formatCurrency(payment.total)} />
+                        <Row label="Desconto" value={formatCurrency(payment.discount)} />
+                        <Row label="Valor Pago" value={formatCurrency(payment.paidAmount)} />
+                        <Row label="Valor Pendente" value={formatCurrency(pendingAmount)} />
 
-                            return (
-                                <Box
-                                    key={installment.id}
-                                    sx={{
-                                        p: 2,
-                                        border: '1px solid',
-                                        borderColor: isPaid ? 'success.light' : 'divider',
-                                        borderRadius: 1,
-                                        bgcolor: isPaid ? 'success.50' : 'background.paper'
-                                    }}
-                                >
-                                    <Stack spacing={1}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Typography variant="body2" fontWeight={600}>
-                                                Parcela {installment.sequence}
-                                            </Typography>
-                                            <Chip
-                                                label={isPaid ? "Paga" : "Pendente"}
-                                                color={isPaid ? "success" : "warning"}
-                                                size="small"
-                                            />
-                                        </Box>
-
-                                        <Row label="Valor" value={formatCurrency(installment.amount)} />
-                                        <Row label="Pago" value={formatCurrency(installment.paidAmount)} />
-
-                                        {!isPaid && (
-                                            <Row label="Restante" value={formatCurrency(remainingAmount)} />
-                                        )}
-
-                                        {installment.dueDate && (
-                                            <Row label="Vencimento" value={formatDate(installment.dueDate)} />
-                                        )}
-
-                                        {installment.paidAt && (
-                                            <Row label="Data do Pagamento" value={formatDate(installment.paidAt)} />
-                                        )}
-
-                                        {/* ✅ BOTÃO PARA PAGAR PARCELA */}
-                                        {!isPaid && onPayInstallment && (
-                                            <Button
-                                                size="small"
-                                                variant="contained"
-                                                color="primary"
-                                                startIcon={<DollarSign size={14} />}
-                                                onClick={() => handlePayInstallment(installment.id, remainingAmount)}
-                                                sx={{ mt: 1 }}
-                                            >
-                                                Pagar {formatCurrency(remainingAmount)}
-                                            </Button>
-                                        )}
-                                    </Stack>
-                                </Box>
-                            );
-                        })}
+                        {payment.method === "INSTALLMENT" && (
+                            <>
+                                <Row label="Entrada" value={formatCurrency(payment.downPayment)} />
+                                <Row label="Número de Parcelas" value={payment.installmentsTotal} />
+                                <Row label="Parcelas Pagas" value={`${payment.installmentsPaid} de ${payment.installmentsTotal}`} />
+                            </>
+                        )}
                     </Stack>
                 </Box>
-            )}
-        </Stack>
+
+                {/* ========================================= */}
+                {/* 🔹 Datas */}
+                {/* ========================================= */}
+                <Box component="section">
+                    <Typography variant="subtitle1" fontWeight={600} mb={1}>
+                        Datas
+                    </Typography>
+                    <Stack spacing={1}>
+                        <Row label="Criado em" value={formatDate(payment.createdAt)} />
+                        <Row label="Última atualização" value={formatDate(payment.updatedAt)} />
+                        <Row label="Último pagamento" value={formatDate(payment.lastPaymentAt)} />
+
+                        {payment.method === "INSTALLMENT" && payment.firstDueDate && (
+                            <Row label="Primeiro vencimento" value={formatDate(payment.firstDueDate)} />
+                        )}
+                    </Stack>
+                </Box>
+
+                {/* ========================================= */}
+                {/* 🔹 Resumo do Parcelamento */}
+                {/* ========================================= */}
+                {hasInstallments && installmentStats && (
+                    <Box component="section">
+                        <Typography variant="subtitle1" fontWeight={600} mb={1}>
+                            Resumo do Parcelamento
+                        </Typography>
+                        <Stack spacing={1}>
+                            <Row label="Total de Parcelas" value={installmentStats.totalInstallments} />
+                            <Row
+                                label="Parcelas Pagas"
+                                value={`${installmentStats.paidInstallments} de ${installmentStats.totalInstallments}`}
+                            />
+                            <Row
+                                label="Valor Total Pago"
+                                value={formatCurrency(installmentStats.totalPaid)}
+                            />
+                            <Row
+                                label="Valor Pendente"
+                                value={formatCurrency(installmentStats.totalPending)}
+                            />
+                        </Stack>
+                    </Box>
+                )}
+
+                {/* ========================================= */}
+                {/* 🔹 Tabela de Parcelas (✅ NOVA INTEGRAÇÃO) */}
+                {/* ========================================= */}
+                {hasInstallments && (
+                    <Box component="section">
+                        <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                            Detalhes das Parcelas
+                        </Typography>
+
+                        <InstallmentsTable
+                            installments={payment.installments || []}
+                            onPay={handleOpenPayDialog}
+                            onEdit={handleOpenEditDialog}
+                            loading={isFetching}
+                        />
+                    </Box>
+                )}
+            </Stack>
+
+            {/* ========================================= */}
+            {/* 🔹 Dialog: Pagar Parcela (✅ NOVA INTEGRAÇÃO) */}
+            {/* ========================================= */}
+            <PayInstallmentDialog
+                open={payDialogOpen}
+                installment={selectedInstallment}
+                onClose={handleClosePayDialog}
+                onConfirm={handleConfirmPay}
+                loading={isFetching}
+            />
+
+            {/* ========================================= */}
+            {/* 🔹 Dialog: Editar Parcela (✅ NOVA INTEGRAÇÃO) */}
+            {/* ========================================= */}
+            <EditInstallmentDialog
+                open={editDialogOpen}
+                installment={selectedInstallment}
+                onClose={handleCloseEditDialog}
+                onConfirm={handleConfirmEdit}
+                loading={isFetching}
+            />
+        </>
     );
 }
 
