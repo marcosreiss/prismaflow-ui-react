@@ -112,7 +112,6 @@ export default function ExpiringPrescriptionsPage() {
         ? {
             id: selectedPrescription.id,
             clientId: selectedPrescription.clientId,
-            prescriptionId: selectedPrescription.id,
             prescriptionDate: selectedPrescription.prescriptionDate,
             doctorName: selectedPrescription.doctorName ?? null,
             crm: selectedPrescription.crm ?? null,

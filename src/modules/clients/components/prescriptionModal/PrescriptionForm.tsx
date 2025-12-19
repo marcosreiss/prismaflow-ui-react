@@ -24,7 +24,7 @@ import { useNotification } from "@/context/NotificationContext";
 
 type PrescriptionControllerType = {
     methods: UseFormReturn<CreatePrescriptionPayload>;
-    inputRef: React.RefObject<HTMLInputElement>;
+    inputRef: React.RefObject<HTMLInputElement | null>; // 👈 Adicione | null
     handleSubmit: (e?: React.BaseSyntheticEvent) => void;
     creating: boolean;
     updating: boolean;
@@ -57,13 +57,14 @@ export default function PrescriptionForm({
 }
 
 type PrescriptionFormContentProps = {
-    inputRef: React.RefObject<HTMLInputElement>;
+    inputRef: React.RefObject<HTMLInputElement | null>; // 👈 Adicione | null aqui também
     creating: boolean;
     updating: boolean;
     isCreate: boolean;
     onClose: () => void;
     handleSubmit: (e?: React.BaseSyntheticEvent) => void;
 };
+
 
 // ✅ FUNÇÕES AUXILIARES PARA MENSAGENS DE ERRO
 function getFieldLabel(fieldName: string): string {
