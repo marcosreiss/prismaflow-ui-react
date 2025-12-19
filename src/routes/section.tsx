@@ -22,7 +22,7 @@ const SalesForm = lazy(() => import('@/modules/sales/pages/SalesFormPage'));
 const SalesDetailsPage = lazy(() => import('@/modules/sales/pages/salesDetailsPage'));
 
 
-const PaymentPage = lazy(() => import('@/modules/payments/PaymentsPage'));
+const PaymentPage = lazy(() => import('@/modules/payments/pages/PaymentsPage'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
