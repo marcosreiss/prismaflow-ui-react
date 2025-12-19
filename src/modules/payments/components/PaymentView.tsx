@@ -1,12 +1,15 @@
 // components/PaymentView.tsx
-import { Box, Stack, Typography, Chip, CircularProgress, Alert } from "@mui/material";
-import { useMemo, useState } from "react";
+import { Box, Stack, Typography, Chip, CircularProgress, Alert, Button } from "@mui/material";
+import { useMemo, useState, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import type { PaymentStatus, PaymentInstallment } from "../types/paymentTypes";
 import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentTypes";
 import { useGetPaymentById } from "../hooks/usePayments";
+import { Printer } from "lucide-react"; // ✅ NOVO ÍCONE
 import InstallmentsTable from "./InstallmentsTable";
 import PayInstallmentDialog from "./PayInstallmentDialog";
 import EditInstallmentDialog from "./EditInstallmentDialog";
+import { CarnetTemplate } from "./CarnetTemplate"; // ✅ NOVO IMPORT
 
 // ==============================
 // 🔹 Props
@@ -37,6 +40,11 @@ export default function PaymentView({
     const [selectedInstallment, setSelectedInstallment] = useState<PaymentInstallment | null>(null);
 
     // ==============================
+    // 🔹 Ref para impressão do carnê (✅ NOVO)
+    // ==============================
+    const carnetRef = useRef<HTMLDivElement>(null);
+
+    // ==============================
     // 🔹 Buscar dados do pagamento
     // ==============================
     const {
@@ -47,6 +55,26 @@ export default function PaymentView({
     } = useGetPaymentById(paymentId);
 
     const payment = apiResponse?.data;
+
+    // ==============================
+    // 🔹 Hook de impressão (✅ CORRIGIDO)
+    // ==============================
+    const handlePrint = useReactToPrint({
+        contentRef: carnetRef, // ✅ Mudou de 'content' para 'contentRef'
+        documentTitle: `Carne-Pagamento-${payment?.saleId || paymentId}`,
+        pageStyle: `
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    `,
+    });
 
     // ==============================
     // 🔹 Cálculos derivados (memoizados)
@@ -267,9 +295,22 @@ export default function PaymentView({
                 {/* ========================================= */}
                 {hasInstallments && installmentStats && (
                     <Box component="section">
-                        <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                            Resumo do Parcelamento
-                        </Typography>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                            <Typography variant="subtitle1" fontWeight={600}>
+                                Resumo do Parcelamento
+                            </Typography>
+
+                            {/* ✅ NOVO: Botão Imprimir Carnê */}
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<Printer size={16} />}
+                                onClick={handlePrint}
+                            >
+                                Imprimir Carnê
+                            </Button>
+                        </Box>
+
                         <Stack spacing={1}>
                             <Row label="Total de Parcelas" value={installmentStats.totalInstallments} />
                             <Row
@@ -289,7 +330,7 @@ export default function PaymentView({
                 )}
 
                 {/* ========================================= */}
-                {/* 🔹 Tabela de Parcelas (✅ NOVA INTEGRAÇÃO) */}
+                {/* 🔹 Tabela de Parcelas */}
                 {/* ========================================= */}
                 {hasInstallments && (
                     <Box component="section">
@@ -308,7 +349,7 @@ export default function PaymentView({
             </Stack>
 
             {/* ========================================= */}
-            {/* 🔹 Dialog: Pagar Parcela (✅ NOVA INTEGRAÇÃO) */}
+            {/* 🔹 Dialog: Pagar Parcela */}
             {/* ========================================= */}
             <PayInstallmentDialog
                 open={payDialogOpen}
@@ -319,7 +360,7 @@ export default function PaymentView({
             />
 
             {/* ========================================= */}
-            {/* 🔹 Dialog: Editar Parcela (✅ NOVA INTEGRAÇÃO) */}
+            {/* 🔹 Dialog: Editar Parcela */}
             {/* ========================================= */}
             <EditInstallmentDialog
                 open={editDialogOpen}
@@ -328,6 +369,13 @@ export default function PaymentView({
                 onConfirm={handleConfirmEdit}
                 loading={isFetching}
             />
+
+            {/* ========================================= */}
+            {/* 🔹 Template do Carnê (oculto, só para impressão) ✅ NOVO */}
+            {/* ========================================= */}
+            <Box sx={{ display: "none" }}>
+                <CarnetTemplate ref={carnetRef} payment={payment} />
+            </Box>
         </>
     );
 }
