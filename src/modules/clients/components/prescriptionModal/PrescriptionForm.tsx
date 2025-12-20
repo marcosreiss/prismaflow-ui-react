@@ -68,67 +68,8 @@ type PrescriptionFormContentProps = {
 
 
 // ✅ FUNÇÕES AUXILIARES PARA MENSAGENS DE ERRO
-function getFieldLabel(fieldName: string): string {
-    const fieldLabels: Record<string, string> = {
-        doctorName: "Nome do médico",
-        crm: "CRM",
-        prescriptionDate: "Data da receita",
-        lensType: "Tipo de lente",
-        frameAndRef: "Armação e Ref",
-        notes: "Observações",
-        odSphericalFar: "OD Esférico Longe",
-        odCylindricalFar: "OD Cilíndrico Longe",
-        odAxisFar: "OD Eixo Longe",
-        odDnpFar: "OD DNP Longe",
-        oeSphericalFar: "OE Esférico Longe",
-        oeCylindricalFar: "OE Cilíndrico Longe",
-        oeAxisFar: "OE Eixo Longe",
-        oeDnpFar: "OE DNP Longe",
-        odSphericalNear: "OD Esférico Perto",
-        odCylindricalNear: "OD Cilíndrico Perto",
-        odAxisNear: "OD Eixo Perto",
-        odDnpNear: "OD DNP Perto",
-        oeSphericalNear: "OE Esférico Perto",
-        oeCylindricalNear: "OE Cilíndrico Perto",
-        oeAxisNear: "OE Eixo Perto",
-        oeDnpNear: "OE DNP Perto",
-        additionRight: "Adição OD",
-        additionLeft: "Adição OE",
-        opticalCenterRight: "Centro Óptico OD",
-        opticalCenterLeft: "Centro Óptico OE",
-        odPellicleFar: "OD Película Longe",
-        odPellicleNear: "OD Película Perto",
-        oePellicleFar: "OE Película Longe",
-        oePellicleNear: "OE Película Perto",
-    };
 
-    return fieldLabels[fieldName] || fieldName;
-}
 
-function getFirstErrorMessage(errors: Record<string, unknown>): string | null {
-    if (!errors || Object.keys(errors).length === 0) return null;
-
-    for (const [fieldName, error] of Object.entries(errors)) {
-        if (error && typeof error === 'object' && 'message' in error && error.message) {
-            const fieldLabel = getFieldLabel(fieldName);
-            return `${fieldLabel}: ${error.message}`;
-        }
-    }
-
-    return null;
-}
-
-function countErrors(errors: Record<string, unknown>): number {
-    if (!errors || Object.keys(errors).length === 0) return 0;
-
-    let count = 0;
-    for (const value of Object.values(errors)) {
-        if (value && typeof value === 'object' && 'message' in value) {
-            count++;
-        }
-    }
-    return count;
-}
 
 function PrescriptionFormContent({
     inputRef,
