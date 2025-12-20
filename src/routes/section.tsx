@@ -16,13 +16,12 @@ const ClientPrescriptionsPage = lazy(() => import('@/modules/clients/pages/Clien
 const ClientsBirthdaysPage = lazy(() => import('@/modules/clients/pages/ClientsBirthdaysPage'));
 const ExpiringPrescriptionsPage = lazy(() => import('@/modules/clients/pages/ExpiringPrescriptionsPage'));
 
-
 const SalesPage = lazy(() => import('@/modules/sales/pages/SalesPage'));
 const SalesForm = lazy(() => import('@/modules/sales/pages/SalesFormPage'));
 const SalesDetailsPage = lazy(() => import('@/modules/sales/pages/salesDetailsPage'));
 
-
-const PaymentPage = lazy(() => import('@/modules/payments/PaymentsPage'));
+const PaymentPage = lazy(() => import('@/modules/payments/pages/PaymentsPage'));
+const OverdueInstallmentsPage = lazy(() => import('@/modules/payments/pages/OverdueInstallmentsPage')); // ✅ NOVO
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -59,11 +58,12 @@ export function PrivateRouter() {
                 { path: 'clients/:id/prescriptions', element: <ClientPrescriptionsPage /> },
 
                 { path: 'sales', element: <SalesPage /> },
-                { path: 'sales/new', element: <SalesForm /> }, // ✅ CRIAÇÃO
-                { path: 'sales/edit/:id', element: <SalesForm /> }, // ✅ EDIÇÃO
+                { path: 'sales/new', element: <SalesForm /> },
+                { path: 'sales/edit/:id', element: <SalesForm /> },
                 { path: 'sales/:id', element: <SalesDetailsPage /> },
 
                 { path: 'payments', element: <PaymentPage /> },
+                { path: 'overdue-installments', element: <OverdueInstallmentsPage /> }, // ✅ NOVO
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },

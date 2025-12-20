@@ -2,21 +2,23 @@ import { Paper, Button, Box } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
+import PaymentDrawer from "../components/paymentDrawer";
+import PaymentFilters from "../components/PaymentFilters";
+import { usePaymentPageController } from "../hooks/usePaymentPageController";
+import type { PaymentListItem, PaymentFromListItem } from "../types/paymentTypes";
 
-import { usePaymentPageController } from "./hooks/usePaymentPageController";
-import type { PaymentListItem, PaymentFromListItem } from "./types/paymentTypes";
-import PaymentFilters from "./components/PaymentFilters";
-import PaymentDrawer from "./components/paymentDrawer";
 
 // ==============================
 // 🔹 Página principal de pagamentos
 // ==============================
 export default function PaymentsPage() {
-    // Controller
+    // ==============================
+    // 🔹 Controller (gerencia estado e lógica)
+    // ==============================
     const controller = usePaymentPageController();
 
     const {
-        // dados e estados
+        // Dados e estados
         payments,
         total,
         isLoading,
@@ -32,7 +34,7 @@ export default function PaymentsPage() {
         deletingIds,
         filters,
 
-        // ações e mutações
+        // Ações e mutações
         setPage,
         setLimit,
         setConfirmDelete,
@@ -45,25 +47,26 @@ export default function PaymentsPage() {
         handleDeleteSelected,
         refetch,
 
-        // handlers de filtro
+        // Handlers de filtro
         handleFilterChange,
 
-        // 🔹 Handlers para Drawer
+        // Handlers para Drawer
         handleDrawerEdit,
         handleDrawerDelete,
         handleDrawerCreateNew,
 
-        // 🔹 Handlers específicos para payments
+        // Handlers específicos para payments
         handleUpdateStatus,
-        handleProcessInstallment,
+        handlePayInstallment, // ✅ ATUALIZADO (antes era handleProcessInstallment)
 
-        // 🔹 Estados de loading
+        // Estados de loading
         isDeleting,
         isAnyMutationPending,
     } = controller;
 
     // ==============================
-    // 🔹 Função para converter PaymentListItem para Payment
+    // 🔹 Função auxiliar para conversão de tipo
+    // Converte PaymentListItem para PaymentFromListItem
     // ==============================
     const convertToPayment = (item: PaymentListItem): PaymentFromListItem => {
         return {
@@ -83,7 +86,7 @@ export default function PaymentsPage() {
     };
 
     // ==============================
-    // 🔹 Colunas da tabela
+    // 🔹 Definição das colunas da tabela
     // ==============================
     const columns: ColumnDef<PaymentListItem>[] = [
         { key: "id", label: "ID", width: 80 },
@@ -145,7 +148,9 @@ export default function PaymentsPage() {
                 p: 3,
             }}
         >
-            {/* Top Toolbar */}
+            {/* ========================================= */}
+            {/* 🔹 Top Toolbar (título, busca, ações) */}
+            {/* ========================================= */}
             <PFTopToolbar
                 title="Pagamentos"
                 onSearch={(value) => handleFilterChange({ clientSearch: value })}
@@ -172,29 +177,56 @@ export default function PaymentsPage() {
                 }
             />
 
-            {/* 🔄 ÁREA DE FILTROS */}
+            {/* ========================================= */}
+            {/* 🔹 ÁREA DE FILTROS (✅ ATUALIZADA) */}
+            {/* ========================================= */}
             <Box sx={{ mb: 3, mt: 2 }}>
                 <PaymentFilters
+                    // Filtros básicos
                     status={filters.status || ''}
                     method={filters.method || ''}
                     dateRange={{
                         start: filters.startDate || '',
                         end: filters.endDate || ''
                     }}
-                    clientSearch={filters.clientSearch || ''} // 🆕 NOVO
-                    onStatusChange={(status) => handleFilterChange({ status: status || undefined })}
-                    onMethodChange={(method) => handleFilterChange({ method: method || undefined })}
+                    clientSearch={filters.clientSearch || ''}
+
+                    // ✅ NOVOS FILTROS AVANÇADOS:
+                    hasOverdueInstallments={filters.hasOverdueInstallments}
+                    isPartiallyPaid={filters.isPartiallyPaid}
+                    dueDaysAhead={filters.dueDaysAhead}
+
+                    // Handlers básicos
+                    onStatusChange={(status) => handleFilterChange({
+                        status: status || undefined
+                    })}
+                    onMethodChange={(method) => handleFilterChange({
+                        method: method || undefined
+                    })}
                     onDateChange={(dateRange) => handleFilterChange({
                         startDate: dateRange.start || undefined,
                         endDate: dateRange.end || undefined
                     })}
                     onClientSearchChange={(clientSearch) => handleFilterChange({
                         clientSearch: clientSearch || undefined
-                    })} // 🆕 NOVO
+                    })}
+
+                    // ✅ NOVOS HANDLERS AVANÇADOS:
+                    onOverdueChange={(checked) => handleFilterChange({
+                        hasOverdueInstallments: checked ? true : undefined
+                    })}
+                    onPartiallyPaidChange={(checked) => handleFilterChange({
+                        isPartiallyPaid: checked ? true : undefined
+                    })}
+                    onDueDaysChange={(days) => handleFilterChange({
+                        dueDaysAhead: days
+                    })}
                 />
             </Box>
 
-            {/* Tabela */}
+            {/* ========================================= */}
+            {/* 🔹 TABELA DE PAGAMENTOS */}
+            {/* ========================================= */}
             <PFTable
                 columns={columns}
                 rows={payments}
@@ -215,7 +247,9 @@ export default function PaymentsPage() {
                 isRowDisabled={(row) => deletingIds.includes(row.id)}
             />
 
-            {/* Drawer de pagamento */}
+            {/* ========================================= */}
+            {/* 🔹 DRAWER DE PAGAMENTO (✅ ATUALIZADO) */}
+            {/* ========================================= */}
             <PaymentDrawer
                 open={drawerOpen}
                 mode={drawerMode}
@@ -225,7 +259,7 @@ export default function PaymentsPage() {
                 onEdit={handleDrawerEdit}
                 onDelete={handleDrawerDelete}
                 onUpdateStatus={handleUpdateStatus}
-                onProcessInstallment={handleProcessInstallment}
+                onPayInstallment={handlePayInstallment} // ✅ ATUALIZADO (antes era onProcessInstallment)
                 onCreateNew={handleDrawerCreateNew}
                 onCreated={() => {
                     refetch();
@@ -235,7 +269,9 @@ export default function PaymentsPage() {
                 }}
             />
 
-            {/* Confirmação de exclusão individual */}
+            {/* ========================================= */}
+            {/* 🔹 CONFIRMAÇÃO DE EXCLUSÃO INDIVIDUAL */}
+            {/* ========================================= */}
             <PFConfirmDialog
                 open={confirmDelete}
                 title="Excluir pagamento"
@@ -245,7 +281,9 @@ export default function PaymentsPage() {
                 loading={isDeleting || isAnyMutationPending}
             />
 
-            {/* Confirmação de exclusão em massa */}
+            {/* ========================================= */}
+            {/* 🔹 CONFIRMAÇÃO DE EXCLUSÃO EM MASSA */}
+            {/* ========================================= */}
             <PFConfirmDialog
                 open={confirmDeleteSelected}
                 title="Excluir pagamentos selecionados"

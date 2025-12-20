@@ -5,6 +5,8 @@ import {
     MenuItem,
     Button,
     Paper,
+    Checkbox,
+    FormControlLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
 import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentTypes";
@@ -17,11 +19,21 @@ interface PaymentFiltersProps {
     status: PaymentStatus | '';
     method: PaymentMethod | '';
     dateRange: { start: string; end: string };
-    clientSearch: string; // 🆕 NOVO
+    clientSearch: string;
+    // ✅ NOVOS FILTROS AVANÇADOS:
+    hasOverdueInstallments?: boolean;
+    isPartiallyPaid?: boolean;
+    dueDaysAhead?: number;
+
+    // Handlers
     onStatusChange: (status: PaymentStatus | '') => void;
     onMethodChange: (method: PaymentMethod | '') => void;
     onDateChange: (dateRange: { start: string; end: string }) => void;
-    onClientSearchChange: (clientSearch: string) => void; // 🆕 NOVO
+    onClientSearchChange: (clientSearch: string) => void;
+    // ✅ NOVOS HANDLERS:
+    onOverdueChange?: (checked: boolean) => void;
+    onPartiallyPaidChange?: (checked: boolean) => void;
+    onDueDaysChange?: (days: number | undefined) => void;
 }
 
 // ==============================
@@ -31,22 +43,41 @@ export default function PaymentFilters({
     status,
     method,
     dateRange,
+    clientSearch,
+    hasOverdueInstallments,
+    isPartiallyPaid,
+    dueDaysAhead,
     onStatusChange,
     onMethodChange,
     onDateChange,
-    onClientSearchChange, // 🆕 NOVO
+    onClientSearchChange,
+    onOverdueChange,
+    onPartiallyPaidChange,
+    onDueDaysChange,
 }: PaymentFiltersProps) {
 
-    // Limpar todos os filtros
+    // ✅ ATUALIZADO: Limpar todos os filtros (incluindo novos)
     const handleClearFilters = () => {
         onStatusChange('');
         onMethodChange('');
         onDateChange({ start: '', end: '' });
-        onClientSearchChange(''); // 🆕 LIMPAR BUSCA POR CLIENTE
+        onClientSearchChange('');
+        // Novos filtros
+        onOverdueChange?.(false);
+        onPartiallyPaidChange?.(false);
+        onDueDaysChange?.(undefined);
     };
 
-    // Verificar se há algum filtro ativo (atualizado)
-    const hasActiveFilters = status || method || dateRange.start || dateRange.end;
+    // ✅ ATUALIZADO: Verificar se há algum filtro ativo (incluindo novos)
+    const hasActiveFilters =
+        status ||
+        method ||
+        dateRange.start ||
+        dateRange.end ||
+        clientSearch ||
+        hasOverdueInstallments ||
+        isPartiallyPaid ||
+        dueDaysAhead !== undefined;
 
     return (
         <Paper
@@ -59,7 +90,9 @@ export default function PaymentFilters({
             }}
         >
             <Stack spacing={2}>
-                {/* Cabeçalho com título e botão limpar */}
+                {/* ========================================= */}
+                {/* 🔹 Cabeçalho com título e botão limpar */}
+                {/* ========================================= */}
                 <Box sx={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -92,13 +125,15 @@ export default function PaymentFilters({
                     )}
                 </Box>
 
-                {/* Filtros em grid responsivo ATUALIZADO */}
+                {/* ========================================= */}
+                {/* 🔹 FILTROS BÁSICOS (Status, Método, Datas) */}
+                {/* ========================================= */}
                 <Box sx={{
                     display: 'grid',
                     gridTemplateColumns: {
                         xs: '1fr',
                         sm: '1fr 1fr',
-                        md: '140px 180px 1fr 1fr' // 🆕 MAIS UMA COLUNA
+                        md: '140px 180px 1fr'
                     },
                     gap: 2,
                     alignItems: 'start'
@@ -176,6 +211,68 @@ export default function PaymentFilters({
                             fullWidth
                         />
                     </Stack>
+                </Box>
+
+                {/* ========================================= */}
+                {/* 🔹 FILTROS AVANÇADOS (Novos) */}
+                {/* ========================================= */}
+                <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        sm: 'repeat(2, 1fr)',
+                        md: 'repeat(3, 1fr)'
+                    },
+                    gap: 2,
+                    alignItems: 'center',
+                    pt: 1,
+                    borderTop: '1px dashed',
+                    borderColor: 'divider'
+                }}>
+                    {/* ✅ NOVO: Checkbox - Parcelas Vencidas */}
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={hasOverdueInstallments || false}
+                                onChange={(e) => onOverdueChange?.(e.target.checked)}
+                                size="small"
+                            />
+                        }
+                        label="Com parcelas vencidas"
+                        sx={{ m: 0 }}
+                    />
+
+                    {/* ✅ NOVO: Checkbox - Parcialmente Pagos */}
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={isPartiallyPaid || false}
+                                onChange={(e) => onPartiallyPaidChange?.(e.target.checked)}
+                                size="small"
+                            />
+                        }
+                        label="Parcialmente pagos"
+                        sx={{ m: 0 }}
+                    />
+
+                    {/* ✅ NOVO: Input - Vencimento nos próximos X dias */}
+                    <TextField
+                        size="small"
+                        type="number"
+                        label="Vence nos próximos (dias)"
+                        value={dueDaysAhead ?? ''}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            onDueDaysChange?.(value ? Number(value) : undefined);
+                        }}
+                        inputProps={{
+                            min: 0,
+                            max: 365,
+                            placeholder: "Ex: 7"
+                        }}
+                        fullWidth
+                        helperText="Ex: 7 para próximos 7 dias"
+                    />
                 </Box>
             </Stack>
         </Paper>

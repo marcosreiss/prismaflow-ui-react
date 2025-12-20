@@ -2,81 +2,93 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/utils/apiResponse";
 import { useNotification } from "@/context/NotificationContext";
-import { useGetPayments, useDeletePayment, useUpdatePaymentStatus, useProcessPaymentInstallment } from "./usePayments";
-import type { Payment, PaymentDetails, PaymentStatus, PaymentListItem, PaymentFilters } from "../types/paymentTypes";
+// ✅ ATUALIZADO: Substituído useProcessPaymentInstallment por usePayInstallment
+import {
+    useGetPayments,
+    useDeletePayment,
+    useUpdatePaymentStatus,
+    usePayInstallment // ✅ NOVO HOOK (substitui useProcessPaymentInstallment)
+} from "./usePayments";
+import type {
+    Payment,
+    PaymentDetails,
+    PaymentStatus,
+    PaymentListItem,
+    PaymentFilters
+} from "../types/paymentTypes";
 
 // ==============================
-// 🔹 Hook principal - Versão Melhorada
+// 🔹 Hook principal - Controller da página de pagamentos
 // ==============================
 export function usePaymentPageController() {
     // ==========================
-    // 🔹 Estados locais
+    // 🔹 Estados locais de paginação e busca
     // ==========================
     const [page, setPage] = useState(0);
-    const [limit, setLimit] = useState(10); // Aumentado para melhor UX
+    const [limit, setLimit] = useState(10);
     const [search, setSearch] = useState("");
 
-    // Estados de UI
+    // ==========================
+    // 🔹 Estados de UI (Drawer e modais)
+    // ==========================
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [drawerMode, setDrawerMode] = useState<"create" | "edit" | "view">("view");
     const [selectedPayment, setSelectedPayment] = useState<PaymentDetails | null>(null);
 
-    // Estados de confirmação
+    // ==========================
+    // 🔹 Estados de confirmação de ações
+    // ==========================
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
     const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
-    // 🔄 Estados de filtro centralizados
-    // No usePaymentPageController.tsx - ATUALIZE:
-
-    // 🔄 Estados de filtro centralizados (ATUALIZADO)
+    // ==========================
+    // 🔹 Estados de filtros centralizados
+    // ✅ ATUALIZADO: Adicionados novos filtros avançados
+    // ==========================
     const [filters, setFilters] = useState<PaymentFilters>({
         status: undefined,
         method: undefined,
         startDate: '',
         endDate: '',
-        clientSearch: '', // 🆕 NOVO
+        clientSearch: '',
+        // ✅ NOVOS FILTROS AVANÇADOS:
+        hasOverdueInstallments: undefined, // Filtrar pagamentos com parcelas vencidas
+        isPartiallyPaid: undefined,        // Filtrar pagamentos parcialmente pagos
+        dueDaysAhead: undefined,           // Filtrar por parcelas vencendo nos próximos X dias
     });
 
+    const { addNotification } = useNotification();
+
+    // ==========================
+    // 🔹 Preparação dos parâmetros de query para a API
+    // ✅ ATUALIZADO: Incluídos novos filtros
+    // ==========================
     const queryParams = useMemo(() => ({
-        page: page + 1,
+        page: page + 1, // API usa paginação baseada em 1
         limit,
+        // Filtros básicos
         ...(filters.status && { status: filters.status }),
         ...(filters.method && { method: filters.method }),
         ...(filters.startDate && { startDate: filters.startDate }),
         ...(filters.endDate && { endDate: filters.endDate }),
-        ...(filters.clientSearch && { clientName: filters.clientSearch }), // Só essa linha para nome do cliente!
+        ...(filters.clientSearch && { clientName: filters.clientSearch }),
+        // ✅ NOVOS FILTROS AVANÇADOS:
+        ...(filters.hasOverdueInstallments !== undefined && {
+            hasOverdueInstallments: filters.hasOverdueInstallments
+        }),
+        ...(filters.isPartiallyPaid !== undefined && {
+            isPartiallyPaid: filters.isPartiallyPaid
+        }),
+        ...(filters.dueDaysAhead !== undefined && {
+            dueDaysAhead: filters.dueDaysAhead
+        }),
     }), [page, limit, filters]);
 
-
-    // 🔄 Limpar filtros (ATUALIZADO)
-    const handleClearFilters = useCallback(() => {
-        setFilters({
-            status: undefined,
-            method: undefined,
-            startDate: '',
-            endDate: '',
-            clientSearch: '', // 🆕 NOVO
-        });
-        setSearch('');
-        setPage(0);
-    }, []);
-
-    const { addNotification } = useNotification();
-
-    // const queryParams = useMemo(() => ({
-    //     page: page + 1,
-    //     limit,
-    //     ...(search && { search }),
-    //     ...(filters.status && { status: filters.status }),
-    //     ...(filters.method && { method: filters.method }),
-    //     ...(filters.startDate && { startDate: filters.startDate }),
-    //     ...(filters.endDate && { endDate: filters.endDate })
-    // }), [page, limit, search, filters]);
-
     // ==========================
-    // 🔹 Hooks de dados
+    // 🔹 Hooks de API - Queries e Mutations
+    // ✅ ATUALIZADO: Substituído hook obsoleto
     // ==========================
     const {
         data,
@@ -88,10 +100,10 @@ export function usePaymentPageController() {
 
     const deletePayment = useDeletePayment();
     const updatePaymentStatus = useUpdatePaymentStatus();
-    const processPaymentInstallment = useProcessPaymentInstallment();
+    const payInstallment = usePayInstallment(); // ✅ NOVO (substitui processPaymentInstallment)
 
     // ==========================
-    // 🔹 Notificações de erro
+    // 🔹 Notificações automáticas de erro
     // ==========================
     useEffect(() => {
         if (error) {
@@ -102,7 +114,7 @@ export function usePaymentPageController() {
     }, [error, addNotification]);
 
     // ==========================
-    // 🔹 Drawer handlers (otimizados com useCallback)
+    // 🔹 Handlers do Drawer (abrir/fechar)
     // ==========================
     const handleOpenDrawer = useCallback((
         mode: "create" | "edit" | "view",
@@ -115,14 +127,14 @@ export function usePaymentPageController() {
 
     const handleCloseDrawer = useCallback(() => {
         setDrawerOpen(false);
-        // Pequeno delay para animação do drawer fechar
+        // Delay para animação do drawer antes de limpar estado
         setTimeout(() => {
             setSelectedPayment(null);
         }, 300);
     }, []);
 
     // ==========================
-    // 🔹 Drawer: ações internas
+    // 🔹 Ações do Drawer (editar/deletar/criar)
     // ==========================
     const handleDrawerEdit = useCallback(() => {
         if (!selectedPayment) return;
@@ -140,7 +152,7 @@ export function usePaymentPageController() {
     }, [handleOpenDrawer]);
 
     // ==========================
-    // 🔹 Exclusão individual
+    // 🔹 Exclusão individual de pagamento
     // ==========================
     const handleDelete = async () => {
         if (!selectedPayment) return;
@@ -159,13 +171,14 @@ export function usePaymentPageController() {
     };
 
     // ==========================
-    // 🔹 Atualização de status
+    // 🔹 Atualização de status do pagamento
     // ==========================
-    const handleUpdateStatus = async (paymentId: number, status: PaymentStatus) => {
+    const handleUpdateStatus = async (paymentId: number, status: PaymentStatus, reason?: string) => {
         try {
             const res = await updatePaymentStatus.mutateAsync({
                 id: paymentId,
-                status
+                status,
+                reason // ✅ ADICIONADO: Motivo opcional (ex: cancelamento)
             });
             addNotification(res.message, "success");
             refetch();
@@ -177,30 +190,30 @@ export function usePaymentPageController() {
     };
 
     // ==========================
-    // 🔹 Processamento de parcela
+    // 🔹 Pagamento de parcela
+    // ✅ NOVO HANDLER (substitui handleProcessInstallment)
     // ==========================
-    const handleProcessInstallment = async (
-        paymentId: number,
+    const handlePayInstallment = async (
         installmentId: number,
-        paidAmount: number
+        paidAmount: number,
+        paidAt?: string
     ) => {
         try {
-            const res = await processPaymentInstallment.mutateAsync({
-                paymentId,
-                installmentId,
-                paidAmount
+            const res = await payInstallment.mutateAsync({
+                id: installmentId,
+                data: { paidAmount, paidAt }
             });
             addNotification(res.message, "success");
             refetch();
         } catch (err) {
             const axiosErr = err as AxiosError<ApiResponse<null>>;
-            const message = axiosErr.response?.data?.message ?? "Erro ao processar parcela.";
+            const message = axiosErr.response?.data?.message ?? "Erro ao pagar parcela.";
             addNotification(message, "error");
         }
     };
 
     // ==========================
-    // 🔹 Seleção de linhas
+    // 🔹 Seleção de linhas na tabela
     // ==========================
     const handleSelectRow = useCallback((id: string | number, checked: boolean) => {
         setSelectedIds(prev =>
@@ -218,7 +231,8 @@ export function usePaymentPageController() {
     }, []);
 
     // ==========================
-    // 🔹 Exclusão em massa otimizada
+    // 🔹 Exclusão em massa (múltiplos pagamentos)
+    // Executa todas as exclusões em paralelo
     // ==========================
     const handleDeleteSelected = async () => {
         if (selectedIds.length === 0) return;
@@ -234,12 +248,11 @@ export function usePaymentPageController() {
 
             const results = await Promise.allSettled(deletePromises);
 
-            // Processa resultados
+            // Processa resultados individuais
             let successCount = 0;
             results.forEach((result, index) => {
                 if (result.status === 'fulfilled') {
                     successCount++;
-                    addNotification(result.value.message, "success");
                 } else {
                     addNotification(`Erro ao excluir pagamento ${selectedIds[index]}`, "error");
                 }
@@ -261,83 +274,80 @@ export function usePaymentPageController() {
     };
 
     // ==========================
-    // 🔹 Filtros otimizados
+    // 🔹 Gerenciamento de filtros
     // ==========================
     const handleFilterChange = useCallback((newFilters: Partial<PaymentFilters>) => {
         setFilters(prev => ({ ...prev, ...newFilters }));
-        setPage(0); // Reset para primeira página ao filtrar
+        setPage(0); // Reset para primeira página ao alterar filtros
     }, []);
 
-    // const handleClearFilters = useCallback(() => {
-    //     setFilters({
-    //         status: undefined,
-    //         method: undefined,
-    //         startDate: '',
-    //         endDate: ''
-    //     });
-    //     setSearch('');
-    //     setPage(0);
-    // }, []);
+    // ✅ ATUALIZADO: Limpa TODOS os filtros (incluindo novos)
+    const handleClearFilters = useCallback(() => {
+        setFilters({
+            status: undefined,
+            method: undefined,
+            startDate: '',
+            endDate: '',
+            clientSearch: '',
+            hasOverdueInstallments: undefined,
+            isPartiallyPaid: undefined,
+            dueDaysAhead: undefined,
+        });
+        setSearch('');
+        setPage(0);
+    }, []);
 
     // ==========================
-    // 🔹 Dados derivados
+    // 🔹 Mapeamento de dados da API para formato da UI
+    // ✅ CORRIGIDO: Compatibilidade de tipos
     // ==========================
-
-
-    const payments: PaymentDetails[] = useMemo(() => {
+    const payments: PaymentListItem[] = useMemo(() => {
         if (!data?.data?.content) return [];
 
         return data.data.content.map((item: PaymentListItem) => {
-            // ✅ Estratégia flexível para clientName
-            const clientName = item.sale?.client?.name || "Cliente não informado";
-            // ✅ Mapeia PaymentListItem para PaymentDetails
+            // ✅ Retorna PaymentListItem diretamente (não precisa converter para PaymentDetails)
             return {
-                // Campos do PaymentListItem
-                id: item.id,
-                saleId: item.saleId,
-                method: item.method,
-                status: item.status,
-                total: item.total,
-                clientName,
-                createdAt: item.createdAt,
-                updatedAt: item.updatedAt,
-
-                // Campos padrão que não existem em PaymentListItem
-                discount: 0,
-                downPayment: 0,
-                installmentsTotal: null,
-                paidAmount: 0,
-                installmentsPaid: 0,
-                lastPaymentAt: null,
-                firstDueDate: null,
-                isActive: true,
-                branchId: "",
-                tenantId: "",
-                installments: [],
-
-                // Campo sale opcional
-                sale: undefined
+                ...item,
+                // Garante que clientName sempre existe
+                clientName: item.sale?.client?.name || item.clientName || "Cliente não informado",
+                // Garante valores padrão para campos opcionais
+                discount: item.discount ?? 0,
+                downPayment: item.downPayment ?? 0,
+                installmentsTotal: item.installmentsTotal ?? null,
+                paidAmount: item.paidAmount ?? 0,
+                installmentsPaid: item.installmentsPaid ?? 0,
+                lastPaymentAt: item.lastPaymentAt ?? null,
+                firstDueDate: item.firstDueDate ?? null,
+                isActive: item.isActive ?? true,
+                branchId: item.branchId ?? "",
+                tenantId: item.tenantId ?? "",
+                installments: item.installments ?? [],
             };
         });
     }, [data?.data?.content]);
 
+
     const total = data?.data?.totalElements ?? 0;
 
     // ==========================
-    // 🔹 Indicadores de loading
+    // 🔹 Indicadores de loading para cada operação
+    // ✅ ATUALIZADO: Incluído isPayingInstallment
     // ==========================
     const isDeleting = deletePayment.isPending;
     const isUpdatingStatus = updatePaymentStatus.isPending;
-    const isProcessingInstallment = processPaymentInstallment.isPending;
+    const isPayingInstallment = payInstallment.isPending; // ✅ NOVO
 
     // ==========================
     // 🔹 Retorno do controller
+    // Expõe todos os estados e handlers para a página
     // ==========================
     return {
-        // Estados base
+        // Estados base de paginação e busca
         page,
         limit,
         search,
+
+        // Estados de UI
         drawerOpen,
         drawerMode,
         selectedPayment,
@@ -347,14 +357,16 @@ export function usePaymentPageController() {
         deletingIds,
         filters,
 
-        // Dados de API
+        // Dados da API
         payments,
         isLoading,
         total,
         isFetching,
+
+        // Estados de loading por operação
         isDeleting,
         isUpdatingStatus,
-        isProcessingInstallment,
+        isPayingInstallment, // ✅ NOVO
 
         // Setters básicos
         setPage,
@@ -381,7 +393,7 @@ export function usePaymentPageController() {
 
         // Ações específicas para pagamentos
         handleUpdateStatus,
-        handleProcessInstallment,
+        handlePayInstallment, // ✅ NOVO (substitui handleProcessInstallment)
 
         // Ações do drawer
         handleDrawerEdit,
@@ -392,6 +404,6 @@ export function usePaymentPageController() {
         addNotification,
         hasSelectedItems: selectedIds.length > 0,
         selectedCount: selectedIds.length,
-        isAnyMutationPending: isDeleting || isUpdatingStatus || isProcessingInstallment
+        isAnyMutationPending: isDeleting || isUpdatingStatus || isPayingInstallment // ✅ ATUALIZADO
     };
 }

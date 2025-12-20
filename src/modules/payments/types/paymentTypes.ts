@@ -24,7 +24,6 @@ export const PaymentStatusLabels: Record<PaymentStatus, string> = {
   CANCELED: "Cancelado",
 };
 
-
 // ==============================
 // 🔹 ENTIDADE PRINCIPAL: PAYMENT
 // ==============================
@@ -64,12 +63,24 @@ export type PaymentInstallment = {
   sequence: number;
   amount: number;
   paidAmount: number;
+  dueDate: string | null;
   paidAt: string | null;
   isActive: boolean;
   branchId: string;
   tenantId: string;
   createdAt: string;
   updatedAt: string;
+};
+
+// ==============================
+// 🔹 TIPOS PARA PARCELAS COM CAMPOS CALCULADOS
+// ==============================
+export type PaymentInstallmentWithCalculations = PaymentInstallment & {
+  isPaid: boolean;
+  isPartiallyPaid: boolean;
+  isOverdue: boolean;
+  daysOverdue: number;
+  remainingAmount: number;
 };
 
 // ==============================
@@ -106,6 +117,45 @@ export type PaymentListItem = {
   };
 };
 
+// ==============================
+// 🔹 TIPOS PARA LISTAGEM DE PARCELAS
+// ==============================
+export type InstallmentListItem = PaymentInstallmentWithCalculations & {
+  clientName?: string;
+  clientPhone?: string;
+  payment?: {
+    id: number;
+    saleId: number;
+    status: PaymentStatus;
+    method: PaymentMethod | null;
+    sale?: {
+      id: number;
+      client?: {
+        id: number;
+        name: string;
+        phone01?: string;
+      };
+    };
+  };
+};
+
+export type InstallmentSummary = {
+  total: number;
+  paid: number;
+  pending: number;
+  overdue: number;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+};
+
+export type InstallmentListResponse = {
+  paymentId: number;
+  saleId: number;
+  summary: InstallmentSummary;
+  installments: PaymentInstallmentWithCalculations[];
+};
+
 // Helper type para conversão
 export type PaymentFromListItem = PaymentListItem & {
   discount: number;
@@ -122,30 +172,42 @@ export type PaymentFromListItem = PaymentListItem & {
 };
 
 // ==============================
-// 🔹 TIPO COMPLETO (Estava perfeito)
+// 🔹 TIPO COMPLETO
 // ==============================
 export type PaymentDetails = Payment & {
   installments: PaymentInstallment[];
   sale?: {
     id: number;
+    subtotal?: number; // ✅ ADICIONAR
+    discount?: number; // ✅ ADICIONAR
     total: number;
+    notes?: string | null; // ✅ ADICIONAR
+    clientName?: string;
+    client?: {
+      id: number;
+      name: string;
+    };
   };
-  clientName: string;
+  clientName?: string; // Para compatibilidade
+  // ✅ ADICIONAR campos calculados que vêm do backend
+  hasOverdueInstallments?: boolean;
+  overdueCount?: number;
+  nextDueDate?: string | null;
+  nextDueAmount?: number | null;
 };
 
 // ==============================
 // 🔹 PAYLOADS (Refatorado para reutilizar o tipo Payment)
 // ==============================
 
-
 export type CreatePaymentPayload = Omit<
   Payment,
-  | 'id'
-  | 'isActive'
-  | 'lastPaymentAt'
-  | 'createdAt'
-  | 'updatedAt'
-  | 'installments'
+  | "id"
+  | "isActive"
+  | "lastPaymentAt"
+  | "createdAt"
+  | "updatedAt"
+  | "installments"
 > & {
   installments?: {
     sequence: number;
@@ -156,20 +218,18 @@ export type CreatePaymentPayload = Omit<
   firstDueDate?: string | null | undefined;
 };
 
-
 export type UpdatePaymentPayload = Partial<
   Pick<
     Payment,
-    | 'method'
-    | 'status'
-    | 'total'
-    | 'discount'
-    | 'downPayment'
-    | 'installmentsTotal'
-    | 'firstDueDate'
+    | "method"
+    | "status"
+    | "total"
+    | "discount"
+    | "downPayment"
+    | "installmentsTotal"
+    | "firstDueDate"
   >
 >;
-
 
 // ==============================
 // 🔹 TIPOS AUXILIARES PARA FORMULÁRIOS (Refatorado)
@@ -177,14 +237,14 @@ export type UpdatePaymentPayload = Partial<
 
 export type PaymentFormValues = Pick<
   CreatePaymentPayload, // Derivado do payload de criação
-  | 'saleId'
-  | 'method'
-  | 'status'
-  | 'total'
-  | 'discount'
-  | 'downPayment'
-  | 'installmentsTotal'
-  | 'firstDueDate'
+  | "saleId"
+  | "method"
+  | "status"
+  | "total"
+  | "discount"
+  | "downPayment"
+  | "installmentsTotal"
+  | "firstDueDate"
 > & {
   // Sobrescreve 'firstDueDate' para garantir que não seja opcional no form
   firstDueDate: string;
@@ -192,14 +252,21 @@ export type PaymentFormValues = Pick<
   // installments: { amount: number; dueDate: string; }[];
 };
 
-// Adicione esses tipos no seu arquivo de tipos
+// ==============================
+// 🔹 FILTROS PARA LISTAGEM
+// ==============================
 export type PaymentFilters = {
   status?: PaymentStatus;
   method?: PaymentMethod;
   startDate?: string;
   endDate?: string;
   search?: string;
-  clientSearch?: string; // 🆕 ADICIONE ESTA LINHA
+  clientSearch?: string;
+  clientId?: number; // ✅ ADICIONAR
+  clientName?: string; // ✅ ADICIONAR
+  hasOverdueInstallments?: boolean; // ✅ ADICIONAR
+  isPartiallyPaid?: boolean; // ✅ ADICIONAR
+  dueDaysAhead?: number; // ✅ ADICIONAR
 };
 
 export type PaymentListQuery = PaymentFilters & {
@@ -244,4 +311,86 @@ export type PaymentApiDetailResponse = {
     };
   };
   clientName?: string; // Caso venha direto do backend
+};
+
+// ==============================
+// 🔹 TIPOS PARA RELATÓRIO DE PARCELAS VENCIDAS
+// ==============================
+export type OverdueInstallmentStats = {
+  totalOverdue: number;
+  totalAmount: number;
+  averageDaysOverdue: number;
+};
+
+export type OverdueInstallmentsResponse = {
+  content: InstallmentListItem[];
+  stats: OverdueInstallmentStats;
+  currentPage: number;
+  totalPages: number;
+  totalElements: number;
+  limit: number;
+};
+
+// ==============================
+// 🔹 TIPOS PARA VALIDAÇÃO DE INTEGRIDADE
+// ==============================
+export type IntegrityIssue = {
+  field: string;
+  expected?: number | number[];
+  found?: number | number[];
+  difference?: number;
+  message: string;
+  installments?: number[];
+};
+
+export type PaymentValidationStats = {
+  paymentId: number;
+  saleId: number;
+  method: PaymentMethod | null;
+  status: PaymentStatus;
+  total: number;
+  discount: number;
+  downPayment: number;
+  amountToInstall: number;
+  installmentsTotal: number | null;
+  installmentsCreated: number;
+  installmentsPaid: number;
+  paidAmount: number;
+  sumOfInstallments: number;
+};
+
+export type PaymentValidationResponse = {
+  valid: boolean;
+  stats: PaymentValidationStats;
+  issues?: IntegrityIssue[];
+  installments: Array<{
+    id: number;
+    sequence: number;
+    amount: number;
+    paidAmount: number;
+    dueDate: string | null;
+    isPaid: boolean;
+  }>;
+};
+
+// ==============================
+// 🔹 PAYLOADS PARA PARCELAS
+// ==============================
+export type PayInstallmentPayload = {
+  paidAmount: number;
+  paidAt?: string; // Opcional, default agora no backend
+};
+
+export type UpdateInstallmentPayload = {
+  amount?: number;
+  dueDate?: string;
+  sequence?: number;
+};
+
+// ==============================
+// 🔹 PAYLOAD PARA ATUALIZAÇÃO DE STATUS
+// ==============================
+export type UpdatePaymentStatusPayload = {
+  status: PaymentStatus;
+  reason?: string; // Para justificativa de cancelamento
 };
