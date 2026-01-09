@@ -1,4 +1,5 @@
 import { Paper, Button, Box } from "@mui/material";
+import { useCallback } from "react";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
@@ -153,7 +154,7 @@ export default function PaymentsPage() {
             {/* ========================================= */}
             <PFTopToolbar
                 title="Pagamentos"
-                onSearch={(value) => handleFilterChange({ clientSearch: value })}
+                onSearch={useCallback((value: string) => handleFilterChange({ clientSearch: value }), [handleFilterChange])}
                 onRefresh={() => refetch()}
                 onAdd={() => handleOpenDrawer("create")}
                 addLabel="Novo pagamento"
