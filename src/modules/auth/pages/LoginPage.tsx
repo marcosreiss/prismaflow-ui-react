@@ -15,12 +15,14 @@ import {
     Select,
     InputAdornment,
     IconButton,
+    useTheme,
 } from "@mui/material";
 import { Eye, EyeOff } from "lucide-react";
 import { Controller } from "react-hook-form";
 import { useLoginPageController } from "../hooks/useLoginPageController";
 
 export default function LoginPage() {
+    const theme = useTheme();
     const {
         control,
         handleSubmit,
@@ -82,8 +84,12 @@ export default function LoginPage() {
                     overflow: "hidden",
                     mx: "auto",
                     backgroundImage: "none",
+                    backgroundColor: theme.palette.mode === 'dark'
+                        ? theme.palette.background.paper
+                        : '#fff',
                 }}
             >
+                {/* Lado Esquerdo */}
                 <Box
                     sx={{
                         flex: 1,
@@ -132,6 +138,7 @@ export default function LoginPage() {
                     </Box>
                 </Box>
 
+                {/* Lado Direito (Formulário) */}
                 <Box
                     sx={{
                         flex: 1,
@@ -140,7 +147,9 @@ export default function LoginPage() {
                         justifyContent: "center",
                         px: { xs: 3, md: 4 },
                         py: { xs: 4, md: 0 },
-                        backgroundColor: { xs: "rgba(255,255,255,0.9)", md: "background.paper" },
+                        backgroundColor: theme.palette.mode === 'dark'
+                            ? theme.palette.background.default
+                            : 'rgba(255,255,255,0.9)',
                     }}
                 >
                     <Paper
@@ -152,6 +161,9 @@ export default function LoginPage() {
                             maxWidth: 320,
                             boxShadow: { xs: 3, md: "none" },
                             backgroundImage: "none",
+                            backgroundColor: theme.palette.mode === 'dark'
+                                ? theme.palette.background.paper
+                                : '#fff',
                         }}
                     >
                         <form onSubmit={handleSubmit(onSubmit)}>
