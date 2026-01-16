@@ -19,7 +19,7 @@ import {
 import { Eye, EyeOff } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useEffect, useRef, useState } from "react";
-import type { AdminBranchSelectionResponse, LoginRequest, LoginResponse } from "@/modules/auth/types/auth";
+import type { AdminBranchSelectionResponse, LoginForm, LoginRequest, LoginResponse, StoredCredentials } from "@/modules/auth/types/auth";
 import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLogin } from "@/modules/auth/hooks/useAuth";
@@ -85,16 +85,7 @@ async function decryptJSON<T>(payload: { iv: string; ct: string }): Promise<T> {
 const LS_KEY_REMEMBER = "pf.remember";
 const LS_KEY_CREDS = "pf.creds";
 
-type LoginForm = {
-    email: string;
-    password: string;
-    rememberMe: boolean;
-};
 
-type StoredCredentials = {
-    email: string;
-    password: string;
-};
 
 export default function Login() {
     const { addNotification } = useNotification();

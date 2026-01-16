@@ -110,3 +110,14 @@ export const UserRoleLabels: Record<UserRole, string> = {
   MANAGER: "Gerente",
   EMPLOYEE: "Funcionário",
 };
+
+export type LoginForm = {
+    email: string;
+    password: string;
+    rememberMe: boolean;
+};
+
+export type StoredCredentials = {
+    email: string;
+    password: string;
+};
