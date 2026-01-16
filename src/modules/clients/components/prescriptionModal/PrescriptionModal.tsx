@@ -5,8 +5,10 @@ import {
     Box,
     IconButton,
     Divider,
+    Button,
+    Stack,
 } from "@mui/material";
-import { X } from "lucide-react";
+import { X, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { usePrescriptionModalController } from "../../hooks/usePrescriptionModalController";
 import type { Prescription } from "../../types/prescriptionTypes";
@@ -107,9 +109,36 @@ export default function PrescriptionModal({
                     <DialogTitle sx={{ p: 0, fontWeight: "bold" }}>
                         {getTitle()}
                     </DialogTitle>
-                    <IconButton onClick={handleClose}>
-                        <X size={20} />
-                    </IconButton>
+
+                    {/* Botões de Rascunho + Fechar */}
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        {!controller.isView && (
+                            <>
+                                {controller.hasDraft && (
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<Trash2 size={16} />}
+                                        onClick={controller.clearDraft}
+                                    >
+                                        Limpar
+                                    </Button>
+                                )}
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    startIcon={<Save size={16} />}
+                                    onClick={controller.saveDraft}
+                                >
+                                    Salvar Rascunho
+                                </Button>
+                            </>
+                        )}
+                        <IconButton onClick={handleClose}>
+                            <X size={20} />
+                        </IconButton>
+                    </Stack>
                 </Box>
 
                 <Divider sx={{ mb: 2 }} />

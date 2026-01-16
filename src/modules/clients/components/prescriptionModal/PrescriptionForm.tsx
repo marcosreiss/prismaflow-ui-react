@@ -84,9 +84,6 @@ function PrescriptionFormContent({
     isCreate,
     onClose,
     handleSubmit,
-    saveDraft,
-    clearDraft,
-    hasDraft,
 }: PrescriptionFormContentProps) {
     const { control, register, formState } = useFormContext<CreatePrescriptionPayload>();
     const validation = usePrescriptionValidation();
@@ -615,26 +612,9 @@ function PrescriptionFormContent({
             </Stack>
 
             {/* ========== AÇÕES DO FORMULÁRIO ========== */}
-            <DialogActions sx={{ mt: 3, px: 0, gap: 1 }}>
-                {hasDraft && (
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={clearDraft}
-                        sx={{ mr: "auto" }}
-                    >
-                        Limpar Rascunho
-                    </Button>
-                )}
+            <DialogActions sx={{ mt: 3, px: 0, gap: 1, justifyContent: "flex-end" }}>
                 <Button onClick={onClose} variant="outlined">
                     Cancelar
-                </Button>
-                <Button
-                    variant="outlined"
-                    onClick={saveDraft}
-                    disabled={creating || updating}
-                >
-                    Salvar Rascunho
                 </Button>
                 <Button
                     type="submit"
@@ -645,6 +625,7 @@ function PrescriptionFormContent({
                     {isCreate ? (creating ? "Salvando..." : "Criar") : (updating ? "Salvando..." : "Salvar")}
                 </Button>
             </DialogActions>
+
         </form>
     );
 }
