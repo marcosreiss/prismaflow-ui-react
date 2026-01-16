@@ -25,11 +25,16 @@ import type { CreatePrescriptionPayload } from "../../types/prescriptionTypes";
 
 type PrescriptionControllerType = {
     methods: UseFormReturn<CreatePrescriptionPayload>;
-    inputRef: React.RefObject<HTMLInputElement | null>; // 👈 Adicione | null
+    inputRef: React.RefObject<HTMLInputElement | null>;
     handleSubmit: (e?: React.BaseSyntheticEvent) => void;
     creating: boolean;
     updating: boolean;
     isCreate: boolean;
+    // Novas propriedades de draft
+    saveDraft: () => void;
+    clearDraft: () => void;
+    hasDraft: boolean;
+    hasUnsavedChanges: boolean;
 };
 
 type PrescriptionFormProps = {
@@ -41,7 +46,7 @@ export default function PrescriptionForm({
     controller,
     onClose,
 }: PrescriptionFormProps) {
-    const { methods, inputRef, creating, updating, isCreate, handleSubmit } = controller;
+    const { methods, inputRef, creating, updating, isCreate, handleSubmit, saveDraft, clearDraft, hasDraft } = controller;
 
     return (
         <FormProvider {...methods}>
@@ -52,24 +57,25 @@ export default function PrescriptionForm({
                 isCreate={isCreate}
                 onClose={onClose}
                 handleSubmit={handleSubmit}
+                saveDraft={saveDraft}
+                clearDraft={clearDraft}
+                hasDraft={hasDraft}
             />
         </FormProvider>
     );
 }
 
 type PrescriptionFormContentProps = {
-    inputRef: React.RefObject<HTMLInputElement | null>; // 👈 Adicione | null aqui também
+    inputRef: React.RefObject<HTMLInputElement | null>;
     creating: boolean;
     updating: boolean;
     isCreate: boolean;
     onClose: () => void;
     handleSubmit: (e?: React.BaseSyntheticEvent) => void;
+    saveDraft: () => void;
+    clearDraft: () => void;
+    hasDraft: boolean;
 };
-
-
-// ✅ FUNÇÕES AUXILIARES PARA MENSAGENS DE ERRO
-
-
 
 function PrescriptionFormContent({
     inputRef,
@@ -78,6 +84,9 @@ function PrescriptionFormContent({
     isCreate,
     onClose,
     handleSubmit,
+    saveDraft,
+    clearDraft,
+    hasDraft,
 }: PrescriptionFormContentProps) {
     const { control, register, formState } = useFormContext<CreatePrescriptionPayload>();
     const validation = usePrescriptionValidation();
@@ -258,9 +267,7 @@ function PrescriptionFormContent({
                                                 size="small"
                                                 value={field.value ?? ""}
                                                 onChange={field.onChange}
-                                                helperText={
-                                                    fieldState.error?.message
-                                                }
+                                                helperText={fieldState.error?.message}
                                             />
                                         )}
                                     />
@@ -339,9 +346,7 @@ function PrescriptionFormContent({
                                                 size="small"
                                                 value={field.value ?? ""}
                                                 onChange={field.onChange}
-                                                helperText={
-                                                    fieldState.error?.message
-                                                }
+                                                helperText={fieldState.error?.message}
                                             />
                                         )}
                                     />
@@ -423,9 +428,7 @@ function PrescriptionFormContent({
                                                 size="small"
                                                 value={field.value ?? ""}
                                                 onChange={field.onChange}
-                                                helperText={
-                                                    fieldState.error?.message
-                                                }
+                                                helperText={fieldState.error?.message}
                                             />
                                         )}
                                     />
@@ -455,7 +458,6 @@ function PrescriptionFormContent({
                                             />
                                         )}
                                     />
-                                    {/* ADIÇÃO OD AQUI */}
                                     <Controller
                                         name="additionRight"
                                         control={control}
@@ -519,9 +521,7 @@ function PrescriptionFormContent({
                                                 size="small"
                                                 value={field.value ?? ""}
                                                 onChange={field.onChange}
-                                                helperText={
-                                                    fieldState.error?.message
-                                                }
+                                                helperText={fieldState.error?.message}
                                             />
                                         )}
                                     />
@@ -551,7 +551,6 @@ function PrescriptionFormContent({
                                             />
                                         )}
                                     />
-                                    {/* ADIÇÃO OE AQUI */}
                                     <Controller
                                         name="additionLeft"
                                         control={control}
@@ -574,54 +573,68 @@ function PrescriptionFormContent({
 
                 <Divider />
 
-                {/* ========== ADIÇÃO E CENTRO ÓPTICO (SEMPRE VISÍVEL FORA DAS TABS) ========== */}
+                {/* ========== CENTRO ÓPTICO ========== */}
                 <Box>
-
-                    {/* Centro Óptico */}
-                    <Box>
-                        <Typography variant="subtitle2" fontWeight={600} mb={1}>
-                            Centro Óptico (Altura)
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-                            Altura do centro óptico para posicionamento correto das lentes
-                        </Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 2 }}>
-                            <Controller
-                                name="opticalCenterRight"
-                                control={control}
-                                rules={{ validate: validation.validateOpticalCenter }}
-                                render={({ field, fieldState }) => (
-                                    <OpticalCenterInput
-                                        label="Centro Óptico OD"
-                                        size="small"
-                                        value={field.value ?? ""}
-                                        onChange={field.onChange}
-                                        helperText={fieldState.error?.message}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="opticalCenterLeft"
-                                control={control}
-                                rules={{ validate: validation.validateOpticalCenter }}
-                                render={({ field, fieldState }) => (
-                                    <OpticalCenterInput
-                                        label="Centro Óptico OE"
-                                        size="small"
-                                        value={field.value ?? ""}
-                                        onChange={field.onChange}
-                                        helperText={fieldState.error?.message}
-                                    />
-                                )}
-                            />
-                        </Box>
+                    <Typography variant="subtitle2" fontWeight={600} mb={1}>
+                        Centro Óptico (Altura)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+                        Altura do centro óptico para posicionamento correto das lentes
+                    </Typography>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 2 }}>
+                        <Controller
+                            name="opticalCenterRight"
+                            control={control}
+                            rules={{ validate: validation.validateOpticalCenter }}
+                            render={({ field, fieldState }) => (
+                                <OpticalCenterInput
+                                    label="Centro Óptico OD"
+                                    size="small"
+                                    value={field.value ?? ""}
+                                    onChange={field.onChange}
+                                    helperText={fieldState.error?.message}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="opticalCenterLeft"
+                            control={control}
+                            rules={{ validate: validation.validateOpticalCenter }}
+                            render={({ field, fieldState }) => (
+                                <OpticalCenterInput
+                                    label="Centro Óptico OE"
+                                    size="small"
+                                    value={field.value ?? ""}
+                                    onChange={field.onChange}
+                                    helperText={fieldState.error?.message}
+                                />
+                            )}
+                        />
                     </Box>
                 </Box>
             </Stack>
 
-            <DialogActions sx={{ mt: 3, px: 0 }}>
+            {/* ========== AÇÕES DO FORMULÁRIO ========== */}
+            <DialogActions sx={{ mt: 3, px: 0, gap: 1 }}>
+                {hasDraft && (
+                    <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={clearDraft}
+                        sx={{ mr: "auto" }}
+                    >
+                        Limpar Rascunho
+                    </Button>
+                )}
                 <Button onClick={onClose} variant="outlined">
                     Cancelar
+                </Button>
+                <Button
+                    variant="outlined"
+                    onClick={saveDraft}
+                    disabled={creating || updating}
+                >
+                    Salvar Rascunho
                 </Button>
                 <Button
                     type="submit"

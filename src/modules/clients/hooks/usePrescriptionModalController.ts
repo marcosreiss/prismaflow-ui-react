@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo, useCallback } from "react";
+import { useEffect, useRef, useMemo, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { AxiosError } from "axios";
 import { useNotification } from "@/context/NotificationContext";
@@ -14,6 +14,13 @@ import type {
   CreatePrescriptionPayload,
   UpdatePrescriptionPayload,
 } from "../types/prescriptionTypes";
+
+import {
+  savePrescriptionDraft,
+  loadPrescriptionDraft,
+  clearPrescriptionDraft,
+  hasPrescriptionDraft,
+} from "@/utils/draftStorage";
 
 // ==============================
 // 🔹 Tipagem e modos
@@ -33,19 +40,14 @@ type UsePrescriptionModalControllerProps = {
 // 🔹 Helpers - Formatação
 // ==============================
 
-/**
- * Converte data do formato YYYY-MM-DD para ISO string UTC
- * Evita problemas de timezone ao enviar para API
- */
 const formatDateForAPI = (dateString: string): string => {
   if (!dateString) return "";
   const [year, month, day] = dateString.split("-");
-  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))).toISOString();
+  return new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day))
+  ).toISOString();
 };
 
-/**
- * Converte data ISO para formato YYYY-MM-DD para inputs do tipo date
- */
 const formatDateForInput = (isoString: string | null): string => {
   if (!isoString) return "";
   return new Date(isoString).toISOString().split("T")[0];
@@ -55,11 +57,6 @@ const formatDateForInput = (isoString: string | null): string => {
 // 🔹 Helpers - Valores padrão
 // ==============================
 
-/**
- * Gera valores default para o formulário
- * - Se prescription existe: preenche com dados existentes
- * - Se não existe: retorna campos vazios
- */
 const getDefaultFormValues = (
   clientId: number | null,
   prescription?: Prescription | null
@@ -69,38 +66,26 @@ const getDefaultFormValues = (
     prescriptionDate: "",
     doctorName: "",
     crm: "",
-
-    // OD - Longe
     odSphericalFar: "",
     odCylindricalFar: "",
     odAxisFar: "",
     odDnpFar: "",
-
-    // OD - Perto
     odSphericalNear: "",
     odCylindricalNear: "",
     odAxisNear: "",
     odDnpNear: "",
-
-    // OE - Longe
     oeSphericalFar: "",
     oeCylindricalFar: "",
     oeAxisFar: "",
     oeDnpFar: "",
-
-    // OE - Perto
     oeSphericalNear: "",
     oeCylindricalNear: "",
     oeAxisNear: "",
     oeDnpNear: "",
-
-    // Películas
     odPellicleFar: "",
     odPellicleNear: "",
     oePellicleFar: "",
     oePellicleNear: "",
-
-    // Gerais
     frameAndRef: "",
     lensType: "",
     notes: "",
@@ -120,38 +105,26 @@ const getDefaultFormValues = (
     prescriptionDate: formatDateForInput(prescription.prescriptionDate),
     doctorName: prescription.doctorName ?? "",
     crm: prescription.crm ?? "",
-
-    // OD - Longe
     odSphericalFar: prescription.odSphericalFar ?? "",
     odCylindricalFar: prescription.odCylindricalFar ?? "",
     odAxisFar: prescription.odAxisFar ?? "",
     odDnpFar: prescription.odDnpFar ?? "",
-
-    // OD - Perto
     odSphericalNear: prescription.odSphericalNear ?? "",
     odCylindricalNear: prescription.odCylindricalNear ?? "",
     odAxisNear: prescription.odAxisNear ?? "",
     odDnpNear: prescription.odDnpNear ?? "",
-
-    // OE - Longe
     oeSphericalFar: prescription.oeSphericalFar ?? "",
     oeCylindricalFar: prescription.oeCylindricalFar ?? "",
     oeAxisFar: prescription.oeAxisFar ?? "",
     oeDnpFar: prescription.oeDnpFar ?? "",
-
-    // OE - Perto
     oeSphericalNear: prescription.oeSphericalNear ?? "",
     oeCylindricalNear: prescription.oeCylindricalNear ?? "",
     oeAxisNear: prescription.oeAxisNear ?? "",
     oeDnpNear: prescription.oeDnpNear ?? "",
-
-    // Películas
     odPellicleFar: prescription.odPellicleFar ?? "",
     odPellicleNear: prescription.odPellicleNear ?? "",
     oePellicleFar: prescription.oePellicleFar ?? "",
     oePellicleNear: prescription.oePellicleNear ?? "",
-
-    // Gerais
     frameAndRef: prescription.frameAndRef ?? "",
     lensType: prescription.lensType ?? "",
     notes: prescription.notes ?? "",
@@ -175,13 +148,19 @@ export function usePrescriptionModalController({
   onUpdated,
 }: UsePrescriptionModalControllerProps) {
   // ==============================
+  // 🔹 Estado de mudanças
+  // ==============================
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // ==============================
   // 🔹 Formulário
   // ==============================
   const methods = useForm<CreatePrescriptionPayload>({
     defaultValues: getDefaultFormValues(clientId, null),
   });
 
-  const { reset } = methods;
+  const { reset, watch } = methods;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { addNotification } = useNotification();
 
@@ -201,18 +180,43 @@ export function usePrescriptionModalController({
   const isView = useMemo(() => mode === "view", [mode]);
 
   // ==============================
+  // 🔹 Funções de Draft
+  // ==============================
+  const saveDraft = useCallback(() => {
+    const currentValues = methods.getValues();
+    savePrescriptionDraft(clientId, currentValues);
+    setHasUnsavedChanges(false);
+    addNotification("Rascunho salvo com sucesso!", "success");
+  }, [clientId, methods, addNotification]);
+
+  const clearDraft = useCallback(() => {
+    clearPrescriptionDraft(clientId);
+    reset(getDefaultFormValues(clientId, null));
+    setHasUnsavedChanges(false);
+    setIsDirty(false);
+    addNotification("Rascunho removido!", "info");
+  }, [clientId, reset, addNotification]);
+
+  const loadDraft = useCallback(() => {
+    const draft = loadPrescriptionDraft(clientId);
+    if (draft) {
+      reset(draft);
+      setHasUnsavedChanges(true);
+      addNotification("Rascunho carregado!", "info");
+    }
+  }, [clientId, reset, addNotification]);
+
+  // ==============================
   // 🔹 Preparação de payload
   // ==============================
   const preparePayloadForAPI = useCallback(
     (values: CreatePrescriptionPayload): CreatePrescriptionPayload => {
       const payload = { ...values };
 
-      // Formata data para ISO UTC
       if (payload.prescriptionDate) {
         payload.prescriptionDate = formatDateForAPI(payload.prescriptionDate);
       }
 
-      // Garante clientId correto na criação
       if (isCreate && clientId) {
         payload.clientId = clientId;
       }
@@ -228,7 +232,6 @@ export function usePrescriptionModalController({
   const handleSubmit = useCallback(
     async (values: CreatePrescriptionPayload) => {
       try {
-        // Validação de clientId
         if (!clientId) {
           addNotification(
             "Cliente não identificado para esta receita.",
@@ -242,6 +245,8 @@ export function usePrescriptionModalController({
         if (isCreate) {
           const res = await createPrescription(payload);
           if (res?.data) {
+            clearPrescriptionDraft(clientId);
+            setHasUnsavedChanges(false);
             addNotification("Receita criada com sucesso!", "success");
             onCreated(res.data);
           }
@@ -251,6 +256,8 @@ export function usePrescriptionModalController({
             data: payload as UpdatePrescriptionPayload,
           });
           if (res?.data) {
+            clearPrescriptionDraft(clientId);
+            setHasUnsavedChanges(false);
             addNotification("Receita atualizada com sucesso!", "success");
             onUpdated(res.data);
           }
@@ -266,7 +273,6 @@ export function usePrescriptionModalController({
 
         addNotification(message, "error");
 
-        // Log apenas em desenvolvimento
         if (process.env.NODE_ENV === "development") {
           console.error("Prescription error:", {
             error,
@@ -295,13 +301,22 @@ export function usePrescriptionModalController({
   // 🔹 Efeitos
   // ==============================
 
+  // Monitorar mudanças no formulário
+  useEffect(() => {
+    if (!open || isView) return;
+
+    const subscription = watch(() => {
+      setIsDirty(true);
+      setHasUnsavedChanges(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch, open, isView]);
+
   // Validação antecipada de clientId
   useEffect(() => {
     if (open && !clientId && (isCreate || isEdit)) {
-      addNotification(
-        "Cliente não identificado para esta receita.",
-        "error"
-      );
+      addNotification("Cliente não identificado para esta receita.", "error");
     }
   }, [open, clientId, isCreate, isEdit, addNotification]);
 
@@ -316,22 +331,32 @@ export function usePrescriptionModalController({
     }
   }, [open, isCreate, isEdit]);
 
-  // Gerenciamento do formulário (reset/preencher)
+  // Gerenciamento do formulário (reset/preencher/carregar draft)
   useEffect(() => {
     if (!open) {
-      // Limpa formulário ao fechar
       reset(getDefaultFormValues(clientId, null));
+      setHasUnsavedChanges(false);
+      setIsDirty(false);
       return;
     }
 
-    // Preenche com dados da receita em edit/view
     if ((isEdit || isView) && prescription) {
       reset(getDefaultFormValues(clientId, prescription));
-    } else {
-      // Limpa formulário em create
-      reset(getDefaultFormValues(clientId, null));
+      setHasUnsavedChanges(false);
+      setIsDirty(false);
+    } else if (isCreate) {
+      // Tentar carregar rascunho salvo
+      const draft = loadPrescriptionDraft(clientId);
+      if (draft) {
+        reset(draft);
+        setHasUnsavedChanges(true);
+      } else {
+        reset(getDefaultFormValues(clientId, null));
+        setHasUnsavedChanges(false);
+      }
+      setIsDirty(false);
     }
-  }, [open, isEdit, isView, prescription, clientId, reset]);
+  }, [open, isEdit, isView, isCreate, prescription, clientId, reset]);
 
   // ==============================
   // 🔹 Retorno do controller
@@ -345,5 +370,11 @@ export function usePrescriptionModalController({
     isCreate,
     isEdit,
     isView,
+    saveDraft,
+    clearDraft,
+    loadDraft,
+    hasDraft: hasPrescriptionDraft(clientId),
+    hasUnsavedChanges,
+    isDirty,
   };
 }

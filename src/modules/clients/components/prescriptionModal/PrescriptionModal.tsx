@@ -7,10 +7,12 @@ import {
     Divider,
 } from "@mui/material";
 import { X } from "lucide-react";
+import { useState } from "react";
 import { usePrescriptionModalController } from "../../hooks/usePrescriptionModalController";
 import type { Prescription } from "../../types/prescriptionTypes";
 import PrescriptionForm from "./PrescriptionForm";
 import PrescriptionView from "./PrescriptionView";
+import ConfirmCloseDialog from "@/components/ConfirmCloseDialog";
 
 type PrescriptionModalProps = {
     open: boolean;
@@ -46,53 +48,95 @@ export default function PrescriptionModal({
         onUpdated: onUpdated ?? (() => { }),
     });
 
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
     const getTitle = () => {
         if (controller.isCreate) return "Nova Receita";
         if (controller.isEdit) return "Editar Receita";
         return "Detalhes da Receita";
     };
 
+    const handleClose = () => {
+        if (controller.hasUnsavedChanges && !controller.isView) {
+            setShowConfirmDialog(true);
+        } else {
+            onClose();
+        }
+    };
+
+    const handleDialogClose = (_event: object, reason: string) => {
+        if (reason === "backdropClick" || reason === "escapeKeyDown") {
+            handleClose();
+            return;
+        }
+    };
+
+    const handleSaveAndClose = () => {
+        controller.saveDraft();
+        setShowConfirmDialog(false);
+        onClose();
+    };
+
+    const handleCloseWithoutSaving = () => {
+        controller.clearDraft();
+        setShowConfirmDialog(false);
+        onClose();
+    };
+
+    const handleCancelClose = () => {
+        setShowConfirmDialog(false);
+    };
+
     return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            fullWidth
-            maxWidth="md"
-            PaperProps={{ sx: { borderRadius: 2, p: 1.5 } }}
-        >
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mb: 1,
-                }}
+        <>
+            <Dialog
+                open={open}
+                onClose={handleDialogClose}
+                fullWidth
+                maxWidth="md"
+                PaperProps={{ sx: { borderRadius: 2, p: 1.5 } }}
             >
-                <DialogTitle sx={{ p: 0, fontWeight: "bold" }}>
-                    {getTitle()}
-                </DialogTitle>
-                <IconButton onClick={onClose}>
-                    <X size={20} />
-                </IconButton>
-            </Box>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        mb: 1,
+                    }}
+                >
+                    <DialogTitle sx={{ p: 0, fontWeight: "bold" }}>
+                        {getTitle()}
+                    </DialogTitle>
+                    <IconButton onClick={handleClose}>
+                        <X size={20} />
+                    </IconButton>
+                </Box>
 
-            <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 2 }} />
 
-            <DialogContent dividers={controller.isView && !!prescription} sx={{ px: 1.5, py: 2 }}>
-                {controller.isView && prescription ? (
-                    <PrescriptionView
-                        prescription={prescription}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onCreateNew={onCreateNew}
-                    />
-                ) : (
-                    <PrescriptionForm
-                        controller={controller}
-                        onClose={onClose}
-                    />
-                )}
-            </DialogContent>
-        </Dialog>
+                <DialogContent dividers={controller.isView && !!prescription} sx={{ px: 1.5, py: 2 }}>
+                    {controller.isView && prescription ? (
+                        <PrescriptionView
+                            prescription={prescription}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            onCreateNew={onCreateNew}
+                        />
+                    ) : (
+                        <PrescriptionForm
+                            controller={controller}
+                            onClose={handleClose}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            <ConfirmCloseDialog
+                open={showConfirmDialog}
+                onSaveAndClose={handleSaveAndClose}
+                onCloseWithoutSaving={handleCloseWithoutSaving}
+                onCancel={handleCancelClose}
+            />
+        </>
     );
 }
