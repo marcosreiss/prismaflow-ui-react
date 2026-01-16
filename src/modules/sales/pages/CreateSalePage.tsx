@@ -7,7 +7,7 @@ import SaleFormProvider from "@/modules/sales/context/SaleFormProvider";
 // ==============================
 // 🔹 Página principal de criação/edição de venda
 // ==============================
-export default function SalesFormPage() {
+export default function CreateSalePage() {
     const { id } = useParams<{ id: string }>();
     const isEditMode = Boolean(id);
 
