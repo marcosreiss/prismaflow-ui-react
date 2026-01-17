@@ -63,6 +63,7 @@ export const useCreatePrescription = () => {
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["prescriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["prescriptions-by-client"] });
       console.log("✅ Receita criada:", res.message);
     },
     onError: (err) => {
