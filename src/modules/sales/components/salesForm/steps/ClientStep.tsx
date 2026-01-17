@@ -259,6 +259,7 @@ export default function ClientStep() {
                     };
                     setSelectedPrescription(newOption);
                     setValue("prescriptionId", p.id);
+                    setOpenPrescriptionModal(false);
                 }}
                 onUpdated={() => { }}
                 onEdit={() => { }}
