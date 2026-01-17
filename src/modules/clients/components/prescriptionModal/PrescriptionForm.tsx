@@ -91,6 +91,7 @@ function PrescriptionFormContent({
 
     const handleFormSubmit = async (e?: React.BaseSyntheticEvent) => {
         e?.preventDefault();
+        e?.stopPropagation();
         handleSubmit(e);
     };
 
