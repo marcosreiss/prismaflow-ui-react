@@ -68,10 +68,10 @@ export default function SalesPage() {
                 }),
         },
         {
-            key: "createdAt",
+            key: "saleDate",
             label: "Data",
             render: (row) =>
-                new Date(row.createdAt).toLocaleDateString("pt-BR", {
+                new Date(row.saleDate).toLocaleDateString("pt-BR", {
                     day: "2-digit",
                     month: "2-digit",
                     year: "numeric",
