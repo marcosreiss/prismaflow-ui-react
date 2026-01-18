@@ -15,10 +15,11 @@ const SALES_ENDPOINT = "/api/sales";
 export function useGetSales(
   page: number = 1,
   limit: number = 10,
-  clientId?: number
+  clientId?: number,
+  clientName?: string,
 ) {
   return useQuery<SalesResponse>({
-    queryKey: ["sales", page, clientId],
+    queryKey: ["sales", page, limit, clientId, clientName], 
     queryFn: async (): Promise<SalesResponse> => {
       const params: Record<string, string | number> = {
         page,
@@ -27,6 +28,10 @@ export function useGetSales(
 
       if (clientId !== undefined) {
         params.clientId = clientId;
+      }
+
+      if (clientName !== undefined && clientName.trim() !== "") {
+        params.clientName = clientName.trim();
       }
 
       const { data } = await api.get<SalesResponse>(SALES_ENDPOINT, {
@@ -81,10 +86,7 @@ export function useUpdateSale() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { clientId, id, ...updatePayload } = payload;
       console.log("Updating sale with payload:", updatePayload);
-      const { data } = await api.put(
-        `${SALES_ENDPOINT}/${id}`,
-        updatePayload
-      );
+      const { data } = await api.put(`${SALES_ENDPOINT}/${id}`, updatePayload);
       return data;
     },
     onSuccess: (_, variables) => {

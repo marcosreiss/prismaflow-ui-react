@@ -13,7 +13,7 @@ export const PaymentMethodLabels: Record<PaymentMethod, string> = {
   MONEY: "Dinheiro",
   DEBIT: "Cartão de débito",
   CREDIT: "Cartão de crédito",
-  INSTALLMENT: "Parcelado",
+  INSTALLMENT: "Carnê",
 };
 
 export type PaymentStatus = "PENDING" | "CONFIRMED" | "CANCELED";

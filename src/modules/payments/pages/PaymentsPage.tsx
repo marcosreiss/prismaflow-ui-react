@@ -102,7 +102,7 @@ export default function PaymentsPage() {
                     MONEY: "Dinheiro",
                     DEBIT: "Cartão de débito",
                     CREDIT: "Cartão de crédito",
-                    INSTALLMENT: "Parcelado",
+                    INSTALLMENT: "Carnê",
                 };
                 return row.method ? methodLabels[row.method] : "-";
             },

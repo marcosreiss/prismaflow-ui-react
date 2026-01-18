@@ -34,6 +34,8 @@ export function useSalesPageController() {
   const { data, isLoading, isFetching, refetch } = useGetSales(
     page + 1,
     limit,
+    undefined, 
+    search,
   );
 
   const deleteSale = useDeleteSale();
@@ -68,13 +70,13 @@ export function useSalesPageController() {
   // ==========================
   const handleSelectRow = (id: string | number, checked: boolean) => {
     setSelectedIds((prev) =>
-      checked ? [...prev, id as number] : prev.filter((i) => i !== id)
+      checked ? [...prev, id as number] : prev.filter((i) => i !== id),
     );
   };
 
   const handleSelectAll = (
     checked: boolean,
-    currentPageIds: (string | number)[]
+    currentPageIds: (string | number)[],
   ) => {
     setSelectedIds(checked ? (currentPageIds as number[]) : []);
   };
