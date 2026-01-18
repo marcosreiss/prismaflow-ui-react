@@ -148,6 +148,26 @@ export default function ClientStep() {
                 Selecione o Cliente e Receita
             </Typography>
 
+            {/* Data da Venda */}
+            <Box sx={{ mb: 3 }}>
+                <Controller
+                    name="saleDate"
+                    control={control}
+                    rules={{ required: "Data da venda é obrigatória" }}
+                    render={({ field, fieldState }) => (
+                        <TextField
+                            {...field}
+                            type="date"
+                            label="Data da Venda"
+                            fullWidth
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    )}
+                />
+            </Box>
+
             {/* Cliente */}
             <Controller
                 name="clientId"

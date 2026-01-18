@@ -11,6 +11,7 @@ import type {
 
 const defaultValues: DeepPartial<SalePayload> = {
     clientId: 0,
+    saleDate: new Date().toISOString().split('T')[0],
     prescriptionId: null,
     productItems: [],
     serviceItems: [],

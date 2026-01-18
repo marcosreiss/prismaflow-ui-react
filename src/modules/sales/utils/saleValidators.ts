@@ -1,4 +1,8 @@
-import type { FrameDetails, Sale, SaleProductItem } from "@/modules/sales/types/salesTypes";
+import type {
+  FrameDetails,
+  Sale,
+  SaleProductItem,
+} from "@/modules/sales/types/salesTypes";
 import type { Product } from "@/modules/products/types/productTypes";
 type ValidatorOptions = { isEditMode?: boolean };
 /**
@@ -16,7 +20,7 @@ export interface ValidationResult {
 export const validateSaleForm = (
   data: Sale,
   step: number,
-  options?: ValidatorOptions
+  options?: ValidatorOptions,
 ): ValidationResult => {
   const errors: string[] = [];
 
@@ -24,6 +28,10 @@ export const validateSaleForm = (
     case 0: // Cliente
       if (!data.clientId) {
         errors.push("Por favor, selecione um cliente.");
+      }
+      // ✅ ADICIONAR validação de data
+      if (!data.saleDate) {
+        errors.push("Data da venda é obrigatória.");
       }
       break;
 
@@ -56,7 +64,7 @@ export const validateSaleForm = (
  */
 export const validateProductItems = (
   productItems: Sale["productItems"],
-  options?: ValidatorOptions
+  options?: ValidatorOptions,
 ): string[] => {
   const errors: string[] = [];
 
@@ -68,7 +76,9 @@ export const validateProductItems = (
 
     // regras básicas
     if (!quantity || quantity < 1) {
-      errors.push(`Produto "${product.name}": quantidade deve ser pelo menos 1.`);
+      errors.push(
+        `Produto "${product.name}": quantidade deve ser pelo menos 1.`,
+      );
       return;
     }
 
@@ -84,7 +94,7 @@ export const validateProductItems = (
       const available = Number((product as Product)?.stockQuantity ?? 0);
       if (available < quantity) {
         errors.push(
-          `Produto "${product.name}": estoque insuficiente. Disponível: ${available}, Solicitado: ${quantity}.`
+          `Produto "${product.name}": estoque insuficiente. Disponível: ${available}, Solicitado: ${quantity}.`,
         );
       }
     }
@@ -97,11 +107,16 @@ export const validateProductItems = (
  * Validações dos detalhes da armação
  */
 // Adicione esta validação específica:
-export const validateFrameDetails = (frameDetails: FrameDetails, productName: string): string[] => {
+export const validateFrameDetails = (
+  frameDetails: FrameDetails,
+  productName: string,
+): string[] => {
   const errors: string[] = [];
 
   if (!frameDetails) {
-    errors.push(`Armação "${productName}": detalhes da armação são obrigatórios.`);
+    errors.push(
+      `Armação "${productName}": detalhes da armação são obrigatórios.`,
+    );
     return errors;
   }
 
@@ -141,7 +156,8 @@ export const validateReview = (data: Sale): string[] => {
 
   // Validação de consistência dos cálculos
   const expectedTotal = data.subtotal - data.discount;
-  if (Math.abs(data.total - expectedTotal) > 0.01) { // Permite pequena diferença de arredondamento
+  if (Math.abs(data.total - expectedTotal) > 0.01) {
+    // Permite pequena diferença de arredondamento
     errors.push("Inconsistência nos cálculos financeiros.");
   }
 
@@ -151,7 +167,10 @@ export const validateReview = (data: Sale): string[] => {
 /**
  * Validação rápida para habilitar/desabilitar botões
  */
-export const canProceedToNextStep = (data: Sale, currentStep: number): boolean => {
+export const canProceedToNextStep = (
+  data: Sale,
+  currentStep: number,
+): boolean => {
   const validation = validateSaleForm(data, currentStep);
   return validation.isValid;
 };
@@ -164,7 +183,6 @@ export const canSubmitSale = (data: Sale): ValidationResult => {
 
   const isEditMode = Boolean(data?.id); // venda existente => edição
 
-
   for (let step = 0; step < 4; step++) {
     const stepValidation = validateSaleForm(data, step, { isEditMode });
     errors.push(...stepValidation.errors);
@@ -176,7 +194,10 @@ export const canSubmitSale = (data: Sale): ValidationResult => {
 /**
  * Validação de produto individual antes de adicionar
  */
-export const validateProductBeforeAdd = (product: Product, quantity: number = 1): ValidationResult => {
+export const validateProductBeforeAdd = (
+  product: Product,
+  quantity: number = 1,
+): ValidationResult => {
   const errors: string[] = [];
 
   if (product.stockQuantity < quantity) {
@@ -189,6 +210,6 @@ export const validateProductBeforeAdd = (product: Product, quantity: number = 1)
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };

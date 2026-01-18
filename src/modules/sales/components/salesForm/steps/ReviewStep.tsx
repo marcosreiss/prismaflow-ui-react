@@ -13,12 +13,14 @@ import type {
     SaleProductItem,
     SaleServiceItem,
 } from "@/modules/sales/types/salesTypes";
+import dayjs from "dayjs";
 
 export default function ReviewStep() {
     const { watch } = useFormContext<SalePayload>();
 
     // Dados observados do formulário
     const clientId = watch("clientId");
+    const saleDate = watch("saleDate");
     const productItems = watch("productItems") || [];
     const serviceItems = watch("serviceItems") || [];
     const protocol = watch("protocol");
@@ -42,6 +44,17 @@ export default function ReviewStep() {
 
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                 <Stack spacing={3}>
+                    {/* DATA DA VENDA */}
+                    <Paper sx={{ p: 2 }}>
+                        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                            Data da Venda
+                        </Typography>
+                        <Typography variant="body2">
+                            {dayjs(saleDate).format("DD/MM/YYYY")}
+                        </Typography>
+                    </Paper>
+
+
                     {/* CLIENTE */}
                     <Box>
                         <Typography variant="subtitle2" color="text.secondary">

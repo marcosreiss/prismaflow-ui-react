@@ -91,6 +91,7 @@ export function mapSaleToPayload(
     // --- Payload final
     const payload: SalePayload = {
         clientId: data.clientId,
+        saleDate: data.saleDate,
         prescriptionId: data.prescriptionId ?? null,
         productItems: productItems.length > 0 ? productItems : [],
         serviceItems: serviceItems.length > 0 ? serviceItems : [],

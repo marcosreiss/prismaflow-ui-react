@@ -11,6 +11,7 @@ import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 export type Sale = {
   id: number;
   clientId: number;
+  saleDate: string;
   prescriptionId?: number | null;
   subtotal: number;
   discount: number;
@@ -81,6 +82,7 @@ export type Protocol = {
 export type SalePayload = {
   id?: number;
   clientId: number;
+  saleDate: string;
   prescriptionId?: number | null;
   productItems?: SaleProductItem[];
   serviceItems?: SaleServiceItem[];
