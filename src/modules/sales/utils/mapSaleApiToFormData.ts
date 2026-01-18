@@ -57,6 +57,7 @@ export const mapSaleApiToFormData = (sale: Sale): SalePayload => {
   // ==============================
   const payload: SalePayload = {
     clientId: sale.clientId,
+    saleDate: sale.saleDate,
     prescriptionId: sale.prescriptionId ?? null,
     productItems,
     serviceItems,
