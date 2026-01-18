@@ -73,14 +73,12 @@ export function mapSaleToPayload(
     // --- Protocolo (opcional)
     const hasProtocolFields =
         data.protocol &&
-        (normalizeString(data.protocol.recordNumber) ||
-            normalizeString(data.protocol.book) ||
+        (normalizeString(data.protocol.book) ||
             typeof data.protocol.page === "number" ||
             normalizeString(data.protocol.os));
 
     const protocol: Protocol | undefined = hasProtocolFields
         ? {
-            recordNumber: normalizeString(data.protocol?.recordNumber) ?? null,
             book: normalizeString(data.protocol?.book) ?? null,
             page:
                 typeof data.protocol?.page === "number"
@@ -133,7 +131,6 @@ export function sanitizeSaleData(
             })) ?? [],
         protocol: data.protocol
             ? {
-                recordNumber: normalizeString(data.protocol.recordNumber) ?? null,
                 book: normalizeString(data.protocol.book) ?? null,
                 page:
                     typeof data.protocol.page === "number"

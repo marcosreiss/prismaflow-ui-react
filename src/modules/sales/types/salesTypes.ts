@@ -70,7 +70,6 @@ export type FrameDetails = {
 };
 
 export type Protocol = {
-  recordNumber?: string | null;
   book?: string | null;
   page?: number | null;
   os?: string | null;

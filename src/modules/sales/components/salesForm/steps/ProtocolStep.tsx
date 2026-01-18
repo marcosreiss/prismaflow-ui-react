@@ -16,7 +16,7 @@ export default function ProtocolStep() {
     const protocol = watch("protocol");
 
     useEffect(() => {
-        if (!protocol) setValue("protocol", { recordNumber: "", book: "", page: null, os: "" });
+        if (!protocol) setValue("protocol", { book: "", page: null, os: "" });
     }, [protocol, setValue]);
 
 
@@ -34,20 +34,6 @@ export default function ProtocolStep() {
             </Typography>
 
             <Stack spacing={2}>
-                {/* Número de Registro */}
-                <Controller
-                    name="protocol.recordNumber"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            fullWidth
-                            size="small"
-                            label="Número de Registro"
-                            placeholder="Ex: A123"
-                        />
-                    )}
-                />
 
                 {/* Livro e Página */}
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

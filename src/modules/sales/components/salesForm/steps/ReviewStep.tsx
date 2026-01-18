@@ -126,11 +126,6 @@ export default function ReviewStep() {
                                     Protocolo
                                 </Typography>
                                 <Stack spacing={0.5} sx={{ ml: 1 }}>
-                                    {protocol.recordNumber && (
-                                        <Typography variant="body2">
-                                            Nº Registro: {protocol.recordNumber}
-                                        </Typography>
-                                    )}
                                     {protocol.book && (
                                         <Typography variant="body2">Livro: {protocol.book}</Typography>
                                     )}

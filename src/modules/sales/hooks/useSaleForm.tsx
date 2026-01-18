@@ -22,7 +22,6 @@ const defaultValues: DeepPartial<SalePayload> = {
 };
 
 const createDefaultProtocol = (): Protocol => ({
-    recordNumber: "",
     book: "",
     page: null,
     os: "",

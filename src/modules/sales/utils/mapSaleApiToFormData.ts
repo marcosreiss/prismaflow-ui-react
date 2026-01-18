@@ -46,7 +46,6 @@ export const mapSaleApiToFormData = (sale: Sale): SalePayload => {
   // ==============================
   const protocol: Protocol | null = sale.protocol
     ? {
-        recordNumber: sale.protocol.recordNumber ?? "",
         book: sale.protocol.book ?? "",
         page: sale.protocol.page ?? null,
         os: sale.protocol.os ?? "",
