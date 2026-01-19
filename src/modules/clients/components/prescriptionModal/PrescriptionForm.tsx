@@ -179,8 +179,8 @@ function PrescriptionFormContent({
                                     <MenuItem value="bifocal">Bifocal</MenuItem>
                                     <MenuItem value="multifocal">Multifocal</MenuItem>
                                     <MenuItem value="ocupacional">Ocupacional</MenuItem>
-                                    <MenuItem value="fotossensivel">Fotossensível</MenuItem>
-                                    <MenuItem value="comFiltroAzul">Com Filtro Azul</MenuItem>
+                                    {/* <MenuItem value="fotossensivel">Fotossensível</MenuItem>
+                                    <MenuItem value="comFiltroAzul">Com Filtro Azul</MenuItem> */}
                                 </TextField>
                             )}
                         />
