@@ -152,7 +152,7 @@ export default function PaymentDrawer({
             ModalProps={{ keepMounted: true }}
             PaperProps={{
                 sx: {
-                    width: { xs: "100%", sm: 600 },
+                    width: { xs: "100%", sm: 600, md: 800 },
                     maxWidth: "100vw",
                     p: { xs: 2, sm: 3 },
                     display: "flex",
