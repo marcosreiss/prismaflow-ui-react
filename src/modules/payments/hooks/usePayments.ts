@@ -225,33 +225,41 @@ export const useGetOverdueInstallments = ({
 // =============================
 export const usePayInstallment = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation<
-    ApiResponse<PaymentInstallmentWithCalculations>,
+    ApiResponse<PaymentInstallment>,
     AxiosError<ApiResponse<null>>,
     { id: number; data: PayInstallmentPayload }
   >({
     mutationFn: async ({ id, data }) => {
       const res = await baseApi.patch<
-        ApiResponse<PaymentInstallmentWithCalculations>
+        ApiResponse<PaymentInstallment>
       >(`/api/payments/installments/${id}/pay`, data);
       return res.data;
     },
     onSuccess: (res, variables) => {
-      // Invalida queries relacionadas
+      // Invalida todas as queries de parcelas
       queryClient.invalidateQueries({ queryKey: ["installments"] });
+      
+      // Invalida a parcela específica
       queryClient.invalidateQueries({
         queryKey: ["installment", variables.id],
       });
+      
+      // Invalida a lista de pagamentos
       queryClient.invalidateQueries({ queryKey: ["payments"] });
-
-      // Invalida o payment específico se soubermos o ID
+      
+      // Busca todas as queries de payment details e invalida
+      queryClient.invalidateQueries({
+        queryKey: ["payment", "details"],
+      });
+      
       if (res.data?.paymentId) {
         queryClient.invalidateQueries({
-          queryKey: ["payment", "details", res.data.paymentId],
+          queryKey: ["installments", "payment", res.data.paymentId],
         });
       }
-
+      
       console.log("✅ Parcela paga:", res.message);
     },
     onError: (err) => {

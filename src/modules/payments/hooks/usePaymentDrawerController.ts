@@ -5,7 +5,6 @@ import {
   useCreatePayment,
   useUpdatePayment,
   useUpdatePaymentStatus,
-  usePayInstallment, // ✅ CORRETO
 } from "./usePayments";
 import { useGetSales } from "@/modules/sales/hooks/useSales";
 import type { Sale } from "@/modules/sales/types/salesTypes";
@@ -35,12 +34,12 @@ interface UsePaymentDrawerControllerProps {
   onUpdateStatus: (
     paymentId: number,
     status: PaymentStatus,
-    reason?: string
+    reason?: string,
   ) => void;
   onPayInstallment: (
     installmentId: number,
     paidAmount: number,
-    paidAt?: string
+    paidAt?: string,
   ) => void; // ✅ CORRETO
   onCreateNew: () => void;
 }
@@ -81,7 +80,6 @@ export function usePaymentDrawerController({
   const { mutateAsync: updatePayment, isPending: updating } =
     useUpdatePayment();
   const { mutateAsync: updateStatus } = useUpdatePaymentStatus();
-  const { mutateAsync: payInstallment } = usePayInstallment(); // ✅ CORRETO
 
   // ==========================
   // 🔹 Formulário
@@ -219,11 +217,11 @@ export function usePaymentDrawerController({
           updatePayload.downPayment = Math.max(0, values.downPayment);
           updatePayload.installmentsTotal = Math.max(
             0,
-            values.installmentsTotal
+            values.installmentsTotal,
           );
           if (values.firstDueDate) {
             updatePayload.firstDueDate = new Date(
-              values.firstDueDate
+              values.firstDueDate,
             ).toISOString();
           }
         } else {
@@ -274,7 +272,7 @@ export function usePaymentDrawerController({
 
   const handleStatusChange = async (
     statusValue: PaymentStatus,
-    reason?: string
+    reason?: string,
   ) => {
     if (mode === "edit" && payment) {
       try {
@@ -297,25 +295,14 @@ export function usePaymentDrawerController({
     }
   };
 
-  // ✅ NOVO HANDLER
+  // ✅ HANDLER CORRETO - apenas repassa para o callback
   const handlePayInstallment = async (
     installmentId: number,
     paidAmount: number,
-    paidAt?: string
+    paidAt?: string,
   ) => {
-    try {
-      await payInstallment({
-        id: installmentId,
-        data: { paidAmount, paidAt },
-      });
-      addNotification("Parcela paga com sucesso!", "success");
-      onPayInstallment(installmentId, paidAmount, paidAt);
-    } catch (error) {
-      const axiosErr = error as AxiosError<ApiResponse<null>>;
-      const message =
-        axiosErr.response?.data?.message ?? "Erro ao pagar parcela.";
-      addNotification(message, "error");
-    }
+    // Apenas chama o callback que veio da page
+    onPayInstallment(installmentId, paidAmount, paidAt);
   };
 
   // ==========================
@@ -348,6 +335,6 @@ export function usePaymentDrawerController({
     handleSaleChange,
     handleMethodChange,
     handleStatusChange,
-    handlePayInstallment, // ✅ ADICIONAR
+    handlePayInstallment,
   };
 }
