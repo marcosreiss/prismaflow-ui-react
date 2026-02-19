@@ -7,27 +7,27 @@ import {
 import type { AxiosError } from "axios";
 import baseApi from "@/utils/axios";
 
+import type { ApiResponse } from "@/utils/apiResponse";
+import type { PaymentStatus, PaymentMethod } from "../types/paymentEnums";
+import type { Payment, PaymentInstallmentItem } from "../types/paymentEntities";
 import type {
-  Payment,
-  PaymentListItem,
   PaymentDetails,
-  CreatePaymentPayload,
-  UpdatePaymentPayload,
-  PaymentStatus,
-  PaymentMethod,
   PaymentApiDetailResponse,
-  PaymentValidationResponse,
+  PaymentInstallmentWithCalculations,
+} from "../types/paymentDetails";
+import type {
+  PaymentListItem,
   InstallmentListResponse,
   OverdueInstallmentsResponse,
-  PaymentInstallmentWithCalculations,
+} from "../types/paymentListTypes";
+import type {
+  ConfigurePaymentPayload,
   PayInstallmentPayload,
-  PaymentInstallment,
-  UpdateInstallmentPayload,
-} from "../types/paymentTypes";
-import type { ApiResponse } from "@/utils/apiResponse";
+} from "../types/paymentPayloads";
+import type { PaymentValidationResponse } from "../types/paymentValidation";
 
 // =============================
-// 🔹 HOOK: GET ALL PAYMENTS (paginated) - ATUALIZADO
+// HOOK: GET ALL PAYMENTS (paginated)
 // =============================
 export const useGetPayments = ({
   page,
@@ -50,9 +50,9 @@ export const useGetPayments = ({
   method?: PaymentMethod;
   startDate?: string;
   endDate?: string;
-  hasOverdueInstallments?: boolean; // ✅ NOVO
-  isPartiallyPaid?: boolean; // ✅ NOVO
-  dueDaysAhead?: number; // ✅ NOVO
+  hasOverdueInstallments?: boolean;
+  isPartiallyPaid?: boolean;
+  dueDaysAhead?: number;
 }) => {
   return useQuery<
     ApiResponse<{
@@ -109,7 +109,7 @@ export const useGetPayments = ({
 };
 
 // =============================
-// 🔹 HOOK: VALIDATE PAYMENT INTEGRITY - NOVO
+// HOOK: VALIDATE PAYMENT INTEGRITY
 // =============================
 export const useValidatePayment = (id?: number) => {
   return useQuery<
@@ -129,7 +129,7 @@ export const useValidatePayment = (id?: number) => {
 };
 
 // =============================
-// 🔹 HOOK: GET PAYMENT STATUS BY SALE ID - NOVO
+// HOOK: GET PAYMENT STATUS BY SALE ID
 // =============================
 export const useGetPaymentStatusBySale = (saleId?: number) => {
   return useQuery<
@@ -153,7 +153,7 @@ export const useGetPaymentStatusBySale = (saleId?: number) => {
 };
 
 // =============================
-// 🔹 HOOK: GET INSTALLMENTS BY PAYMENT ID - NOVO
+// HOOK: GET INSTALLMENTS BY PAYMENT ID
 // =============================
 export const useGetInstallmentsByPayment = (paymentId?: number) => {
   return useQuery<
@@ -163,7 +163,7 @@ export const useGetInstallmentsByPayment = (paymentId?: number) => {
     queryKey: ["installments", "payment", paymentId],
     queryFn: async () => {
       const { data } = await baseApi.get<ApiResponse<InstallmentListResponse>>(
-        `/api/payments/${paymentId}/installments`
+        `/api/payment-installments/by-payment/${paymentId}`,
       );
       return data;
     },
@@ -173,7 +173,7 @@ export const useGetInstallmentsByPayment = (paymentId?: number) => {
 };
 
 // =============================
-// 🔹 HOOK: GET INSTALLMENT BY ID - NOVO
+// HOOK: GET INSTALLMENT BY ID
 // =============================
 export const useGetInstallmentById = (id?: number) => {
   return useQuery<
@@ -184,7 +184,7 @@ export const useGetInstallmentById = (id?: number) => {
     queryFn: async () => {
       const { data } = await baseApi.get<
         ApiResponse<PaymentInstallmentWithCalculations>
-      >(`/api/payments/installments/${id}`);
+      >(`/api/payment-installments/${id}`);
       return data;
     },
     enabled: !!id,
@@ -193,7 +193,7 @@ export const useGetInstallmentById = (id?: number) => {
 };
 
 // =============================
-// 🔹 HOOK: GET OVERDUE INSTALLMENTS - NOVO
+// HOOK: GET OVERDUE INSTALLMENTS
 // =============================
 export const useGetOverdueInstallments = ({
   page,
@@ -210,7 +210,7 @@ export const useGetOverdueInstallments = ({
     queryFn: async () => {
       const { data } = await baseApi.get<
         ApiResponse<OverdueInstallmentsResponse>
-      >("/api/payments/installments/overdue", {
+      >("/api/payment-installments/overdue", {
         params: { page, limit },
       });
       return data;
@@ -221,68 +221,70 @@ export const useGetOverdueInstallments = ({
 };
 
 // =============================
-// 🔹 HOOK: PAY INSTALLMENT - NOVO (substitui useProcessPaymentInstallment)
+// HOOK: PAY INSTALLMENT
+// paidAmount é acumulativo — a parcela é quitada quando paidAmount >= amount
 // =============================
 export const usePayInstallment = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<
-    ApiResponse<PaymentInstallment>,
+    ApiResponse<PaymentInstallmentItem>,
     AxiosError<ApiResponse<null>>,
     { id: number; data: PayInstallmentPayload }
   >({
     mutationFn: async ({ id, data }) => {
-      const res = await baseApi.patch<
-        ApiResponse<PaymentInstallment>
-      >(`/api/payments/installments/${id}/pay`, data);
+      const res = await baseApi.patch<ApiResponse<PaymentInstallmentItem>>(
+        `/api/payment-installments/${id}/pay`,
+        data,
+      );
       return res.data;
     },
     onSuccess: (res, variables) => {
-      // Invalida todas as queries de parcelas
       queryClient.invalidateQueries({ queryKey: ["installments"] });
-      
-      // Invalida a parcela específica
       queryClient.invalidateQueries({
         queryKey: ["installment", variables.id],
       });
-      
-      // Invalida a lista de pagamentos
       queryClient.invalidateQueries({ queryKey: ["payments"] });
-      
-      // Busca todas as queries de payment details e invalida
       queryClient.invalidateQueries({
         queryKey: ["payment", "details"],
       });
-      
-      if (res.data?.paymentId) {
+
+      if (res.data?.paymentMethodId) {
         queryClient.invalidateQueries({
-          queryKey: ["installments", "payment", res.data.paymentId],
+          queryKey: ["installments", "payment", res.data.paymentMethodId],
         });
       }
-      
-      console.log("✅ Parcela paga:", res.message);
+
+      console.log("Parcela paga:", res.message);
     },
     onError: (err) => {
-      console.error("❌ Erro ao pagar parcela:", err.response?.data?.message);
+      console.error("Erro ao pagar parcela:", err.response?.data?.message);
     },
   });
 };
 
 // =============================
-// 🔹 HOOK: UPDATE INSTALLMENT - NOVO
+// HOOK: UPDATE INSTALLMENT
+// Atualiza campos da parcela (amount, dueDate, sequence)
+// Não use para registrar pagamento — use usePayInstallment para isso
 // =============================
 export const useUpdateInstallment = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ApiResponse<PaymentInstallment>,
+    ApiResponse<PaymentInstallmentItem>,
     AxiosError<ApiResponse<null>>,
-    { id: number; data: UpdateInstallmentPayload }
+    {
+      id: number;
+      data: Partial<
+        Pick<PaymentInstallmentItem, "amount" | "dueDate" | "sequence">
+      >;
+    }
   >({
     mutationFn: async ({ id, data }) => {
-      const res = await baseApi.put<ApiResponse<PaymentInstallment>>(
-        `/api/payments/installments/${id}`,
-        data
+      const res = await baseApi.put<ApiResponse<PaymentInstallmentItem>>(
+        `/api/payment-installments/${id}`,
+        data,
       );
       return res.data;
     },
@@ -293,26 +295,24 @@ export const useUpdateInstallment = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["payments"] });
 
-      // Invalida o payment específico se soubermos o ID
-      if (res.data?.paymentId) {
+      if (res.data?.paymentMethodId) {
         queryClient.invalidateQueries({
-          queryKey: ["payment", "details", res.data.paymentId],
+          queryKey: ["payment", "details", res.data.paymentMethodId],
         });
       }
 
-      console.log("✅ Parcela atualizada:", res.message);
+      console.log("Parcela atualizada:", res.message);
     },
     onError: (err) => {
-      console.error(
-        "❌ Erro ao atualizar parcela:",
-        err.response?.data?.message
-      );
+      console.error("Erro ao atualizar parcela:", err.response?.data?.message);
     },
   });
 };
 
 // =============================
-// 🔹 HOOK: CREATE PAYMENT
+// HOOK: CREATE PAYMENT
+// Cria o registro de pagamento vinculado a uma venda.
+// Após criar, use useConfigurePayment para definir os métodos.
 // =============================
 export const useCreatePayment = () => {
   const queryClient = useQueryClient();
@@ -320,63 +320,66 @@ export const useCreatePayment = () => {
   return useMutation<
     ApiResponse<Payment>,
     AxiosError<ApiResponse<null>>,
-    CreatePaymentPayload
+    { saleId: number; branchId: string; tenantId: string }
   >({
     mutationFn: async (payload) => {
       const { data } = await baseApi.post<ApiResponse<Payment>>(
         "/api/payments",
-        payload
+        payload,
       );
       return data;
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
-      console.log("✅ Pagamento criado:", res.message);
+      console.log("Pagamento criado:", res.message);
     },
     onError: (err) => {
-      console.error("❌ Erro ao criar pagamento:", err.response?.data?.message);
+      console.error("Erro ao criar pagamento:", err.response?.data?.message);
     },
   });
 };
 
 // =============================
-// 🔹 HOOK: UPDATE PAYMENT
+// HOOK: CONFIGURE PAYMENT (substitui useUpdatePayment)
+// Configura ou reconfigura os métodos via PUT /payments/:id.
+// Substitui todos os métodos anteriores se nenhuma parcela foi paga.
+// A soma de methods[].amount deve ser igual ao total (tolerância R$ 0,01).
 // =============================
-export const useUpdatePayment = () => {
+export const useConfigurePayment = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
     ApiResponse<Payment>,
     AxiosError<ApiResponse<null>>,
-    { id: number; data: UpdatePaymentPayload }
+    { id: number; data: ConfigurePaymentPayload }
   >({
     mutationFn: async ({ id, data }) => {
       const res = await baseApi.put<ApiResponse<Payment>>(
         `/api/payments/${id}`,
-        data
+        data,
       );
       return res.data;
     },
     onSuccess: (res, variables) => {
-      // ✅ ADICIONAR variables
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({
         queryKey: ["payment", "details", variables.id],
-      }); // ✅ CORRIGIR
-      queryClient.invalidateQueries({ queryKey: ["installments"] }); // ✅ ADICIONAR (caso gere parcelas)
-      console.log("✅ Pagamento atualizado:", res.message);
+      });
+      // Parcelas são regeradas pelo backend ao reconfigurar
+      queryClient.invalidateQueries({ queryKey: ["installments"] });
+      console.log("Pagamento configurado:", res.message);
     },
     onError: (err) => {
       console.error(
-        "❌ Erro ao atualizar pagamento:",
-        err.response?.data?.message
+        "Erro ao configurar pagamento:",
+        err.response?.data?.message,
       );
     },
   });
 };
 
 // =============================
-// 🔹 HOOK: DELETE PAYMENT
+// HOOK: DELETE PAYMENT
 // =============================
 export const useDeletePayment = () => {
   const queryClient = useQueryClient();
@@ -384,36 +387,32 @@ export const useDeletePayment = () => {
   return useMutation<ApiResponse<null>, AxiosError<ApiResponse<null>>, number>({
     mutationFn: async (id) => {
       const { data } = await baseApi.delete<ApiResponse<null>>(
-        `/api/payments/${id}`
+        `/api/payments/${id}`,
       );
       return data;
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
-      console.log("✅ Pagamento excluído:", res.message);
+      console.log("Pagamento excluído:", res.message);
     },
     onError: (err) => {
-      console.error(
-        "❌ Erro ao excluir pagamento:",
-        err.response?.data?.message
-      );
+      console.error("Erro ao excluir pagamento:", err.response?.data?.message);
     },
   });
 };
 
 // =============================
-// 🔹 HOOK: GET PAYMENT BY ID
+// HOOK: GET PAYMENT BY ID
 // =============================
-
 export const useGetPaymentById = (id?: number) => {
   return useQuery<ApiResponse<PaymentDetails>, AxiosError<ApiResponse<null>>>({
     queryKey: ["payment", "details", id],
     queryFn: async () => {
       const { data } = await baseApi.get<ApiResponse<PaymentApiDetailResponse>>(
-        `/api/payments/${id}`
+        `/api/payments/${id}`,
       );
 
-      // ✅ Mapear para garantir que clientName esteja preenchido
+      // Mapear para garantir que clientName esteja preenchido
       if (data.data) {
         const paymentDetails = mapApiResponseToPaymentDetails(data.data);
         return {
@@ -429,53 +428,8 @@ export const useGetPaymentById = (id?: number) => {
   });
 };
 
-// 🔹 Função auxiliar para mapeamento
-function mapApiResponseToPaymentDetails(
-  apiData: PaymentApiDetailResponse
-): PaymentDetails {
-  // ✅ Agora temos type safety
-  const clientName =
-    apiData.sale?.clientName || // ← PRIMEIRO: busca em sale.clientName
-    apiData.sale?.client?.name || // ← DEPOIS: busca em sale.client.name (fallback)
-    apiData.clientName || // ← fallback adicional
-    "Cliente não informado";
-
-  return {
-    // Campos básicos
-    id: apiData.id,
-    saleId: apiData.saleId,
-    method: apiData.method,
-    status: apiData.status,
-    total: apiData.total,
-    discount: apiData.discount,
-    downPayment: apiData.downPayment,
-    installmentsTotal: apiData.installmentsTotal,
-    paidAmount: apiData.paidAmount,
-    installmentsPaid: apiData.installmentsPaid,
-    lastPaymentAt: apiData.lastPaymentAt,
-    firstDueDate: apiData.firstDueDate,
-    isActive: apiData.isActive,
-    branchId: apiData.branchId,
-    tenantId: apiData.tenantId,
-    createdAt: apiData.createdAt,
-    updatedAt: apiData.updatedAt,
-
-    // Relações
-    installments: apiData.installments || [],
-
-    // Campos específicos do PaymentDetails
-    clientName,
-    sale: apiData.sale
-      ? {
-          id: apiData.sale.id,
-          total: apiData.sale.total,
-        }
-      : undefined,
-  };
-}
-
 // =============================
-// 🔹 HOOK: UPDATE PAYMENT STATUS
+// HOOK: UPDATE PAYMENT STATUS
 // =============================
 export const useUpdatePaymentStatus = () => {
   const queryClient = useQueryClient();
@@ -488,24 +442,69 @@ export const useUpdatePaymentStatus = () => {
     mutationFn: async ({ id, status, reason }) => {
       const res = await baseApi.patch<ApiResponse<Payment>>(
         `/api/payments/${id}/status`,
-        { status, reason }
+        { status, reason },
       );
       return res.data;
     },
     onSuccess: (res, variables) => {
-      // ✅ ADICIONAR variables
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({
         queryKey: ["payment", "details", variables.id],
-      }); // ✅ CORRIGIR
-      queryClient.invalidateQueries({ queryKey: ["installments"] }); // ✅ ADICIONAR
-      console.log("✅ Status do pagamento atualizado:", res.message);
+      });
+      queryClient.invalidateQueries({ queryKey: ["installments"] });
+      console.log("Status do pagamento atualizado:", res.message);
     },
     onError: (err) => {
       console.error(
-        "❌ Erro ao atualizar status do pagamento:",
-        err.response?.data?.message
+        "Erro ao atualizar status do pagamento:",
+        err.response?.data?.message,
       );
     },
   });
 };
+
+// =============================
+// HELPERS
+// =============================
+
+// Normaliza a resposta da API para o tipo PaymentDetails consumido pelo front.
+// Garante que clientName esteja preenchido independente de onde vier na resposta.
+// Prioridade: sale.clientName > sale.client.name > clientName direto
+function mapApiResponseToPaymentDetails(
+  apiData: PaymentApiDetailResponse,
+): PaymentDetails {
+  const clientName =
+    apiData.sale?.clientName ||
+    apiData.sale?.client?.name ||
+    apiData.clientName ||
+    "Cliente não informado";
+
+  return {
+    id: apiData.id,
+    saleId: apiData.saleId,
+    status: apiData.status,
+    total: apiData.total,
+    discount: apiData.discount,
+    paidAmount: apiData.paidAmount,
+    installmentsPaid: apiData.installmentsPaid,
+    lastPaymentAt: apiData.lastPaymentAt,
+    isActive: apiData.isActive,
+    branchId: apiData.branchId,
+    tenantId: apiData.tenantId,
+    createdAt: apiData.createdAt,
+    updatedAt: apiData.updatedAt,
+    methods: apiData.methods ?? [],
+    clientName,
+    sale: apiData.sale
+      ? {
+          id: apiData.sale.id,
+          subtotal: apiData.sale.subtotal,
+          discount: apiData.sale.discount,
+          total: apiData.sale.total,
+          notes: apiData.sale.notes,
+          clientName: apiData.sale.clientName,
+          client: apiData.sale.client,
+        }
+      : undefined,
+  };
+}
