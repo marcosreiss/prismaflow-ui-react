@@ -1,7 +1,6 @@
 import type { PaymentInstallmentWithCalculations } from "./paymentDetails";
-import type { PaymentMethodItem } from "./paymentEntities";
 import type { PaymentStatus } from "./paymentEnums";
-
+import type { PaymentMethodItem } from "./paymentEntities";
 
 export type PaymentListItem = {
   id: number;
