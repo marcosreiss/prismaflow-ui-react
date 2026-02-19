@@ -11,13 +11,9 @@ import {
     usePayInstallment,
 } from "./usePayments";
 
-import type {
-    Payment,
-    PaymentDetails,
-    PaymentStatus,
-    PaymentListItem,
-    PaymentFilters,
-} from "../types/paymentTypes";
+
+import type { PaymentFilters } from "../types/paymentFilters";
+import type { PaymentListItem, PaymentDetails, Payment, PaymentStatus } from "../types";
 
 // ==============================
 // Helpers (sem hooks)
@@ -27,14 +23,12 @@ function buildPaymentsQueryParams(page: number, limit: number, filters: PaymentF
         page: page + 1, // API usa paginação baseada em 1
         limit,
 
-        // Filtros básicos
         ...(filters.status && { status: filters.status }),
         ...(filters.method && { method: filters.method }),
         ...(filters.startDate && { startDate: filters.startDate }),
         ...(filters.endDate && { endDate: filters.endDate }),
         ...(filters.clientSearch && { clientName: filters.clientSearch }),
 
-        // Filtros avançados
         ...(filters.hasOverdueInstallments !== undefined && {
             hasOverdueInstallments: filters.hasOverdueInstallments,
         }),
@@ -55,16 +49,13 @@ function mapPaymentsToListItems(data?: ApiResponse<{ content: PaymentListItem[] 
         ...item,
         clientName: item.sale?.client?.name || item.clientName || "Cliente não informado",
         discount: item.discount ?? 0,
-        downPayment: item.downPayment ?? 0,
-        installmentsTotal: item.installmentsTotal ?? null,
         paidAmount: item.paidAmount ?? 0,
         installmentsPaid: item.installmentsPaid ?? 0,
         lastPaymentAt: item.lastPaymentAt ?? null,
-        firstDueDate: item.firstDueDate ?? null,
         isActive: item.isActive ?? true,
         branchId: item.branchId ?? "",
         tenantId: item.tenantId ?? "",
-        installments: item.installments ?? [],
+        methods: item.methods ?? [],
     }));
 }
 
@@ -88,7 +79,7 @@ function usePaymentsFiltersState() {
 
 function useDrawerState() {
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [drawerMode, setDrawerMode] = useState<"create" | "edit" | "view">("view");
+    const [drawerMode, setDrawerMode] = useState<"edit" | "view">("view");
     const [selectedPayment, setSelectedPayment] = useState<PaymentDetails | null>(null);
 
     return {
@@ -135,17 +126,15 @@ function useErrorNotificationEffect(error: unknown) {
 }
 
 // ==============================
-// 🔹 Hook principal - Controller da página de pagamentos
+// Hook principal - Controller da página de pagamentos
 // ==============================
 export function usePaymentPageController() {
     console.log("usePaymentPageController render");
 
-    // Estados de paginação e busca
     const [page, setPage] = useState(0);
     const [limit, setLimit] = useState(10);
     const [search, setSearch] = useState("");
 
-    // Estados agrupados
     const { filters, setFilters } = usePaymentsFiltersState();
     const {
         drawerOpen,
@@ -159,25 +148,20 @@ export function usePaymentPageController() {
         useConfirmationsState();
     const { selectedIds, setSelectedIds, deletingIds, setDeletingIds } = useSelectionState();
 
-    // Query params memoizados
-    const queryParams = useMemo(() => buildPaymentsQueryParams(page, limit, filters), [
-        page,
-        limit,
-        filters,
-    ]);
+    const queryParams = useMemo(
+        () => buildPaymentsQueryParams(page, limit, filters),
+        [page, limit, filters]
+    );
 
-    // API: query
     const { data, isLoading, isFetching, refetch, error } = useGetPayments(queryParams);
 
-    // API: mutations
     const deletePayment = useDeletePayment();
     const updatePaymentStatus = useUpdatePaymentStatus();
     const payInstallment = usePayInstallment();
 
-    // Notificação de erro (efeitos isolados)
     const { addNotification } = useErrorNotificationEffect(error);
 
-    // Handlers filtros
+    // Handlers de filtros
     const handleFilterChange = useCallback(
         (newFilters: Partial<PaymentFilters>) => {
             setFilters((prev) => ({ ...prev, ...newFilters }));
@@ -201,9 +185,9 @@ export function usePaymentPageController() {
         setPage(0);
     }, [setFilters]);
 
-    // Handlers Drawer
+    // Handlers do drawer
     const handleOpenDrawer = useCallback(
-        (mode: "create" | "edit" | "view", payment?: Payment | PaymentListItem | null) => {
+        (mode: "edit" | "view", payment?: Payment | PaymentListItem | null) => {
             setDrawerMode(mode);
             setSelectedPayment((payment as PaymentDetails) ?? null);
             setDrawerOpen(true);
@@ -216,7 +200,6 @@ export function usePaymentPageController() {
         setTimeout(() => setSelectedPayment(null), 300);
     }, [setDrawerOpen, setSelectedPayment]);
 
-    // Ações do Drawer
     const handleDrawerEdit = useCallback(() => {
         if (!selectedPayment) return;
         handleOpenDrawer("edit", selectedPayment);
@@ -229,11 +212,6 @@ export function usePaymentPageController() {
         },
         [setSelectedPayment, setConfirmDelete]
     );
-
-    const handleDrawerCreateNew = useCallback(() => {
-        setSelectedPayment(null);
-        handleOpenDrawer("create");
-    }, [setSelectedPayment, handleOpenDrawer]);
 
     // Exclusão individual
     const handleDelete = useCallback(async () => {
@@ -277,11 +255,11 @@ export function usePaymentPageController() {
 
     // Pagamento de parcela
     const handlePayInstallment = useCallback(
-        async (installmentId: number, paidAmount: number, paidAt?: string) => {
+        async (installmentId: number, paidAmount: number) => {
             try {
                 const res = await payInstallment.mutateAsync({
                     id: installmentId,
-                    data: { paidAmount, paidAt },
+                    data: { paidAmount },
                 });
                 addNotification(res.message, "success");
                 refetch();
@@ -297,7 +275,9 @@ export function usePaymentPageController() {
     // Seleção de linhas
     const handleSelectRow = useCallback(
         (id: string | number, checked: boolean) => {
-            setSelectedIds((prev) => (checked ? [...prev, id as number] : prev.filter((i) => i !== id)));
+            setSelectedIds((prev) =>
+                checked ? [...prev, id as number] : prev.filter((i) => i !== id)
+            );
         },
         [setSelectedIds]
     );
@@ -352,11 +332,9 @@ export function usePaymentPageController() {
         refetch,
     ]);
 
-    // Dados mapeados
     const payments: PaymentListItem[] = useMemo(() => mapPaymentsToListItems(data), [data]);
     const total = data?.data?.totalElements ?? 0;
 
-    // Flags de loading
     const isDeleting = deletePayment.isPending;
     const isUpdatingStatus = updatePaymentStatus.isPending;
     const isPayingInstallment = payInstallment.isPending;
@@ -420,7 +398,6 @@ export function usePaymentPageController() {
         // Ações do drawer
         handleDrawerEdit,
         handleDrawerDelete,
-        handleDrawerCreateNew,
 
         // Utilitários
         addNotification,

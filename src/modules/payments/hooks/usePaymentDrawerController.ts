@@ -1,33 +1,25 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNotification } from "@/context/NotificationContext";
-import {
-  useCreatePayment,
-  useUpdatePayment,
-  useUpdatePaymentStatus,
-} from "./usePayments";
-import { useGetSales } from "@/modules/sales/hooks/useSales";
-import type { Sale } from "@/modules/sales/types/salesTypes";
+import { useConfigurePayment, useUpdatePaymentStatus } from "./usePayments";
+
+import type { PaymentFormValues } from "../types/paymentFormTypes";
 import type {
-  Payment,
-  PaymentDetails,
-  CreatePaymentPayload,
-  UpdatePaymentPayload,
-  PaymentMethod,
-  PaymentStatus,
-} from "../types/paymentTypes";
+  ConfigurePaymentPayload,
+  PaymentMethodPayload,
+} from "../types/paymentPayloads";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/utils/apiResponse";
+import type { Payment, PaymentDetails, PaymentStatus } from "../types";
 
 // ==============================
-// 🔹 Tipagens
+// Tipagens
 // ==============================
-export type PaymentDrawerMode = "create" | "edit" | "view";
+export type PaymentDrawerMode = "edit" | "view";
 
 interface UsePaymentDrawerControllerProps {
   mode: PaymentDrawerMode;
   payment?: PaymentDetails | null;
-  onCreated: (payment: Payment) => void;
   onUpdated: (payment: Payment) => void;
   onEdit: () => void;
   onDelete: (payment: Payment) => void;
@@ -36,277 +28,165 @@ interface UsePaymentDrawerControllerProps {
     status: PaymentStatus,
     reason?: string,
   ) => void;
-  onPayInstallment: (
-    installmentId: number,
-    paidAmount: number,
-    paidAt?: string,
-  ) => void; // ✅ CORRETO
-  onCreateNew: () => void;
+  onPayInstallment: (installmentId: number, paidAmount: number) => void;
 }
 
-type PaymentFormValues = {
-  saleId: number;
-  method: PaymentMethod;
-  status: PaymentStatus;
-  total: number;
-  discount: number;
-  downPayment: number;
-  installmentsTotal: number; // ✅ Número de parcelas (não valor)
-  firstDueDate: string;
-};
-
 // ==============================
-// 🔹 Hook principal
+// Hook principal
 // ==============================
 export function usePaymentDrawerController({
   mode,
   payment,
-  onCreated,
   onUpdated,
   onEdit,
   onDelete,
   onUpdateStatus,
-  onPayInstallment, // ✅ CORRETO
-  onCreateNew,
+  onPayInstallment,
 }: UsePaymentDrawerControllerProps) {
   const { addNotification } = useNotification();
 
-  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
-  const [showInstallments, setShowInstallments] = useState(false);
+  const [showInstallmentFields, setShowInstallmentFields] = useState(false);
 
-  // ✅ Hooks de mutação
-  const { mutateAsync: createPayment, isPending: creating } =
-    useCreatePayment();
-  const { mutateAsync: updatePayment, isPending: updating } =
-    useUpdatePayment();
+  const { mutateAsync: configurePayment, isPending: configuring } =
+    useConfigurePayment();
   const { mutateAsync: updateStatus } = useUpdatePaymentStatus();
 
   // ==========================
-  // 🔹 Formulário
+  // Formulário
   // ==========================
   const methods = useForm<PaymentFormValues>({
     defaultValues: {
       saleId: 0,
-      method: "MONEY",
-      status: "PENDING",
       total: 0,
       discount: 0,
-      downPayment: 0,
-      installmentsTotal: 0,
-      firstDueDate: new Date().toISOString().split("T")[0],
+      status: "PENDING",
+      methods: [],
     },
   });
 
-  const { watch, setValue, reset, handleSubmit } = methods;
+  const { reset, handleSubmit, watch } = methods;
+
+  // Exibe campos de parcelas se algum método do tipo INSTALLMENT estiver no array
+  const watchedMethods = watch("methods");
+  useEffect(() => {
+    const hasInstallment = watchedMethods?.some(
+      (m) => m.method === "INSTALLMENT",
+    );
+    setShowInstallmentFields(!!hasInstallment);
+  }, [watchedMethods]);
 
   // ==========================
-  // 🔹 Vendas (autocomplete)
-  // ==========================
-  const { data: saleData } = useGetSales(1, 100);
-
-  const saleOptions = useMemo(() => {
-    if (saleData?.data?.content) {
-      return saleData.data.content;
-    }
-    return [];
-  }, [saleData]);
-
-  // ==========================
-  // 🔹 Efeitos (carregar pagamento)
+  // Carregar dados no formulário ao abrir
   // ==========================
   useEffect(() => {
     if ((mode === "edit" || mode === "view") && payment) {
       reset({
         saleId: payment.saleId,
-        method: payment.method || "MONEY",
-        status: payment.status,
         total: payment.total,
         discount: payment.discount,
-        downPayment: payment.downPayment,
-        installmentsTotal: payment.installmentsTotal || 0,
-        firstDueDate: payment.firstDueDate
-          ? payment.firstDueDate.split("T")[0]
-          : new Date().toISOString().split("T")[0],
+        status: payment.status,
+        methods: payment.methods.map((m) => ({
+          _key: crypto.randomUUID(),
+          method: m.method,
+          amount: m.amount,
+          installments: m.installments,
+          firstDueDate: m.firstDueDate
+            ? m.firstDueDate.split("T")[0]
+            : undefined,
+        })),
       });
-
-      const sale = saleOptions.find((s: Sale) => s.id === payment.saleId);
-      setSelectedSale(sale || null);
-      setShowInstallments(payment.method === "INSTALLMENT");
-    } else if (mode === "create") {
-      reset({
-        saleId: 0,
-        method: "MONEY",
-        status: "PENDING",
-        total: 0,
-        discount: 0,
-        downPayment: 0,
-        installmentsTotal: 0,
-        firstDueDate: new Date().toISOString().split("T")[0],
-      });
-      setSelectedSale(null);
-      setShowInstallments(false);
     }
-  }, [mode, payment, reset, saleOptions]);
-
-  // Watch form values
-  const method = watch("method");
+  }, [mode, payment, reset]);
 
   // ==========================
-  // 🔹 Cálculos automáticos
-  // ==========================
-  useEffect(() => {
-    setShowInstallments(method === "INSTALLMENT");
-
-    if (method !== "INSTALLMENT") {
-      setValue("downPayment", 0);
-      setValue("installmentsTotal", 0);
-    }
-  }, [method, setValue]);
-
-  // ==========================
-  // 🔹 Submit
+  // Submit — configura methods[] via PUT /payments/:id
+  // Só disponível no modo edit
   // ==========================
   const onSubmit = handleSubmit(async (values) => {
+    if (!payment) return;
+
     try {
       if (values.total <= 0) {
         addNotification("Valor total deve ser maior que zero.", "error");
         return;
       }
 
-      if (!values.saleId) {
-        addNotification("Selecione uma venda.", "error");
+      const methodsSum = values.methods.reduce((acc, m) => acc + m.amount, 0);
+      const diff = Math.abs(methodsSum - values.total);
+
+      if (diff > 0.01) {
+        addNotification(
+          `A soma dos métodos (R$ ${methodsSum.toFixed(2)}) não corresponde ao total (R$ ${values.total.toFixed(2)}).`,
+          "error",
+        );
         return;
       }
 
-      if (mode === "create") {
-        const payload: CreatePaymentPayload = {
-          saleId: values.saleId,
-          method: values.method,
-          status: "PENDING",
-          total: Math.max(0, values.total),
-          discount: Math.max(0, values.discount),
-          downPayment: Math.max(0, values.downPayment),
-          installmentsTotal:
-            values.method === "INSTALLMENT"
-              ? Math.max(0, values.installmentsTotal)
-              : null,
-          paidAmount: 0,
-          installmentsPaid: 0,
-          branchId: "br_01j9xyz72h",
-          tenantId: "ten_01j8b32v7x",
-          ...(values.method === "INSTALLMENT" &&
-            values.firstDueDate && {
-              firstDueDate: new Date(values.firstDueDate).toISOString(),
+      const payload: ConfigurePaymentPayload = {
+        total: values.total,
+        methods: values.methods.map(
+          (m): PaymentMethodPayload => ({
+            method: m.method,
+            amount: m.amount,
+            ...(m.method === "INSTALLMENT" && {
+              installments: m.installments,
+              firstDueDate: m.firstDueDate
+                ? new Date(m.firstDueDate).toISOString()
+                : undefined,
             }),
-        } as CreatePaymentPayload;
+          }),
+        ),
+      };
 
-        const res = await createPayment(payload);
-        if (res?.data) {
-          onCreated(res.data);
-          addNotification("Pagamento criado com sucesso!", "success");
-        }
-      } else if (mode === "edit" && payment) {
-        const updatePayload: UpdatePaymentPayload = {
-          method: values.method,
-          status: values.status,
-          total: Math.max(0, values.total),
-          discount: Math.max(0, values.discount),
-        };
-
-        if (values.method === "INSTALLMENT") {
-          updatePayload.downPayment = Math.max(0, values.downPayment);
-          updatePayload.installmentsTotal = Math.max(
-            0,
-            values.installmentsTotal,
-          );
-          if (values.firstDueDate) {
-            updatePayload.firstDueDate = new Date(
-              values.firstDueDate,
-            ).toISOString();
-          }
-        } else {
-          updatePayload.downPayment = 0;
-          updatePayload.installmentsTotal = null;
-          updatePayload.firstDueDate = undefined;
-        }
-
-        const res = await updatePayment({
-          id: payment.id,
-          data: updatePayload,
-        });
-        if (res?.data) {
-          onUpdated(res.data);
-          addNotification("Pagamento atualizado com sucesso!", "success");
-        }
+      const res = await configurePayment({ id: payment.id, data: payload });
+      if (res?.data) {
+        onUpdated(res.data);
+        addNotification("Pagamento configurado com sucesso!", "success");
       }
     } catch (error) {
       const axiosErr = error as AxiosError<ApiResponse<null>>;
       const message =
-        axiosErr.response?.data?.message ?? "Erro ao salvar pagamento.";
+        axiosErr.response?.data?.message ?? "Erro ao configurar pagamento.";
       addNotification(message, "error");
     }
   });
 
   // ==========================
-  // 🔹 Handlers
+  // Handlers
   // ==========================
-  const handleSaleChange = (sale: Sale | null) => {
-    setSelectedSale(sale);
-    if (sale) {
-      setValue("saleId", sale.id);
-      if (mode === "create") {
-        setValue("total", sale.total);
-      }
-    } else {
-      setValue("saleId", 0);
-      if (mode === "create") {
-        setValue("total", 0);
-      }
-    }
-  };
 
-  const handleMethodChange = (methodValue: PaymentMethod) => {
-    setValue("method", methodValue);
-    setShowInstallments(methodValue === "INSTALLMENT");
-  };
-
+  // Troca de status — exclusiva do modo view
   const handleStatusChange = async (
     statusValue: PaymentStatus,
     reason?: string,
   ) => {
-    if (mode === "edit" && payment) {
-      try {
-        const res = await updateStatus({
-          id: payment.id,
-          status: statusValue,
-          reason,
-        });
+    if (mode !== "view" || !payment) return;
 
-        if (res?.data) {
-          addNotification("Status do pagamento atualizado!", "success");
-          onUpdateStatus(payment.id, statusValue, reason);
-        }
-      } catch (error) {
-        const axiosErr = error as AxiosError<ApiResponse<null>>;
-        const message =
-          axiosErr.response?.data?.message ?? "Erro ao atualizar status.";
-        addNotification(message, "error");
+    try {
+      const res = await updateStatus({
+        id: payment.id,
+        status: statusValue,
+        reason,
+      });
+      if (res?.data) {
+        addNotification("Status do pagamento atualizado!", "success");
+        onUpdateStatus(payment.id, statusValue, reason);
       }
+    } catch (error) {
+      const axiosErr = error as AxiosError<ApiResponse<null>>;
+      const message =
+        axiosErr.response?.data?.message ?? "Erro ao atualizar status.";
+      addNotification(message, "error");
     }
   };
 
-  // ✅ HANDLER CORRETO - apenas repassa para o callback
-  const handlePayInstallment = async (
-    installmentId: number,
-    paidAmount: number,
-    paidAt?: string,
-  ) => {
-    // Apenas chama o callback que veio da page
-    onPayInstallment(installmentId, paidAmount, paidAt);
+  // Apenas repassa para o callback da página — a mutation vive no page controller
+  const handlePayInstallment = (installmentId: number, paidAmount: number) => {
+    onPayInstallment(installmentId, paidAmount);
   };
 
   // ==========================
-  // 🔹 Retorno
+  // Retorno
   // ==========================
   return {
     // form
@@ -314,26 +194,20 @@ export function usePaymentDrawerController({
     handleSubmit: onSubmit,
 
     // estados
-    creating,
-    updating,
-    selectedSale,
-    showInstallments,
+    configuring,
+    showInstallmentFields,
 
     // dados
-    saleOptions,
     mode,
     payment,
 
-    // callbacks
+    // callbacks repassados para o JSX
     onEdit,
     onDelete,
     onUpdateStatus,
     onPayInstallment,
-    onCreateNew,
 
     // handlers
-    handleSaleChange,
-    handleMethodChange,
     handleStatusChange,
     handlePayInstallment,
   };
