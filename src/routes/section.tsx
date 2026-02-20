@@ -21,7 +21,7 @@ const SalesForm = lazy(() => import('@/modules/sales/pages/CreateSalePage'));
 const SalesDetailsPage = lazy(() => import('@/modules/sales/pages/salesDetailsPage'));
 
 const PaymentPage = lazy(() => import('@/modules/payments/pages/PaymentsPage'));
-const OverdueInstallmentsPage = lazy(() => import('@/modules/payments/pages/OverdueInstallmentsPage')); // ✅ NOVO
+// const OverdueInstallmentsPage = lazy(() => import('@/modules/payments/pages/OverdueInstallmentsPage')); 
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -63,7 +63,7 @@ export function PrivateRouter() {
                 { path: 'sales/:id', element: <SalesDetailsPage /> },
 
                 { path: 'payments', element: <PaymentPage /> },
-                { path: 'overdue-installments', element: <OverdueInstallmentsPage /> }, // ✅ NOVO
+                // { path: 'overdue-installments', element: <OverdueInstallmentsPage /> }, 
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },

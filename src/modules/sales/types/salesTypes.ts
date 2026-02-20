@@ -1,7 +1,7 @@
 import type { Client } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
-import type { Payment } from "@/modules/payments/types/paymentTypes";
+import type { Payment } from "@/modules/payments/types";
 import type { Product } from "@/modules/products/types/productTypes";
 import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 
