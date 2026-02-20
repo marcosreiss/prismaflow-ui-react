@@ -4,6 +4,8 @@ import type { PaymentStatus } from "./paymentEnums";
 export type PaymentMethodPayload = {
   method: "PIX" | "MONEY" | "DEBIT" | "CREDIT" | "INSTALLMENT";
   amount: number;
+  // Obrigatório para métodos à vista — backend não assume now()
+  paidAt?: string;
   // Obrigatórios apenas quando method === "INSTALLMENT"
   installments?: number;
   firstDueDate?: string;

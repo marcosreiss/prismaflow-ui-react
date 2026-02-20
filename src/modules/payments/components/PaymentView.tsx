@@ -228,7 +228,7 @@ export default function PaymentView({
                     <Typography variant="subtitle1" fontWeight={600} mb={1}>
                         Métodos de Pagamento
                     </Typography>
-                    <Stack spacing={1}>
+                    <Stack spacing={1.5}>
                         {payment.methods.length === 0 && (
                             <Typography variant="body2" color="text.secondary">
                                 Nenhum método configurado
@@ -240,18 +240,35 @@ export default function PaymentView({
                                 sx={{
                                     display: "flex",
                                     justifyContent: "space-between",
-                                    alignItems: "center",
+                                    alignItems: "flex-start",
+                                    gap: 1,
                                 }}
                             >
-                                <Typography variant="body2" fontWeight={600} sx={{ minWidth: 140 }}>
-                                    {PaymentMethodLabels[m.method]}:
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    {formatCurrency(m.amount)}
-                                    {m.method === "INSTALLMENT" && m.installments
-                                        ? ` — ${m.installments}x`
-                                        : ""}
-                                </Typography>
+                                <Box>
+                                    <Typography variant="body2" fontWeight={600}>
+                                        {PaymentMethodLabels[m.method]}
+                                        {m.method === "INSTALLMENT" && m.installments
+                                            ? ` — ${m.installments}x`
+                                            : ""}
+                                    </Typography>
+                                    {/* Data do pagamento — apenas para métodos à vista já pagos */}
+                                    {m.paidAt && (
+                                        <Typography variant="caption" color="text.secondary">
+                                            Pago em {formatDate(m.paidAt)}
+                                        </Typography>
+                                    )}
+                                </Box>
+
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography variant="body2" color="text.secondary">
+                                        {formatCurrency(m.amount)}
+                                    </Typography>
+                                    <Chip
+                                        label={m.isPaid ? "Pago" : "Pendente"}
+                                        color={m.isPaid ? "success" : "default"}
+                                        size="small"
+                                    />
+                                </Stack>
                             </Box>
                         ))}
                     </Stack>

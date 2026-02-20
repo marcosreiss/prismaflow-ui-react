@@ -17,13 +17,11 @@ import { PaymentMethodLabels } from "../types/paymentEnums";
 import type { PaymentMethod } from "../types/paymentEnums";
 import type { PaymentFormValues } from "../types/paymentFormTypes";
 
-// Limite máximo de métodos por pagamento.
-// Para alterar, basta modificar esta constante.
 const MAX_PAYMENT_METHODS = 2;
 
-// ==============================
-// Componente principal
-// ==============================
+const INSTALLMENT_METHODS: PaymentMethod[] = ["INSTALLMENT"];
+const isInstallmentMethod = (method: PaymentMethod) => INSTALLMENT_METHODS.includes(method);
+
 export default function PaymentMethodsBuilder() {
     const {
         control,
@@ -39,13 +37,11 @@ export default function PaymentMethodsBuilder() {
     const total = useWatch({ control, name: "total" });
     const watchedMethods = useWatch({ control, name: "methods" });
 
-    // Tipos já selecionados — cada tipo só pode aparecer uma vez
     const usedTypes = useMemo(
         () => new Set(watchedMethods?.map((m) => m.method) ?? []),
         [watchedMethods]
     );
 
-    // Soma atual dos métodos para validação em tempo real
     const methodsSum = useMemo(
         () => watchedMethods?.reduce((acc, m) => acc + (Number(m.amount) || 0), 0) ?? 0,
         [watchedMethods]
@@ -58,7 +54,6 @@ export default function PaymentMethodsBuilder() {
     const handleAddMethod = () => {
         if (!canAddMethod) return;
 
-        // Seleciona automaticamente o primeiro tipo ainda não utilizado
         const availableMethod = (Object.keys(PaymentMethodLabels) as PaymentMethod[]).find(
             (m) => !usedTypes.has(m)
         );
@@ -108,7 +103,7 @@ export default function PaymentMethodsBuilder() {
             <Stack spacing={2}>
                 {fields.map((field, index) => {
                     const methodValue = watchedMethods?.[index]?.method;
-                    const isInstallment = methodValue === "INSTALLMENT";
+                    const isInstallment = methodValue ? isInstallmentMethod(methodValue) : false;
                     const fieldError = errors.methods?.[index];
 
                     return (
@@ -153,8 +148,6 @@ export default function PaymentMethodsBuilder() {
                                     size="small"
                                     error={!!fieldError?.method}
                                     helperText={fieldError?.method?.message}
-                                    // useFieldArray não rastreia o select via register sozinho,
-                                    // value precisa ser controlado explicitamente
                                     value={watchedMethods?.[index]?.method ?? ""}
                                 >
                                     {(Object.entries(PaymentMethodLabels) as [PaymentMethod, string][]).map(
@@ -162,7 +155,10 @@ export default function PaymentMethodsBuilder() {
                                             <MenuItem
                                                 key={key}
                                                 value={key}
-                                                disabled={usedTypes.has(key) && watchedMethods?.[index]?.method !== key}
+                                                disabled={
+                                                    usedTypes.has(key) &&
+                                                    watchedMethods?.[index]?.method !== key
+                                                }
                                             >
                                                 {label}
                                             </MenuItem>
@@ -170,7 +166,7 @@ export default function PaymentMethodsBuilder() {
                                     )}
                                 </TextField>
 
-                                {/* Valor do método — Controller necessário pela interface do CurrencyInput */}
+                                {/* Valor do método */}
                                 <Controller
                                     name={`methods.${index}.amount`}
                                     control={control}
@@ -187,11 +183,33 @@ export default function PaymentMethodsBuilder() {
                                     )}
                                 />
 
+                                {/* Data do pagamento — obrigatória para métodos à vista */}
+                                {!isInstallment && (
+                                    <TextField
+                                        {...register(`methods.${index}.paidAt`, {
+                                            required: "Informe a data do pagamento",
+                                        })}
+                                        type="date"
+                                        label="Data do pagamento"
+                                        fullWidth
+                                        size="small"
+                                        InputLabelProps={{ shrink: true }}
+                                        error={!!fieldError?.paidAt}
+                                        helperText={
+                                            fieldError?.paidAt?.message ??
+                                            "Data em que o cliente realizou o pagamento"
+                                        }
+                                        defaultValue={new Date().toISOString().split("T")[0]}
+                                    />
+                                )}
+
                                 {/* Campos exclusivos de carnê */}
                                 {isInstallment && (
                                     <>
                                         <TextField
-                                            {...register(`methods.${index}.installments`, { valueAsNumber: true })}
+                                            {...register(`methods.${index}.installments`, {
+                                                valueAsNumber: true,
+                                            })}
                                             type="number"
                                             label="Número de parcelas"
                                             fullWidth
@@ -222,7 +240,6 @@ export default function PaymentMethodsBuilder() {
                 })}
             </Stack>
 
-            {/* Validação da soma em tempo real */}
             {fields.length > 0 && (
                 <>
                     <Divider sx={{ my: 2 }} />

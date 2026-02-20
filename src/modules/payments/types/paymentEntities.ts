@@ -20,6 +20,9 @@ export type PaymentMethodItem = {
   paymentId: number;
   method: PaymentMethod;
   amount: number;
+  isPaid: boolean;
+  paidAt: string | null;
+  // Exclusivos de INSTALLMENT
   installments?: number;
   firstDueDate?: string | null;
   installmentItems: PaymentInstallmentItem[];

@@ -7,6 +7,7 @@ import {
     Divider,
     CircularProgress,
     Stack,
+    Tooltip,
 } from "@mui/material";
 import { X, Pencil, Trash2, CreditCard } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -95,13 +96,13 @@ export default function PaymentDrawer({
         reason?: string
     ) => {
         if (!currentPayment) return;
-
         await handleStatusChange(status, reason);
-
-        setCurrentPayment((prev) =>
-            prev ? { ...prev, status } : prev
-        );
+        setCurrentPayment((prev) => (prev ? { ...prev, status } : prev));
     };
+
+    // Edição bloqueada quando qualquer método já foi pago — backend rejeita o replace
+    const isEditBlocked =
+        !!currentPayment?.methods?.some((m) => m.isPaid);
 
     return (
         <Drawer
@@ -154,14 +155,26 @@ export default function PaymentDrawer({
                 {isView && currentPayment && (
                     <Box>
                         <Stack direction="row" spacing={1} mb={2} flexWrap="wrap">
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                startIcon={<Pencil size={14} />}
-                                onClick={onEdit}
+                            <Tooltip
+                                title={
+                                    isEditBlocked
+                                        ? "Não é possível editar: um ou mais métodos já foram pagos"
+                                        : ""
+                                }
                             >
-                                Editar
-                            </Button>
+                                {/* span necessário para Tooltip funcionar em botão desabilitado */}
+                                <span>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        startIcon={<Pencil size={14} />}
+                                        onClick={onEdit}
+                                        disabled={isEditBlocked}
+                                    >
+                                        Editar
+                                    </Button>
+                                </span>
+                            </Tooltip>
 
                             <Button
                                 size="small"
@@ -202,7 +215,6 @@ export default function PaymentDrawer({
 
                         <Divider sx={{ mb: 2 }} />
 
-                        {/* PaymentView será atualizado na próxima etapa */}
                         <PaymentView
                             paymentId={currentPayment.id}
                             onPayInstallment={handlePayInstallment}

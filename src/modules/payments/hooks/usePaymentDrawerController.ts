@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNotification } from "@/context/NotificationContext";
 import { useConfigurePayment, useUpdatePaymentStatus } from "./usePayments";
@@ -49,8 +49,6 @@ export function usePaymentDrawerController({
 }: UsePaymentDrawerControllerProps) {
   const { addNotification } = useNotification();
 
-  const [showInstallmentFields, setShowInstallmentFields] = useState(false);
-
   const { mutateAsync: configurePayment, isPending: configuring } =
     useConfigurePayment();
   const { mutateAsync: updateStatus } = useUpdatePaymentStatus();
@@ -68,16 +66,7 @@ export function usePaymentDrawerController({
     },
   });
 
-  const { reset, handleSubmit, watch } = methods;
-
-  // Exibe campos de parcelas se algum método do tipo INSTALLMENT estiver no array
-  const watchedMethods = watch("methods");
-  useEffect(() => {
-    const hasInstallment = watchedMethods?.some(
-      (m) => m.method === "INSTALLMENT",
-    );
-    setShowInstallmentFields(!!hasInstallment);
-  }, [watchedMethods]);
+  const { reset, handleSubmit } = methods;
 
   // ==========================
   // Carregar dados no formulário ao abrir
@@ -93,6 +82,8 @@ export function usePaymentDrawerController({
           _key: crypto.randomUUID(),
           method: m.method,
           amount: m.amount,
+          // paidAt é preservado para exibição — não editável após isPaid = true
+          paidAt: m.paidAt ?? undefined,
           installments: m.installments,
           firstDueDate: m.firstDueDate
             ? m.firstDueDate.split("T")[0]
@@ -126,12 +117,29 @@ export function usePaymentDrawerController({
         return;
       }
 
+      // Métodos à vista exigem paidAt — validação antes de montar o payload
+      const missingPaidAt = values.methods.some(
+        (m) => m.method !== "INSTALLMENT" && !m.paidAt,
+      );
+
+      if (missingPaidAt) {
+        addNotification(
+          "Informe a data de pagamento para todos os métodos à vista.",
+          "error",
+        );
+        return;
+      }
+
       const payload: ConfigurePaymentPayload = {
         total: values.total,
         methods: values.methods.map(
           (m): PaymentMethodPayload => ({
             method: m.method,
             amount: m.amount,
+            // Métodos à vista enviam paidAt — INSTALLMENT não usa este campo
+            ...(m.method !== "INSTALLMENT" && {
+              paidAt: new Date(m.paidAt!).toISOString(),
+            }),
             ...(m.method === "INSTALLMENT" && {
               installments: m.installments,
               firstDueDate: m.firstDueDate
@@ -203,7 +211,6 @@ export function usePaymentDrawerController({
 
     // estados
     configuring,
-    showInstallmentFields,
 
     // dados
     mode,
