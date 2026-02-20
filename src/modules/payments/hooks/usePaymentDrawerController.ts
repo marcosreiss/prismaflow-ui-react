@@ -130,13 +130,24 @@ export function usePaymentDrawerController({
         return;
       }
 
+      const missingFirstDueDate = values.methods.some(
+        (m) => m.method === "INSTALLMENT" && !m.firstDueDate,
+      );
+
+      if (missingFirstDueDate) {
+        addNotification(
+          "Informe a primeira data de vencimento para o método de parcelamento.",
+          "error",
+        );
+        return;
+      }
+
       const payload: ConfigurePaymentPayload = {
         total: values.total,
         methods: values.methods.map(
           (m): PaymentMethodPayload => ({
             method: m.method,
             amount: m.amount,
-            // Métodos à vista enviam paidAt — INSTALLMENT não usa este campo
             ...(m.method !== "INSTALLMENT" && {
               paidAt: new Date(m.paidAt!).toISOString(),
             }),

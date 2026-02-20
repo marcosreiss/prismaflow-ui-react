@@ -223,7 +223,9 @@ export default function PaymentMethodsBuilder() {
                                         />
 
                                         <TextField
-                                            {...register(`methods.${index}.firstDueDate`)}
+                                            {...register(`methods.${index}.firstDueDate`, {
+                                                required: "Informe a primeira data de vencimento",
+                                            })}
                                             type="date"
                                             label="Primeira data de vencimento"
                                             fullWidth
