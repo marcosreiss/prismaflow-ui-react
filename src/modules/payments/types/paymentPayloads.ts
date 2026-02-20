@@ -18,6 +18,7 @@ export type ConfigurePaymentPayload = {
 // PATCH /payment-installments/:id/pay
 export type PayInstallmentPayload = {
   paidAmount: number;
+  paidAt?: string;
 };
 
 export type UpdatePaymentStatusPayload = {

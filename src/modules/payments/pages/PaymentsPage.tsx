@@ -1,21 +1,18 @@
 import { Paper, Button, Box } from "@mui/material";
-import { useCallback } from "react";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import PaymentDrawer from "../components/paymentDrawer";
 import PaymentFilters from "../components/PaymentFilters";
 import { usePaymentPageController } from "../hooks/usePaymentPageController";
-import type { PaymentListItem, PaymentFromListItem } from "../types/paymentTypes";
-
+import { PaymentMethodLabels } from "../types/paymentEnums";
+import type { PaymentListItem } from "../types/paymentListTypes";
+import { useCallback } from "react";
 
 // ==============================
-// 🔹 Página principal de pagamentos
+// Página principal de pagamentos
 // ==============================
 export default function PaymentsPage() {
-    // ==============================
-    // 🔹 Controller (gerencia estado e lógica)
-    // ==============================
     const controller = usePaymentPageController();
 
     const {
@@ -35,7 +32,7 @@ export default function PaymentsPage() {
         deletingIds,
         filters,
 
-        // Ações e mutações
+        // Ações
         setPage,
         setLimit,
         setConfirmDelete,
@@ -48,63 +45,38 @@ export default function PaymentsPage() {
         handleDeleteSelected,
         refetch,
 
-        // Handlers de filtro
+        // Filtros
         handleFilterChange,
 
-        // Handlers para Drawer
+        // Drawer
         handleDrawerEdit,
         handleDrawerDelete,
-        handleDrawerCreateNew,
 
-        // Handlers específicos para payments
+        // Específicos
         handleUpdateStatus,
-        handlePayInstallment, // ✅ ATUALIZADO (antes era handleProcessInstallment)
+        handlePayInstallment,
 
-        // Estados de loading
+        // Loading
         isDeleting,
         isAnyMutationPending,
     } = controller;
 
     // ==============================
-    // 🔹 Função auxiliar para conversão de tipo
-    // Converte PaymentListItem para PaymentFromListItem
-    // ==============================
-    const convertToPayment = (item: PaymentListItem): PaymentFromListItem => {
-        return {
-            ...item,
-            discount: item.discount ?? 0,
-            downPayment: item.downPayment ?? 0,
-            installmentsTotal: item.installmentsTotal ?? null,
-            paidAmount: item.paidAmount ?? 0,
-            installmentsPaid: item.installmentsPaid ?? 0,
-            lastPaymentAt: item.lastPaymentAt ?? null,
-            firstDueDate: item.firstDueDate ?? null,
-            isActive: item.isActive ?? true,
-            branchId: item.branchId ?? "",
-            tenantId: item.tenantId ?? "",
-            installments: item.installments ?? [],
-        };
-    };
-
-    // ==============================
-    // 🔹 Definição das colunas da tabela
+    // Colunas da tabela
     // ==============================
     const columns: ColumnDef<PaymentListItem>[] = [
         { key: "id", label: "ID", width: 80 },
         { key: "saleId", label: "Venda ID", width: 100 },
         { key: "clientName", label: "Cliente" },
         {
-            key: "method",
+            key: "methods",
             label: "Método",
             render: (row) => {
-                const methodLabels: Record<string, string> = {
-                    PIX: "Pix",
-                    MONEY: "Dinheiro",
-                    DEBIT: "Cartão de débito",
-                    CREDIT: "Cartão de crédito",
-                    INSTALLMENT: "Carnê",
-                };
-                return row.method ? methodLabels[row.method] : "-";
+                if (!row.methods || row.methods.length === 0) return "-";
+                if (row.methods.length === 1) {
+                    return PaymentMethodLabels[row.methods[0].method];
+                }
+                return "Múltiplos métodos";
             },
         },
         {
@@ -137,7 +109,7 @@ export default function PaymentsPage() {
     ];
 
     // ==============================
-    // 🔹 Render
+    // Render
     // ==============================
     return (
         <Paper
@@ -149,15 +121,13 @@ export default function PaymentsPage() {
                 p: 3,
             }}
         >
-            {/* ========================================= */}
-            {/* 🔹 Top Toolbar (título, busca, ações) */}
-            {/* ========================================= */}
             <PFTopToolbar
                 title="Pagamentos"
-                onSearch={useCallback((value: string) => handleFilterChange({ clientSearch: value }), [handleFilterChange])}
+                onSearch={useCallback(
+                    (value: string) => handleFilterChange({ clientSearch: value }),
+                    [handleFilterChange]
+                )}
                 onRefresh={() => refetch()}
-                onAdd={() => handleOpenDrawer("create")}
-                addLabel="Novo pagamento"
                 actionsExtra={
                     selectedIds.length > 0 && (
                         <Button
@@ -178,56 +148,49 @@ export default function PaymentsPage() {
                 }
             />
 
-            {/* ========================================= */}
-            {/* 🔹 ÁREA DE FILTROS (✅ ATUALIZADA) */}
-            {/* ========================================= */}
             <Box sx={{ mb: 3, mt: 2 }}>
                 <PaymentFilters
-                    // Filtros básicos
-                    status={filters.status || ''}
-                    method={filters.method || ''}
+                    status={filters.status || ""}
+                    method={filters.method || ""}
                     dateRange={{
-                        start: filters.startDate || '',
-                        end: filters.endDate || ''
+                        start: filters.startDate || "",
+                        end: filters.endDate || "",
                     }}
-                    clientSearch={filters.clientSearch || ''}
-
-                    // ✅ NOVOS FILTROS AVANÇADOS:
+                    clientSearch={filters.clientSearch || ""}
                     hasOverdueInstallments={filters.hasOverdueInstallments}
                     isPartiallyPaid={filters.isPartiallyPaid}
                     dueDaysAhead={filters.dueDaysAhead}
-
-                    // Handlers básicos
-                    onStatusChange={(status) => handleFilterChange({
-                        status: status || undefined
-                    })}
-                    onMethodChange={(method) => handleFilterChange({
-                        method: method || undefined
-                    })}
-                    onDateChange={(dateRange) => handleFilterChange({
-                        startDate: dateRange.start || undefined,
-                        endDate: dateRange.end || undefined
-                    })}
-                    onClientSearchChange={(clientSearch) => handleFilterChange({
-                        clientSearch: clientSearch || undefined
-                    })}
-
-                    // ✅ NOVOS HANDLERS AVANÇADOS:
-                    onOverdueChange={(checked) => handleFilterChange({
-                        hasOverdueInstallments: checked ? true : undefined
-                    })}
-                    onPartiallyPaidChange={(checked) => handleFilterChange({
-                        isPartiallyPaid: checked ? true : undefined
-                    })}
-                    onDueDaysChange={(days) => handleFilterChange({
-                        dueDaysAhead: days
-                    })}
+                    onStatusChange={(status) =>
+                        handleFilterChange({ status: status || undefined })
+                    }
+                    onMethodChange={(method) =>
+                        handleFilterChange({ method: method || undefined })
+                    }
+                    onDateChange={(dateRange) =>
+                        handleFilterChange({
+                            startDate: dateRange.start || undefined,
+                            endDate: dateRange.end || undefined,
+                        })
+                    }
+                    onClientSearchChange={(clientSearch) =>
+                        handleFilterChange({ clientSearch: clientSearch || undefined })
+                    }
+                    onOverdueChange={(checked) =>
+                        handleFilterChange({
+                            hasOverdueInstallments: checked ? true : undefined,
+                        })
+                    }
+                    onPartiallyPaidChange={(checked) =>
+                        handleFilterChange({
+                            isPartiallyPaid: checked ? true : undefined,
+                        })
+                    }
+                    onDueDaysChange={(days) =>
+                        handleFilterChange({ dueDaysAhead: days })
+                    }
                 />
             </Box>
 
-            {/* ========================================= */}
-            {/* 🔹 TABELA DE PAGAMENTOS */}
-            {/* ========================================= */}
             <PFTable
                 columns={columns}
                 rows={payments}
@@ -238,9 +201,9 @@ export default function PaymentsPage() {
                 onPageChange={(newPage) => setPage(newPage)}
                 onPageSizeChange={(newLimit) => setLimit(newLimit)}
                 getRowId={(row) => row.id}
-                onRowClick={(_, row) => handleOpenDrawer("view", convertToPayment(row))}
-                onEdit={(row) => handleOpenDrawer("edit", convertToPayment(row))}
-                onDelete={(row) => handleDrawerDelete(convertToPayment(row))}
+                onRowClick={(_, row) => handleOpenDrawer("view", row)}
+                onEdit={(row) => handleOpenDrawer("edit", row)}
+                onDelete={(row) => handleDrawerDelete(row)}
                 selectable
                 selectedRows={selectedIds}
                 onSelectRow={handleSelectRow}
@@ -248,9 +211,6 @@ export default function PaymentsPage() {
                 isRowDisabled={(row) => deletingIds.includes(row.id)}
             />
 
-            {/* ========================================= */}
-            {/* 🔹 DRAWER DE PAGAMENTO (✅ ATUALIZADO) */}
-            {/* ========================================= */}
             <PaymentDrawer
                 open={drawerOpen}
                 mode={drawerMode}
@@ -260,19 +220,10 @@ export default function PaymentsPage() {
                 onEdit={handleDrawerEdit}
                 onDelete={handleDrawerDelete}
                 onUpdateStatus={handleUpdateStatus}
-                onPayInstallment={handlePayInstallment} // ✅ ATUALIZADO (antes era onProcessInstallment)
-                onCreateNew={handleDrawerCreateNew}
-                onCreated={() => {
-                    refetch();
-                }}
-                onUpdated={() => {
-                    refetch();
-                }}
+                onPayInstallment={handlePayInstallment}
+                onUpdated={() => refetch()}
             />
 
-            {/* ========================================= */}
-            {/* 🔹 CONFIRMAÇÃO DE EXCLUSÃO INDIVIDUAL */}
-            {/* ========================================= */}
             <PFConfirmDialog
                 open={confirmDelete}
                 title="Excluir pagamento"
@@ -282,9 +233,6 @@ export default function PaymentsPage() {
                 loading={isDeleting || isAnyMutationPending}
             />
 
-            {/* ========================================= */}
-            {/* 🔹 CONFIRMAÇÃO DE EXCLUSÃO EM MASSA */}
-            {/* ========================================= */}
             <PFConfirmDialog
                 open={confirmDeleteSelected}
                 title="Excluir pagamentos selecionados"

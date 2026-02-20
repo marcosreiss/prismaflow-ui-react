@@ -1,4 +1,3 @@
-// components/PayInstallmentDialog.tsx
 import {
     Dialog,
     DialogTitle,
@@ -17,29 +16,27 @@ import { useForm, Controller } from "react-hook-form";
 import { useState } from "react";
 import { DollarSign, Calendar } from "lucide-react";
 import CurrencyInput from "@/components/imask/CurrencyInput";
-import type { PaymentInstallment } from "../types/paymentTypes";
+import type { PaymentInstallmentItem } from "../types/paymentEntities";
 
 // ==============================
-// 🔹 Form values
+// Tipagens
 // ==============================
 interface PayInstallmentFormValues {
     paidAmount: number;
-    paidAt: string; // ISO date string
+    // Data em que o pagamento foi de fato realizado — pode ser retroativa
+    paidAt: string;
 }
 
-// ==============================
-// 🔹 Props
-// ==============================
 interface PayInstallmentDialogProps {
     open: boolean;
-    installment: PaymentInstallment | null;
+    installment: PaymentInstallmentItem | null;
     onClose: () => void;
     onConfirm: (installmentId: number, paidAmount: number, paidAt?: string) => Promise<void>;
     loading?: boolean;
 }
 
 // ==============================
-// 🔹 Componente principal
+// Componente principal
 // ==============================
 export default function PayInstallmentDialog({
     open,
@@ -48,53 +45,36 @@ export default function PayInstallmentDialog({
     onConfirm,
     loading = false,
 }: PayInstallmentDialogProps) {
-    // ==============================
-    // 🔹 Estados
-    // ==============================
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // ==============================
-    // 🔹 Form setup
-    // ==============================
-    const {
-        control,
-        handleSubmit,
-        reset,
-        watch, // ✅ Removido 'errors' do formState
-    } = useForm<PayInstallmentFormValues>({
+    const { control, handleSubmit, reset, watch } = useForm<PayInstallmentFormValues>({
         defaultValues: {
             paidAmount: 0,
-            paidAt: new Date().toISOString().split("T")[0], // Data de hoje no formato YYYY-MM-DD
+            paidAt: new Date().toISOString().split("T")[0],
         },
     });
 
-    // ==============================
-    // 🔹 Calcular valores
-    // ==============================
     const remainingAmount = installment
         ? Math.max(0, installment.amount - installment.paidAmount)
         : 0;
 
     const paidAmountValue = watch("paidAmount");
-    const isPartialPayment = paidAmountValue < remainingAmount;
+    const isPartialPayment = paidAmountValue > 0 && paidAmountValue < remainingAmount;
     const willCompletePay = paidAmountValue >= remainingAmount;
 
-    // ==============================
-    // 🔹 Handler: Submit
-    // ==============================
     const onSubmit = async (data: PayInstallmentFormValues) => {
         if (!installment) return;
 
-        // Validação: valor não pode ser zero
         if (data.paidAmount <= 0) {
             setError("O valor pago deve ser maior que zero.");
             return;
         }
 
-        // Validação: valor não pode exceder o restante
         if (data.paidAmount > remainingAmount) {
-            setError(`O valor pago não pode ser maior que o valor restante (${formatCurrency(remainingAmount)}).`);
+            setError(
+                `O valor pago não pode ser maior que o valor restante (${formatCurrency(remainingAmount)}).`
+            );
             return;
         }
 
@@ -102,36 +82,32 @@ export default function PayInstallmentDialog({
         setError(null);
 
         try {
-            // Converter data para ISO string se fornecida
-            const paidAt = data.paidAt ? new Date(data.paidAt).toISOString() : undefined;
+            // paidAt é convertido para ISO — o backend usa quando fornecido,
+            // caso contrário preenche automaticamente com a data atual
+            const paidAt = data.paidAt
+                ? new Date(data.paidAt).toISOString()
+                : undefined;
 
             await onConfirm(installment.id, data.paidAmount, paidAt);
-
-            // Resetar form e fechar
             reset();
             onClose();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
-            setError(err.message || "Erro ao processar pagamento da parcela.");
+        } catch (err: unknown) {
+            const message =
+                err instanceof Error ? err.message : "Erro ao processar pagamento da parcela.";
+            setError(message);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // ==============================
-    // 🔹 Handler: Fechar dialog
-    // ==============================
     const handleClose = () => {
-        if (!isSubmitting) {
-            reset();
-            setError(null);
-            onClose();
-        }
+        if (isSubmitting) return;
+        reset();
+        setError(null);
+        onClose();
     };
 
-    // ==============================
-    // 🔹 Handler: Pagar valor total
-    // ==============================
+    // Preenche o formulário com o valor restante para quitação total
     const handlePayFull = () => {
         reset({
             paidAmount: remainingAmount,
@@ -139,48 +115,16 @@ export default function PayInstallmentDialog({
         });
     };
 
-    // ==============================
-    // 🔹 Helpers: Formatação
-    // ==============================
-    const formatCurrency = (value: number) => {
-        return value.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-        });
-    };
-
-    const formatDate = (dateString: string | null) => {
-        if (!dateString) return "-";
-        try {
-            return new Date(dateString).toLocaleDateString("pt-BR");
-        } catch {
-            return "-";
-        }
-    };
-
-    // ==============================
-    // 🔹 Render: Se não tem parcela
-    // ==============================
     if (!installment) return null;
 
-    // ==============================
-    // 🔹 Render: Dialog
-    // ==============================
     return (
         <Dialog
             open={open}
             onClose={handleClose}
             maxWidth="sm"
             fullWidth
-            PaperProps={{
-                sx: {
-                    borderRadius: 2,
-                }
-            }}
+            PaperProps={{ sx: { borderRadius: 2 } }}
         >
-            {/* ========================================= */}
-            {/* 🔹 Título */}
-            {/* ========================================= */}
             <DialogTitle sx={{ pb: 1 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <DollarSign size={24} />
@@ -190,9 +134,6 @@ export default function PayInstallmentDialog({
                 </Box>
             </DialogTitle>
 
-            {/* ========================================= */}
-            {/* 🔹 Conteúdo */}
-            {/* ========================================= */}
             <DialogContent dividers>
                 <form onSubmit={handleSubmit(onSubmit)} id="pay-installment-form">
                     <Stack spacing={3}>
@@ -229,14 +170,13 @@ export default function PayInstallmentDialog({
 
                         <Divider />
 
-                        {/* Campos do formulário */}
+                        {/* Formulário */}
                         <Box>
                             <Typography variant="subtitle2" fontWeight={600} gutterBottom>
                                 Dados do Pagamento
                             </Typography>
 
                             <Stack spacing={2} sx={{ mt: 1.5 }}>
-                                {/* Valor a pagar */}
                                 <Controller
                                     name="paidAmount"
                                     control={control}
@@ -244,16 +184,17 @@ export default function PayInstallmentDialog({
                                         required: "Informe o valor a pagar",
                                         min: {
                                             value: 0.01,
-                                            message: "O valor deve ser maior que zero"
+                                            message: "O valor deve ser maior que zero",
                                         },
                                         max: {
                                             value: remainingAmount,
-                                            message: `O valor não pode ser maior que ${formatCurrency(remainingAmount)}`
-                                        }
+                                            message: `O valor não pode ser maior que ${formatCurrency(remainingAmount)}`,
+                                        },
                                     }}
                                     render={({ field, fieldState }) => (
                                         <CurrencyInput
-                                            {...field}
+                                            value={field.value ?? 0}
+                                            onChange={field.onChange}
                                             label="Valor a pagar"
                                             fullWidth
                                             size="small"
@@ -264,7 +205,6 @@ export default function PayInstallmentDialog({
                                     )}
                                 />
 
-                                {/* Botão para preencher valor total */}
                                 <Button
                                     variant="outlined"
                                     size="small"
@@ -275,13 +215,11 @@ export default function PayInstallmentDialog({
                                     Pagar valor total ({formatCurrency(remainingAmount)})
                                 </Button>
 
-                                {/* Data do pagamento */}
+                                {/* Campo de data — permite registrar pagamentos retroativos */}
                                 <Controller
                                     name="paidAt"
                                     control={control}
-                                    rules={{
-                                        required: "Informe a data do pagamento"
-                                    }}
+                                    rules={{ required: "Informe a data do pagamento" }}
                                     render={({ field, fieldState }) => (
                                         <TextField
                                             {...field}
@@ -290,13 +228,17 @@ export default function PayInstallmentDialog({
                                             fullWidth
                                             size="small"
                                             error={!!fieldState.error}
-                                            helperText={fieldState.error?.message || "Data em que o pagamento foi realizado"}
-                                            InputLabelProps={{
-                                                shrink: true,
-                                            }}
+                                            helperText={
+                                                fieldState.error?.message ||
+                                                "Informe a data em que o pagamento foi realizado"
+                                            }
+                                            InputLabelProps={{ shrink: true }}
                                             InputProps={{
                                                 startAdornment: (
-                                                    <Calendar size={16} style={{ marginRight: 8, opacity: 0.6 }} />
+                                                    <Calendar
+                                                        size={16}
+                                                        style={{ marginRight: 8, opacity: 0.6 }}
+                                                    />
                                                 ),
                                             }}
                                         />
@@ -305,24 +247,24 @@ export default function PayInstallmentDialog({
                             </Stack>
                         </Box>
 
-                        {/* Alertas informativos */}
                         {paidAmountValue > 0 && (
                             <Box>
                                 {isPartialPayment && (
                                     <Alert severity="info" sx={{ fontSize: "0.875rem" }}>
-                                        <strong>Pagamento parcial:</strong> Restará {formatCurrency(remainingAmount - paidAmountValue)} após este pagamento.
+                                        <strong>Pagamento parcial:</strong> Restará{" "}
+                                        {formatCurrency(remainingAmount - paidAmountValue)} após
+                                        este pagamento.
                                     </Alert>
                                 )}
-
                                 {willCompletePay && (
                                     <Alert severity="success" sx={{ fontSize: "0.875rem" }}>
-                                        <strong>Pagamento completo:</strong> Esta parcela será quitada totalmente.
+                                        <strong>Pagamento completo:</strong> Esta parcela será
+                                        quitada totalmente.
                                     </Alert>
                                 )}
                             </Box>
                         )}
 
-                        {/* Erro */}
                         {error && (
                             <Alert severity="error" onClose={() => setError(null)}>
                                 {error}
@@ -332,9 +274,6 @@ export default function PayInstallmentDialog({
                 </form>
             </DialogContent>
 
-            {/* ========================================= */}
-            {/* 🔹 Ações */}
-            {/* ========================================= */}
             <DialogActions sx={{ px: 3, py: 2 }}>
                 <Button
                     onClick={handleClose}
@@ -349,7 +288,7 @@ export default function PayInstallmentDialog({
                     variant="contained"
                     disabled={isSubmitting || loading}
                     startIcon={
-                        (isSubmitting || loading) ? (
+                        isSubmitting || loading ? (
                             <CircularProgress size={18} color="inherit" />
                         ) : (
                             <DollarSign size={18} />
@@ -364,7 +303,7 @@ export default function PayInstallmentDialog({
 }
 
 // ==============================
-// 🔹 Componente auxiliar: InfoRow
+// Componente auxiliar
 // ==============================
 interface InfoRowProps {
     label: string;
@@ -388,4 +327,23 @@ function InfoRow({ label, value, valueColor, bold = false }: InfoRowProps) {
             </Typography>
         </Box>
     );
+}
+
+// ==============================
+// Helpers
+// ==============================
+function formatCurrency(value: number): string {
+    return value.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+    });
+}
+
+function formatDate(dateString: string | null): string {
+    if (!dateString) return "-";
+    try {
+        return new Date(dateString).toLocaleDateString("pt-BR");
+    } catch {
+        return "-";
+    }
 }

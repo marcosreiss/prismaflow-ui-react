@@ -1,142 +1,130 @@
-// components/PaymentView.tsx
-import { Box, Stack, Typography, Chip, CircularProgress, Alert, Button } from "@mui/material";
+import {
+    Box,
+    Stack,
+    Typography,
+    Chip,
+    CircularProgress,
+    Alert,
+    Button,
+    Divider,
+} from "@mui/material";
 import { useMemo, useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
-import type { PaymentStatus, PaymentInstallment } from "../types/paymentTypes";
-import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentTypes";
+import { Printer } from "lucide-react";
 import { useGetPaymentById } from "../hooks/usePayments";
-import { Printer } from "lucide-react"; // ✅ NOVO ÍCONE
+import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentEnums";
+import { CarnetTemplate } from "./CarnetTemplate";
 import InstallmentsTable from "./InstallmentsTable";
 import PayInstallmentDialog from "./PayInstallmentDialog";
 import EditInstallmentDialog from "./EditInstallmentDialog";
-import { CarnetTemplate } from "./CarnetTemplate"; // ✅ NOVO IMPORT
+import type { PaymentStatus } from "../types/paymentEnums";
+import type { PaymentInstallmentItem, PaymentMethodItem } from "../types/paymentEntities";
 
 // ==============================
-// 🔹 Props
+// Props
 // ==============================
 interface PaymentViewProps {
     paymentId: number | undefined;
     onPayInstallment?: (installmentId: number, paidAmount: number, paidAt?: string) => void;
-    onEditInstallment?: (installmentId: number, data: {
-        sequence?: number;
-        amount?: number;
-        dueDate?: string;
-    }) => Promise<void>;
+    onEditInstallment?: (
+        installmentId: number,
+        data: { sequence?: number; amount?: number; dueDate?: string }
+    ) => Promise<void>;
 }
 
 // ==============================
-// 🔹 Componente principal
+// Componente principal
 // ==============================
 export default function PaymentView({
     paymentId,
     onPayInstallment,
-    onEditInstallment
+    onEditInstallment,
 }: PaymentViewProps) {
-    // ==============================
-    // 🔹 Estados para dialogs
-    // ==============================
     const [payDialogOpen, setPayDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [selectedInstallment, setSelectedInstallment] = useState<PaymentInstallment | null>(null);
+    const [selectedInstallment, setSelectedInstallment] =
+        useState<PaymentInstallmentItem | null>(null);
 
-    // ==============================
-    // 🔹 Ref para impressão do carnê (✅ NOVO)
-    // ==============================
     const carnetRef = useRef<HTMLDivElement>(null);
 
-    // ==============================
-    // 🔹 Buscar dados do pagamento
-    // ==============================
-    const {
-        data: apiResponse,
-        isLoading,
-        error,
-        isFetching
-    } = useGetPaymentById(paymentId);
-
+    const { data: apiResponse, isLoading, error, isFetching } = useGetPaymentById(paymentId);
     const payment = apiResponse?.data;
 
-    // ==============================
-    // 🔹 Hook de impressão (✅ CORRIGIDO)
-    // ==============================
     const handlePrint = useReactToPrint({
-        contentRef: carnetRef, // ✅ Mudou de 'content' para 'contentRef'
-        documentTitle: `Carne-Pagamento-${payment?.saleId || paymentId}`,
+        contentRef: carnetRef,
+        documentTitle: `Carne-Pagamento-${payment?.saleId ?? paymentId}`,
         pageStyle: `
-        @page {
-            size: A4;
-            margin: 0;
-        }
-        @media print {
-            body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+            @page { size: A4; margin: 0; }
+            @media print {
+                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
-        }
-    `,
+        `,
     });
 
-    // ==============================
-    // 🔹 Cálculos derivados (memoizados)
-    // ==============================
+    // Valor pendente total do pagamento
     const pendingAmount = useMemo(() => {
         if (!payment) return 0;
         return Math.max(0, payment.total - payment.discount - payment.paidAmount);
     }, [payment]);
 
-    const installmentStats = useMemo(() => {
-        if (!payment || payment.method !== "INSTALLMENT" || !payment.installments) {
-            return null;
-        }
+    // Métodos que possuem parcelas
+    const installmentMethods = useMemo(
+        () => payment?.methods.filter(
+            (m) => m.method === "INSTALLMENT" && m.installmentItems.length > 0
+        ) ?? [],
+        [payment]
+    );
 
-        const paidInstallments = payment.installments.filter(i => i.paidAt);
-        const totalPaid = payment.installments.reduce((sum, i) => sum + i.paidAmount, 0);
-        const totalPending = payment.installments.reduce((sum, i) =>
-            sum + Math.max(0, i.amount - i.paidAmount), 0
-        );
+    const hasInstallments = installmentMethods.length > 0;
 
-        return {
-            totalInstallments: payment.installments.length,
-            paidInstallments: paidInstallments.length,
-            totalPaid,
-            totalPending
-        };
-    }, [payment]);
+    // Resumo por método de parcelamento
+    const installmentStatsByMethod = useMemo(() => {
+        return installmentMethods.map((m) => {
+            const paid = m.installmentItems.filter((i) => i.paidAt !== null).length;
+            const totalPaid = m.installmentItems.reduce((acc, i) => acc + i.paidAmount, 0);
+            const totalPending = m.installmentItems.reduce(
+                (acc, i) => acc + Math.max(0, i.amount - i.paidAmount),
+                0
+            );
+            return {
+                methodId: m.id,
+                total: m.installmentItems.length,
+                paid,
+                totalPaid,
+                totalPending,
+            };
+        });
+    }, [installmentMethods]);
 
-    const hasInstallments = useMemo(() =>
-        payment?.method === "INSTALLMENT" &&
-        Array.isArray(payment?.installments) &&
-        payment.installments.length > 0,
-        [payment]);
+    // Achata todas as parcelas de todos os métodos para busca por id
+    const allInstallmentItems = useMemo(
+        () => payment?.methods.flatMap((m) => m.installmentItems) ?? [],
+        [payment]
+    );
 
-    // ==============================
-    // 🔹 Função auxiliar para cor do status
-    // ==============================
     const getStatusColor = (status: PaymentStatus) => {
         switch (status) {
-            case "CONFIRMED":
-                return "success";
-            case "PENDING":
-                return "warning";
-            case "CANCELED":
-                return "error";
-            default:
-                return "default";
+            case "CONFIRMED": return "success";
+            case "PENDING": return "warning";
+            case "CANCELED": return "error";
+            default: return "default";
         }
     };
 
-    // ==============================
-    // 🔹 Handlers para pagar parcela
-    // ==============================
+    // Handlers: pagar parcela
     const handleOpenPayDialog = (installmentId: number) => {
-        const installment = payment?.installments?.find(i => i.id === installmentId);
+        const installment = allInstallmentItems.find((i) => i.id === installmentId);
         if (installment) {
             setSelectedInstallment(installment);
             setPayDialogOpen(true);
         }
     };
 
-    const handleConfirmPay = async (installmentId: number, paidAmount: number, paidAt?: string) => {
+    const handleConfirmPay = async (
+        installmentId: number,
+        paidAmount: number,
+        paidAt?: string
+    ) => {
         if (onPayInstallment) {
             await onPayInstallment(installmentId, paidAmount, paidAt);
         }
@@ -149,21 +137,15 @@ export default function PaymentView({
         setSelectedInstallment(null);
     };
 
-    // ==============================
-    // 🔹 Handlers para editar parcela
-    // ==============================
-    const handleOpenEditDialog = (installment: PaymentInstallment) => {
+    // Handlers: editar parcela
+    const handleOpenEditDialog = (installment: PaymentInstallmentItem) => {
         setSelectedInstallment(installment);
         setEditDialogOpen(true);
     };
 
     const handleConfirmEdit = async (
         installmentId: number,
-        data: {
-            sequence?: number;
-            amount?: number;
-            dueDate?: string;
-        }
+        data: { sequence?: number; amount?: number; dueDate?: string }
     ) => {
         if (onEditInstallment) {
             await onEditInstallment(installmentId, data);
@@ -177,9 +159,7 @@ export default function PaymentView({
         setSelectedInstallment(null);
     };
 
-    // ==============================
-    // 🔹 Render condicional (estados de carregamento/erro)
-    // ==============================
+    // Estados de carregamento e erro
     if (!paymentId) {
         return (
             <Alert severity="info" sx={{ mt: 2 }}>
@@ -202,7 +182,8 @@ export default function PaymentView({
     if (error) {
         return (
             <Alert severity="error" sx={{ mt: 2 }}>
-                Erro ao carregar detalhes do pagamento: {error.response?.data?.message || error.message}
+                Erro ao carregar detalhes do pagamento:{" "}
+                {error.response?.data?.message ?? error.message}
             </Alert>
         );
     }
@@ -215,15 +196,10 @@ export default function PaymentView({
         );
     }
 
-    // ==============================
-    // 🔹 Render principal
-    // ==============================
     return (
         <>
-            <Stack spacing={2}>
-                {/* ========================================= */}
-                {/* 🔹 Informações Básicas */}
-                {/* ========================================= */}
+            <Stack spacing={3}>
+                {/* Informações Básicas */}
                 <Box component="section">
                     <Typography variant="subtitle1" fontWeight={600} mb={1}>
                         Informações Básicas
@@ -231,7 +207,7 @@ export default function PaymentView({
                     <Stack spacing={1}>
                         <Row label="ID" value={payment.id} />
                         <Row label="Venda ID" value={payment.saleId} />
-                        <Row label="Cliente" value={payment.clientName || "-"} />
+                        <Row label="Cliente" value={payment.clientName ?? "-"} />
                         <Row
                             label="Status"
                             value={
@@ -242,16 +218,48 @@ export default function PaymentView({
                                 />
                             }
                         />
-                        <Row
-                            label="Método"
-                            value={payment.method ? PaymentMethodLabels[payment.method] : "-"}
-                        />
                     </Stack>
                 </Box>
 
-                {/* ========================================= */}
-                {/* 🔹 Valores */}
-                {/* ========================================= */}
+                <Divider />
+
+                {/* Métodos de Pagamento */}
+                <Box component="section">
+                    <Typography variant="subtitle1" fontWeight={600} mb={1}>
+                        Métodos de Pagamento
+                    </Typography>
+                    <Stack spacing={1}>
+                        {payment.methods.length === 0 && (
+                            <Typography variant="body2" color="text.secondary">
+                                Nenhum método configurado
+                            </Typography>
+                        )}
+                        {payment.methods.map((m: PaymentMethodItem) => (
+                            <Box
+                                key={m.id}
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                }}
+                            >
+                                <Typography variant="body2" fontWeight={600} sx={{ minWidth: 140 }}>
+                                    {PaymentMethodLabels[m.method]}:
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {formatCurrency(m.amount)}
+                                    {m.method === "INSTALLMENT" && m.installments
+                                        ? ` — ${m.installments}x`
+                                        : ""}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Stack>
+                </Box>
+
+                <Divider />
+
+                {/* Valores */}
                 <Box component="section">
                     <Typography variant="subtitle1" fontWeight={600} mb={1}>
                         Valores
@@ -261,20 +269,16 @@ export default function PaymentView({
                         <Row label="Desconto" value={formatCurrency(payment.discount)} />
                         <Row label="Valor Pago" value={formatCurrency(payment.paidAmount)} />
                         <Row label="Valor Pendente" value={formatCurrency(pendingAmount)} />
-
-                        {payment.method === "INSTALLMENT" && (
-                            <>
-                                <Row label="Entrada" value={formatCurrency(payment.downPayment)} />
-                                <Row label="Número de Parcelas" value={payment.installmentsTotal} />
-                                <Row label="Parcelas Pagas" value={`${payment.installmentsPaid} de ${payment.installmentsTotal}`} />
-                            </>
-                        )}
+                        <Row
+                            label="Parcelas Pagas"
+                            value={`${payment.installmentsPaid}`}
+                        />
                     </Stack>
                 </Box>
 
-                {/* ========================================= */}
-                {/* 🔹 Datas */}
-                {/* ========================================= */}
+                <Divider />
+
+                {/* Datas */}
                 <Box component="section">
                     <Typography variant="subtitle1" fontWeight={600} mb={1}>
                         Datas
@@ -283,74 +287,74 @@ export default function PaymentView({
                         <Row label="Criado em" value={formatDate(payment.createdAt)} />
                         <Row label="Última atualização" value={formatDate(payment.updatedAt)} />
                         <Row label="Último pagamento" value={formatDate(payment.lastPaymentAt)} />
-
-                        {payment.method === "INSTALLMENT" && payment.firstDueDate && (
-                            <Row label="Primeiro vencimento" value={formatDate(payment.firstDueDate)} />
-                        )}
                     </Stack>
                 </Box>
 
-                {/* ========================================= */}
-                {/* 🔹 Resumo do Parcelamento */}
-                {/* ========================================= */}
-                {hasInstallments && installmentStats && (
-                    <Box component="section">
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                {/* Resumo e tabela por método de parcelamento */}
+                {hasInstallments && installmentMethods.map((m, index) => (
+                    <Box key={m.id} component="section">
+                        <Divider sx={{ mb: 2 }} />
+
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                mb: 1,
+                            }}
+                        >
                             <Typography variant="subtitle1" fontWeight={600}>
-                                Resumo do Parcelamento
+                                Carnê — {m.installments}x de{" "}
+                                {formatCurrency(m.amount / (m.installments ?? 1))}
                             </Typography>
 
-                            {/* ✅ NOVO: Botão Imprimir Carnê */}
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<Printer size={16} />}
-                                onClick={handlePrint}
-                            >
-                                Imprimir Carnê
-                            </Button>
+                            {/* Botão de impressão apenas no primeiro método */}
+                            {index === 0 && (
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    startIcon={<Printer size={16} />}
+                                    onClick={handlePrint}
+                                >
+                                    Imprimir Carnê
+                                </Button>
+                            )}
                         </Box>
 
-                        <Stack spacing={1}>
-                            <Row label="Total de Parcelas" value={installmentStats.totalInstallments} />
+                        {/* Resumo do método */}
+                        <Stack spacing={1} mb={2}>
+                            <Row
+                                label="Total de Parcelas"
+                                value={installmentStatsByMethod[index].total}
+                            />
                             <Row
                                 label="Parcelas Pagas"
-                                value={`${installmentStats.paidInstallments} de ${installmentStats.totalInstallments}`}
+                                value={`${installmentStatsByMethod[index].paid} de ${installmentStatsByMethod[index].total}`}
                             />
                             <Row
                                 label="Valor Total Pago"
-                                value={formatCurrency(installmentStats.totalPaid)}
+                                value={formatCurrency(installmentStatsByMethod[index].totalPaid)}
                             />
                             <Row
                                 label="Valor Pendente"
-                                value={formatCurrency(installmentStats.totalPending)}
+                                value={formatCurrency(installmentStatsByMethod[index].totalPending)}
                             />
                         </Stack>
-                    </Box>
-                )}
 
-                {/* ========================================= */}
-                {/* 🔹 Tabela de Parcelas */}
-                {/* ========================================= */}
-                {hasInstallments && (
-                    <Box component="section">
-                        <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                        {/* Tabela de parcelas do método */}
+                        <Typography variant="subtitle2" fontWeight={600} mb={1}>
                             Detalhes das Parcelas
                         </Typography>
-
                         <InstallmentsTable
-                            installments={payment.installments || []}
+                            installments={m.installmentItems}
                             onPay={handleOpenPayDialog}
                             onEdit={handleOpenEditDialog}
                             loading={isFetching}
                         />
                     </Box>
-                )}
+                ))}
             </Stack>
 
-            {/* ========================================= */}
-            {/* 🔹 Dialog: Pagar Parcela */}
-            {/* ========================================= */}
             <PayInstallmentDialog
                 open={payDialogOpen}
                 installment={selectedInstallment}
@@ -359,9 +363,6 @@ export default function PaymentView({
                 loading={isFetching}
             />
 
-            {/* ========================================= */}
-            {/* 🔹 Dialog: Editar Parcela */}
-            {/* ========================================= */}
             <EditInstallmentDialog
                 open={editDialogOpen}
                 installment={selectedInstallment}
@@ -370,9 +371,7 @@ export default function PaymentView({
                 loading={isFetching}
             />
 
-            {/* ========================================= */}
-            {/* 🔹 Template do Carnê (oculto, só para impressão) ✅ NOVO */}
-            {/* ========================================= */}
+            {/* Template do carnê — oculto, usado apenas para impressão */}
             <Box sx={{ display: "none" }}>
                 <CarnetTemplate ref={carnetRef} payment={payment} />
             </Box>
@@ -381,7 +380,7 @@ export default function PaymentView({
 }
 
 // ==============================
-// 🔹 Componente Row (exibir label + valor)
+// Componente Row
 // ==============================
 function Row({
     label,
@@ -390,7 +389,7 @@ function Row({
     label: string;
     value: string | number | React.ReactNode | null | undefined;
 }) {
-    if (value == null || value === '' || (typeof value === 'number' && isNaN(value))) {
+    if (value == null || value === "" || (typeof value === "number" && isNaN(value))) {
         return null;
     }
 
@@ -407,28 +406,18 @@ function Row({
 }
 
 // ==============================
-// 🔹 Helpers (formatação)
+// Helpers
 // ==============================
 function formatCurrency(value: number | undefined | null): string {
-    if (value == null || isNaN(value)) {
-        return "R$ 0,00";
-    }
-
-    return value.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    });
+    if (value == null || isNaN(value)) return "R$ 0,00";
+    return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function formatDate(dateString: string | null | undefined): string {
     if (!dateString) return "-";
-
     try {
         const date = new Date(dateString);
-        if (isNaN(date.getTime())) {
-            return "-";
-        }
-
+        if (isNaN(date.getTime())) return "-";
         return date.toLocaleDateString("pt-BR", {
             day: "2-digit",
             month: "2-digit",

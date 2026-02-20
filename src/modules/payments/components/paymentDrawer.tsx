@@ -5,44 +5,38 @@ import {
     IconButton,
     Button,
     Divider,
-    TextField,
     CircularProgress,
     Stack,
-    Autocomplete,
-    MenuItem,
 } from "@mui/material";
-import { X, Pencil, Trash2, CreditCard, DollarSign } from "lucide-react";
+import { X, Pencil, Trash2, CreditCard } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Controller, FormProvider } from "react-hook-form";
+import { FormProvider } from "react-hook-form";
 
 import { usePaymentDrawerController } from "../hooks/usePaymentDrawerController";
 import PaymentView from "./PaymentView";
-import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentTypes";
+import PaymentMethodsBuilder from "./PaymentMethodsBuilder";
 
-import type { Payment, PaymentDetails, PaymentStatus, PaymentMethod } from "../types/paymentTypes";
-import type { Sale } from "@/modules/sales/types/salesTypes";
-import CurrencyInput from "@/components/imask/CurrencyInput";
+import type { PaymentStatus } from "../types/paymentEnums";
+import type { PaymentDetails, Payment } from "../types";
 
 // ==============================
-// 🔹 Tipagens
+// Tipagens
 // ==============================
 interface PaymentDrawerProps {
     open: boolean;
-    mode: "create" | "edit" | "view";
+    mode: "edit" | "view";
     payment?: PaymentDetails | null;
     paymentId: number | null;
     onClose: () => void;
     onEdit: () => void;
-    onDelete: (payment: Payment) => void;
-    onUpdateStatus: (paymentId: number, status: PaymentStatus, reason?: string) => void; // ✅ ATUALIZADO
-    onPayInstallment: (installmentId: number, paidAmount: number, paidAt?: string) => void; // ✅ ATUALIZADO
-    onCreated: (payment: Payment) => void;
+    onDelete: (payment: PaymentDetails) => void;
+    onUpdateStatus: (paymentId: number, status: PaymentStatus, reason?: string) => void;
+    onPayInstallment: (installmentId: number, paidAmount: number, paidAt?: string) => void;
     onUpdated: (payment: Payment) => void;
-    onCreateNew: () => void;
 }
 
 // ==============================
-// 🔹 Componente principal
+// Componente principal
 // ==============================
 export default function PaymentDrawer({
     open,
@@ -52,98 +46,63 @@ export default function PaymentDrawer({
     onEdit,
     onDelete,
     onUpdateStatus,
-    onPayInstallment, // ✅ ATUALIZADO
-    onCreated,
+    onPayInstallment,
     onUpdated,
-    onCreateNew,
 }: PaymentDrawerProps) {
-    // ==============================
-    // 🔹 Controller
-    // ==============================
     const controller = usePaymentDrawerController({
         mode,
         payment,
-        onCreated,
         onUpdated,
         onEdit,
         onDelete,
         onUpdateStatus,
-        onPayInstallment, // ✅ ATUALIZADO
-        onCreateNew,
+        onPayInstallment,
     });
 
     const {
         methods,
         handleSubmit,
-        creating,
-        updating,
-        saleOptions,
-        selectedSale,
-        handleSaleChange,
-        showInstallments,
-        handleMethodChange,
+        configuring,
         handleStatusChange,
-        handlePayInstallment, // ✅ ADICIONAR
+        handlePayInstallment,
     } = controller;
 
-    const isCreate = mode === "create";
     const isEdit = mode === "edit";
     const isView = mode === "view";
 
-    // ==============================
-    // 🔹 Estado local para payment atualizado
-    // ==============================
-    const [currentPayment, setCurrentPayment] = useState<PaymentDetails | null>(payment || null);
+    // Estado local para refletir atualizações de status sem aguardar refetch
+    const [currentPayment, setCurrentPayment] = useState<PaymentDetails | null>(
+        payment ?? null
+    );
 
     useEffect(() => {
-        setCurrentPayment(payment || null);
+        setCurrentPayment(payment ?? null);
     }, [payment]);
 
-    // ==============================
-    // 🔹 Foco no primeiro input ao abrir
-    // ==============================
+    // Foca no primeiro campo ao abrir em modo edit
     useEffect(() => {
-        if (open && (isCreate || isEdit)) {
-            const firstInput = document.querySelector<HTMLInputElement>("input[name='total']");
+        if (open && isEdit) {
+            const firstInput = document.querySelector<HTMLInputElement>(
+                "input[name='total']"
+            );
             firstInput?.focus();
         }
-    }, [open, isCreate, isEdit]);
+    }, [open, isEdit]);
 
-    // ==============================
-    // 🔹 Atualizar status com refresh imediato
-    // ==============================
-    const handleUpdateStatusWithRefresh = async (paymentId: number, status: PaymentStatus) => {
-        try {
-            await onUpdateStatus(paymentId, status);
+    // Atualiza status e reflete localmente sem aguardar o React Query
+    const handleStatusChangeWithOptimisticUpdate = async (
+        status: PaymentStatus,
+        reason?: string
+    ) => {
+        if (!currentPayment) return;
 
-            // Atualizar localmente
-            if (currentPayment && currentPayment.id === paymentId) {
-                const updatedPayment = {
-                    ...currentPayment,
-                    status: status,
-                    ...(status === "CONFIRMED" && {
-                        paidAmount: currentPayment.total - (currentPayment.discount || 0),
-                        lastPaymentAt: new Date().toISOString()
-                    }),
-                    ...(status === "PENDING" && {
-                        paidAmount: 0,
-                        lastPaymentAt: null
-                    })
-                };
-                setCurrentPayment(updatedPayment);
+        await handleStatusChange(status, reason);
 
-                if (onUpdated) {
-                    onUpdated(updatedPayment as Payment);
-                }
-            }
-        } catch (error) {
-            console.error("Erro ao atualizar status:", error);
-        }
+        setCurrentPayment((prev) =>
+            prev ? { ...prev, status } : prev
+        );
     };
 
-    // ==============================
-    // 🔹 Render
-    // ==============================
     return (
         <Drawer
             anchor="right"
@@ -160,9 +119,7 @@ export default function PaymentDrawer({
                 },
             }}
         >
-            {/* ========================================= */}
-            {/* 🔹 Header */}
-            {/* ========================================= */}
+            {/* Header */}
             <Box
                 sx={{
                     display: "flex",
@@ -172,11 +129,9 @@ export default function PaymentDrawer({
                 }}
             >
                 <Typography variant="h6" fontWeight="bold">
-                    {isCreate
-                        ? "Adicionar pagamento"
-                        : isEdit
-                            ? "Editar pagamento"
-                            : `Pagamento #${currentPayment?.id}`}
+                    {isEdit
+                        ? `Editar pagamento #${currentPayment?.id}`
+                        : `Pagamento #${currentPayment?.id}`}
                 </Typography>
 
                 <IconButton onClick={onClose}>
@@ -186,9 +141,7 @@ export default function PaymentDrawer({
 
             <Divider sx={{ mb: 2 }} />
 
-            {/* ========================================= */}
-            {/* 🔹 Conteúdo principal */}
-            {/* ========================================= */}
+            {/* Conteúdo principal */}
             <Box
                 sx={{
                     flexGrow: 1,
@@ -197,12 +150,9 @@ export default function PaymentDrawer({
                     pb: 3,
                 }}
             >
-                {/* ========================================= */}
-                {/* 🔹 MODO VIEW */}
-                {/* ========================================= */}
+                {/* MODO VIEW */}
                 {isView && currentPayment && (
                     <Box>
-                        {/* Ações */}
                         <Stack direction="row" spacing={1} mb={2} flexWrap="wrap">
                             <Button
                                 size="small"
@@ -212,6 +162,7 @@ export default function PaymentDrawer({
                             >
                                 Editar
                             </Button>
+
                             <Button
                                 size="small"
                                 variant="outlined"
@@ -222,254 +173,66 @@ export default function PaymentDrawer({
                                 Remover
                             </Button>
 
-                            {/* Confirmar apenas pagamentos pendentes */}
                             {currentPayment.status === "PENDING" && (
                                 <Button
                                     size="small"
                                     variant="contained"
                                     color="success"
-                                    onClick={() => handleUpdateStatusWithRefresh(currentPayment.id, "CONFIRMED")}
+                                    onClick={() =>
+                                        handleStatusChangeWithOptimisticUpdate("CONFIRMED")
+                                    }
                                 >
                                     Confirmar
+                                </Button>
+                            )}
+
+                            {currentPayment.status === "CONFIRMED" && (
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="warning"
+                                    onClick={() =>
+                                        handleStatusChangeWithOptimisticUpdate("PENDING")
+                                    }
+                                >
+                                    Reverter para pendente
                                 </Button>
                             )}
                         </Stack>
 
                         <Divider sx={{ mb: 2 }} />
 
-                        {/* Dados do pagamento */}
+                        {/* PaymentView será atualizado na próxima etapa */}
                         <PaymentView
-                            paymentId={payment?.id}
-                            onPayInstallment={handlePayInstallment} // ✅ ATUALIZADO
+                            paymentId={currentPayment.id}
+                            onPayInstallment={handlePayInstallment}
                         />
-
-                        <Divider sx={{ my: 3 }} />
-
-                        {/* Botão de adicionar novo */}
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            onClick={onCreateNew}
-                            startIcon={<DollarSign size={16} />}
-                        >
-                            Adicionar novo pagamento
-                        </Button>
                     </Box>
                 )}
 
-                {/* ========================================= */}
-                {/* 🔹 MODO CREATE / EDIT */}
-                {/* ========================================= */}
-                {(isCreate || isEdit) && (
+                {/* MODO EDIT */}
+                {isEdit && (
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit}>
                             <Stack spacing={3}>
-                                {/* Informações da Venda */}
-                                <Box>
-                                    <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                                        Informações da Venda
-                                    </Typography>
-
-                                    <Stack spacing={2}>
-                                        <Autocomplete
-                                            size="small"
-                                            options={saleOptions}
-                                            getOptionLabel={(option: Sale) =>
-                                                `Venda #${option.id} - ${option.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
-                                            }
-                                            value={selectedSale}
-                                            onChange={(_, newValue) => handleSaleChange(newValue)}
-                                            renderInput={(params) => (
-                                                <TextField
-                                                    {...params}
-                                                    label="Selecionar Venda"
-                                                    fullWidth
-                                                    size="small"
-                                                />
-                                            )}
-                                            disabled={isEdit}
-                                        />
-                                    </Stack>
-                                </Box>
+                                {/* Builder de métodos — gerencia methods[] com validação da soma */}
+                                <PaymentMethodsBuilder />
 
                                 <Divider />
 
-                                {/* Método de Pagamento */}
-                                <Box>
-                                    <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                                        Método de Pagamento
-                                    </Typography>
-
-                                    <Stack spacing={2}>
-                                        <Controller
-                                            name="method"
-                                            control={methods.control}
-                                            rules={{ required: "Selecione o método de pagamento" }}
-                                            render={({ field, fieldState }) => (
-                                                <TextField
-                                                    {...field}
-                                                    select
-                                                    label="Método de Pagamento"
-                                                    fullWidth
-                                                    size="small"
-                                                    error={!!fieldState.error}
-                                                    helperText={fieldState.error?.message}
-                                                    onChange={(e) => {
-                                                        field.onChange(e);
-                                                        handleMethodChange(e.target.value as PaymentMethod);
-                                                    }}
-                                                >
-                                                    {Object.entries(PaymentMethodLabels).map(([key, label]) => (
-                                                        <MenuItem key={key} value={key}>
-                                                            {label}
-                                                        </MenuItem>
-                                                    ))}
-                                                </TextField>
-                                            )}
-                                        />
-
-                                        <Controller
-                                            name="status"
-                                            control={methods.control}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    select
-                                                    label="Status"
-                                                    fullWidth
-                                                    size="small"
-                                                    onChange={(e) => {
-                                                        field.onChange(e);
-                                                        handleStatusChange(e.target.value as PaymentStatus);
-                                                    }}
-                                                >
-                                                    {Object.entries(PaymentStatusLabels).map(([key, label]) => (
-                                                        <MenuItem key={key} value={key}>
-                                                            {label}
-                                                        </MenuItem>
-                                                    ))}
-                                                </TextField>
-                                            )}
-                                        />
-                                    </Stack>
-                                </Box>
-
-                                <Divider />
-
-                                {/* Valores */}
-                                <Box>
-                                    <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                                        Valores
-                                    </Typography>
-
-                                    <Stack spacing={2}>
-                                        <Controller
-                                            name="total"
-                                            control={methods.control}
-                                            rules={{ required: "Informe o valor total" }}
-                                            render={({ field, fieldState }) => (
-                                                <CurrencyInput
-                                                    {...field}
-                                                    label="Valor Total"
-                                                    fullWidth
-                                                    size="small"
-                                                    error={!!fieldState.error}
-                                                    helperText={fieldState.error?.message}
-                                                />
-                                            )}
-                                        />
-
-                                        <Controller
-                                            name="discount"
-                                            control={methods.control}
-                                            render={({ field }) => (
-                                                <CurrencyInput
-                                                    {...field}
-                                                    label="Desconto"
-                                                    fullWidth
-                                                    size="small"
-                                                />
-                                            )}
-                                        />
-
-                                        {/* ✅ CORRIGIDO: Campos de parcelamento */}
-                                        {showInstallments && (
-                                            <>
-                                                <Controller
-                                                    name="downPayment"
-                                                    control={methods.control}
-                                                    render={({ field }) => (
-                                                        <CurrencyInput
-                                                            {...field}
-                                                            label="Entrada (Sinal)"
-                                                            fullWidth
-                                                            size="small"
-                                                        />
-                                                    )}
-                                                />
-
-                                                {/* ✅ CORRIGIDO: installmentsTotal é NÚMERO, não valor */}
-                                                <Controller
-                                                    name="installmentsTotal"
-                                                    control={methods.control}
-                                                    render={({ field }) => (
-                                                        <TextField
-                                                            {...field}
-                                                            type="number"
-                                                            label="Número de Parcelas"
-                                                            fullWidth
-                                                            size="small"
-                                                            inputProps={{
-                                                                min: 1,
-                                                                max: 99,
-                                                                step: 1
-                                                            }}
-                                                            helperText="Quantidade de parcelas"
-                                                        />
-                                                    )}
-                                                />
-
-                                                <Controller
-                                                    name="firstDueDate"
-                                                    control={methods.control}
-                                                    render={({ field }) => (
-                                                        <TextField
-                                                            {...field}
-                                                            label="Primeira Data de Vencimento"
-                                                            fullWidth
-                                                            size="small"
-                                                            type="date"
-                                                            InputLabelProps={{
-                                                                shrink: true,
-                                                            }}
-                                                        />
-                                                    )}
-                                                />
-                                            </>
-                                        )}
-                                    </Stack>
-                                </Box>
-
-                                {/* Ações */}
-                                <Box pt={2}>
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        fullWidth
-                                        startIcon={
-                                            creating || updating ? <CircularProgress size={18} /> : <CreditCard size={18} />
-                                        }
-                                        disabled={creating || updating}
-                                    >
-                                        {isCreate
-                                            ? creating
-                                                ? "Criando..."
-                                                : "Criar pagamento"
-                                            : updating
-                                                ? "Salvando..."
-                                                : "Salvar alterações"}
-                                    </Button>
-                                </Box>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    fullWidth
+                                    startIcon={
+                                        configuring
+                                            ? <CircularProgress size={18} />
+                                            : <CreditCard size={18} />
+                                    }
+                                    disabled={configuring}
+                                >
+                                    {configuring ? "Salvando..." : "Salvar pagamento"}
+                                </Button>
                             </Stack>
                         </form>
                     </FormProvider>

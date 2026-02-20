@@ -5,404 +5,448 @@ import type { ApiResponse } from "@/utils/apiResponse";
 import { useNotification } from "@/context/NotificationContext";
 
 import {
-    useGetPayments,
-    useDeletePayment,
-    useUpdatePaymentStatus,
-    usePayInstallment,
+  useGetPayments,
+  useDeletePayment,
+  useUpdatePaymentStatus,
+  usePayInstallment,
 } from "./usePayments";
 
-
 import type { PaymentFilters } from "../types/paymentFilters";
-import type { PaymentListItem, PaymentDetails, Payment, PaymentStatus } from "../types";
+import type {
+  PaymentListItem,
+  PaymentDetails,
+  Payment,
+  PaymentStatus,
+} from "../types";
 
 // ==============================
 // Helpers (sem hooks)
 // ==============================
-function buildPaymentsQueryParams(page: number, limit: number, filters: PaymentFilters) {
-    return {
-        page: page + 1, // API usa paginação baseada em 1
-        limit,
+function buildPaymentsQueryParams(
+  page: number,
+  limit: number,
+  filters: PaymentFilters,
+) {
+  return {
+    page: page + 1, // API usa paginação baseada em 1
+    limit,
 
-        ...(filters.status && { status: filters.status }),
-        ...(filters.method && { method: filters.method }),
-        ...(filters.startDate && { startDate: filters.startDate }),
-        ...(filters.endDate && { endDate: filters.endDate }),
-        ...(filters.clientSearch && { clientName: filters.clientSearch }),
+    ...(filters.status && { status: filters.status }),
+    ...(filters.method && { method: filters.method }),
+    ...(filters.startDate && { startDate: filters.startDate }),
+    ...(filters.endDate && { endDate: filters.endDate }),
+    ...(filters.clientSearch && { clientName: filters.clientSearch }),
 
-        ...(filters.hasOverdueInstallments !== undefined && {
-            hasOverdueInstallments: filters.hasOverdueInstallments,
-        }),
-        ...(filters.isPartiallyPaid !== undefined && {
-            isPartiallyPaid: filters.isPartiallyPaid,
-        }),
-        ...(filters.dueDaysAhead !== undefined && {
-            dueDaysAhead: filters.dueDaysAhead,
-        }),
-    };
+    ...(filters.hasOverdueInstallments !== undefined && {
+      hasOverdueInstallments: filters.hasOverdueInstallments,
+    }),
+    ...(filters.isPartiallyPaid !== undefined && {
+      isPartiallyPaid: filters.isPartiallyPaid,
+    }),
+    ...(filters.dueDaysAhead !== undefined && {
+      dueDaysAhead: filters.dueDaysAhead,
+    }),
+  };
 }
 
-function mapPaymentsToListItems(data?: ApiResponse<{ content: PaymentListItem[] }>) {
-    const content = data?.data?.content;
-    if (!content) return [];
+function mapPaymentsToListItems(
+  data?: ApiResponse<{ content: PaymentListItem[] }>,
+) {
+  const content = data?.data?.content;
+  if (!content) return [];
 
-    return content.map((item: PaymentListItem) => ({
-        ...item,
-        clientName: item.sale?.client?.name || item.clientName || "Cliente não informado",
-        discount: item.discount ?? 0,
-        paidAmount: item.paidAmount ?? 0,
-        installmentsPaid: item.installmentsPaid ?? 0,
-        lastPaymentAt: item.lastPaymentAt ?? null,
-        isActive: item.isActive ?? true,
-        branchId: item.branchId ?? "",
-        tenantId: item.tenantId ?? "",
-        methods: item.methods ?? [],
-    }));
+  return content.map((item: PaymentListItem) => ({
+    ...item,
+    clientName:
+      item.sale?.client?.name || item.clientName || "Cliente não informado",
+    discount: item.discount ?? 0,
+    paidAmount: item.paidAmount ?? 0,
+    installmentsPaid: item.installmentsPaid ?? 0,
+    lastPaymentAt: item.lastPaymentAt ?? null,
+    isActive: item.isActive ?? true,
+    branchId: item.branchId ?? "",
+    tenantId: item.tenantId ?? "",
+    methods: item.methods ?? [],
+  }));
 }
 
 // ==============================
 // Custom hooks internos (com hooks)
 // ==============================
 function usePaymentsFiltersState() {
-    const [filters, setFilters] = useState<PaymentFilters>({
-        status: undefined,
-        method: undefined,
-        startDate: "",
-        endDate: "",
-        clientSearch: "",
-        hasOverdueInstallments: undefined,
-        isPartiallyPaid: undefined,
-        dueDaysAhead: undefined,
-    });
+  const [filters, setFilters] = useState<PaymentFilters>({
+    status: undefined,
+    method: undefined,
+    startDate: "",
+    endDate: "",
+    clientSearch: "",
+    hasOverdueInstallments: undefined,
+    isPartiallyPaid: undefined,
+    dueDaysAhead: undefined,
+  });
 
-    return { filters, setFilters };
+  return { filters, setFilters };
 }
 
 function useDrawerState() {
-    const [drawerOpen, setDrawerOpen] = useState(false);
-    const [drawerMode, setDrawerMode] = useState<"edit" | "view">("view");
-    const [selectedPayment, setSelectedPayment] = useState<PaymentDetails | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<"edit" | "view">("view");
+  const [selectedPayment, setSelectedPayment] = useState<PaymentDetails | null>(
+    null,
+  );
 
-    return {
-        drawerOpen,
-        setDrawerOpen,
-        drawerMode,
-        setDrawerMode,
-        selectedPayment,
-        setSelectedPayment,
-    };
+  return {
+    drawerOpen,
+    setDrawerOpen,
+    drawerMode,
+    setDrawerMode,
+    selectedPayment,
+    setSelectedPayment,
+  };
 }
 
 function useConfirmationsState() {
-    const [confirmDelete, setConfirmDelete] = useState(false);
-    const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
 
-    return { confirmDelete, setConfirmDelete, confirmDeleteSelected, setConfirmDeleteSelected };
+  return {
+    confirmDelete,
+    setConfirmDelete,
+    confirmDeleteSelected,
+    setConfirmDeleteSelected,
+  };
 }
 
 function useSelectionState() {
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [deletingIds, setDeletingIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
-    return { selectedIds, setSelectedIds, deletingIds, setDeletingIds };
+  return { selectedIds, setSelectedIds, deletingIds, setDeletingIds };
 }
 
 function useErrorNotificationEffect(error: unknown) {
-    const { addNotification } = useNotification();
-    const addNotificationRef = useRef(addNotification);
+  const { addNotification } = useNotification();
+  const addNotificationRef = useRef(addNotification);
 
-    useEffect(() => {
-        addNotificationRef.current = addNotification;
-    }, [addNotification]);
+  useEffect(() => {
+    addNotificationRef.current = addNotification;
+  }, [addNotification]);
 
-    useEffect(() => {
-        if (!error) return;
+  useEffect(() => {
+    if (!error) return;
 
-        const axiosErr = error as AxiosError<ApiResponse<null>>;
-        const message = axiosErr.response?.data?.message ?? "Erro ao carregar pagamentos.";
-        addNotificationRef.current(message, "error");
-    }, [error]);
+    const axiosErr = error as AxiosError<ApiResponse<null>>;
+    const message =
+      axiosErr.response?.data?.message ?? "Erro ao carregar pagamentos.";
+    addNotificationRef.current(message, "error");
+  }, [error]);
 
-    return { addNotification };
+  return { addNotification };
 }
 
 // ==============================
 // Hook principal - Controller da página de pagamentos
 // ==============================
 export function usePaymentPageController() {
-    console.log("usePaymentPageController render");
+  console.log("usePaymentPageController render");
 
-    const [page, setPage] = useState(0);
-    const [limit, setLimit] = useState(10);
-    const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
 
-    const { filters, setFilters } = usePaymentsFiltersState();
-    const {
-        drawerOpen,
-        setDrawerOpen,
-        drawerMode,
-        setDrawerMode,
-        selectedPayment,
-        setSelectedPayment,
-    } = useDrawerState();
-    const { confirmDelete, setConfirmDelete, confirmDeleteSelected, setConfirmDeleteSelected } =
-        useConfirmationsState();
-    const { selectedIds, setSelectedIds, deletingIds, setDeletingIds } = useSelectionState();
+  const { filters, setFilters } = usePaymentsFiltersState();
+  const {
+    drawerOpen,
+    setDrawerOpen,
+    drawerMode,
+    setDrawerMode,
+    selectedPayment,
+    setSelectedPayment,
+  } = useDrawerState();
+  const {
+    confirmDelete,
+    setConfirmDelete,
+    confirmDeleteSelected,
+    setConfirmDeleteSelected,
+  } = useConfirmationsState();
+  const { selectedIds, setSelectedIds, deletingIds, setDeletingIds } =
+    useSelectionState();
 
-    const queryParams = useMemo(
-        () => buildPaymentsQueryParams(page, limit, filters),
-        [page, limit, filters]
-    );
+  const queryParams = useMemo(
+    () => buildPaymentsQueryParams(page, limit, filters),
+    [page, limit, filters],
+  );
 
-    const { data, isLoading, isFetching, refetch, error } = useGetPayments(queryParams);
+  const { data, isLoading, isFetching, refetch, error } =
+    useGetPayments(queryParams);
 
-    const deletePayment = useDeletePayment();
-    const updatePaymentStatus = useUpdatePaymentStatus();
-    const payInstallment = usePayInstallment();
+  const deletePayment = useDeletePayment();
+  const updatePaymentStatus = useUpdatePaymentStatus();
+  const payInstallment = usePayInstallment();
 
-    const { addNotification } = useErrorNotificationEffect(error);
+  const { addNotification } = useErrorNotificationEffect(error);
 
-    // Handlers de filtros
-    const handleFilterChange = useCallback(
-        (newFilters: Partial<PaymentFilters>) => {
-            setFilters((prev) => ({ ...prev, ...newFilters }));
-            setPage(0);
-        },
-        [setFilters]
-    );
+  // Handlers de filtros
+  const handleFilterChange = useCallback(
+    (newFilters: Partial<PaymentFilters>) => {
+      setFilters((prev) => ({ ...prev, ...newFilters }));
+      setPage(0);
+    },
+    [setFilters],
+  );
 
-    const handleClearFilters = useCallback(() => {
-        setFilters({
-            status: undefined,
-            method: undefined,
-            startDate: "",
-            endDate: "",
-            clientSearch: "",
-            hasOverdueInstallments: undefined,
-            isPartiallyPaid: undefined,
-            dueDaysAhead: undefined,
+  const handleClearFilters = useCallback(() => {
+    setFilters({
+      status: undefined,
+      method: undefined,
+      startDate: "",
+      endDate: "",
+      clientSearch: "",
+      hasOverdueInstallments: undefined,
+      isPartiallyPaid: undefined,
+      dueDaysAhead: undefined,
+    });
+    setSearch("");
+    setPage(0);
+  }, [setFilters]);
+
+  // Handlers do drawer
+  const handleOpenDrawer = useCallback(
+    (mode: "edit" | "view", payment?: Payment | PaymentListItem | null) => {
+      setDrawerMode(mode);
+      setSelectedPayment((payment as PaymentDetails) ?? null);
+      setDrawerOpen(true);
+    },
+    [setDrawerMode, setSelectedPayment, setDrawerOpen],
+  );
+
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    setTimeout(() => setSelectedPayment(null), 300);
+  }, [setDrawerOpen, setSelectedPayment]);
+
+  const handleDrawerEdit = useCallback(() => {
+    if (!selectedPayment) return;
+    handleOpenDrawer("edit", selectedPayment);
+  }, [selectedPayment, handleOpenDrawer]);
+
+  const handleDrawerDelete = useCallback(
+    (payment: Payment | PaymentListItem) => {
+      setSelectedPayment(payment as PaymentDetails);
+      setConfirmDelete(true);
+    },
+    [setSelectedPayment, setConfirmDelete],
+  );
+
+  // Exclusão individual
+  const handleDelete = useCallback(async () => {
+    if (!selectedPayment) return;
+
+    try {
+      const res = await deletePayment.mutateAsync(selectedPayment.id);
+      addNotification(res.message, "success");
+      setConfirmDelete(false);
+      handleCloseDrawer();
+      refetch();
+    } catch (err) {
+      const axiosErr = err as AxiosError<ApiResponse<null>>;
+      const message =
+        axiosErr.response?.data?.message ?? "Erro ao excluir pagamento.";
+      addNotification(message, "error");
+    }
+  }, [
+    selectedPayment,
+    deletePayment,
+    addNotification,
+    setConfirmDelete,
+    handleCloseDrawer,
+    refetch,
+  ]);
+
+  // Atualização de status
+  const handleUpdateStatus = useCallback(
+    async (paymentId: number, status: PaymentStatus, reason?: string) => {
+      try {
+        const res = await updatePaymentStatus.mutateAsync({
+          id: paymentId,
+          status,
+          reason,
         });
-        setSearch("");
-        setPage(0);
-    }, [setFilters]);
+        addNotification(res.message, "success");
+        refetch();
+      } catch (err) {
+        const axiosErr = err as AxiosError<ApiResponse<null>>;
+        const message =
+          axiosErr.response?.data?.message ?? "Erro ao atualizar status.";
+        addNotification(message, "error");
+      }
+    },
+    [updatePaymentStatus, addNotification, refetch],
+  );
 
-    // Handlers do drawer
-    const handleOpenDrawer = useCallback(
-        (mode: "edit" | "view", payment?: Payment | PaymentListItem | null) => {
-            setDrawerMode(mode);
-            setSelectedPayment((payment as PaymentDetails) ?? null);
-            setDrawerOpen(true);
-        },
-        [setDrawerMode, setSelectedPayment, setDrawerOpen]
-    );
+  // Pagamento de parcela
+  const handlePayInstallment = useCallback(
+    async (installmentId: number, paidAmount: number, paidAt?: string) => {
+      try {
+        const res = await payInstallment.mutateAsync({
+          id: installmentId,
+          data: { paidAmount, paidAt },
+        });
+        addNotification(res.message, "success");
+        refetch();
+      } catch (err) {
+        const axiosErr = err as AxiosError<ApiResponse<null>>;
+        const message =
+          axiosErr.response?.data?.message ?? "Erro ao pagar parcela.";
+        addNotification(message, "error");
+      }
+    },
+    [payInstallment, addNotification, refetch],
+  );
 
-    const handleCloseDrawer = useCallback(() => {
-        setDrawerOpen(false);
-        setTimeout(() => setSelectedPayment(null), 300);
-    }, [setDrawerOpen, setSelectedPayment]);
+  // Seleção de linhas
+  const handleSelectRow = useCallback(
+    (id: string | number, checked: boolean) => {
+      setSelectedIds((prev) =>
+        checked ? [...prev, id as number] : prev.filter((i) => i !== id),
+      );
+    },
+    [setSelectedIds],
+  );
 
-    const handleDrawerEdit = useCallback(() => {
-        if (!selectedPayment) return;
-        handleOpenDrawer("edit", selectedPayment);
-    }, [selectedPayment, handleOpenDrawer]);
+  const handleSelectAll = useCallback(
+    (checked: boolean, currentPageIds: (string | number)[]) => {
+      setSelectedIds(checked ? (currentPageIds as number[]) : []);
+    },
+    [setSelectedIds],
+  );
 
-    const handleDrawerDelete = useCallback(
-        (payment: Payment | PaymentListItem) => {
-            setSelectedPayment(payment as PaymentDetails);
-            setConfirmDelete(true);
-        },
-        [setSelectedPayment, setConfirmDelete]
-    );
+  // Exclusão em massa
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedIds.length === 0) return;
 
-    // Exclusão individual
-    const handleDelete = useCallback(async () => {
-        if (!selectedPayment) return;
+    setConfirmDeleteSelected(false);
+    setDeletingIds(selectedIds);
 
-        try {
-            const res = await deletePayment.mutateAsync(selectedPayment.id);
-            addNotification(res.message, "success");
-            setConfirmDelete(false);
-            handleCloseDrawer();
-            refetch();
-        } catch (err) {
-            const axiosErr = err as AxiosError<ApiResponse<null>>;
-            const message = axiosErr.response?.data?.message ?? "Erro ao excluir pagamento.";
-            addNotification(message, "error");
+    try {
+      const deletePromises = selectedIds.map((id) =>
+        deletePayment.mutateAsync(id),
+      );
+      const results = await Promise.allSettled(deletePromises);
+
+      let successCount = 0;
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          successCount++;
+        } else {
+          addNotification(
+            `Erro ao excluir pagamento ${selectedIds[index]}`,
+            "error",
+          );
         }
-    }, [
-        selectedPayment,
-        deletePayment,
-        addNotification,
-        setConfirmDelete,
-        handleCloseDrawer,
-        refetch,
-    ]);
+      });
 
-    // Atualização de status
-    const handleUpdateStatus = useCallback(
-        async (paymentId: number, status: PaymentStatus, reason?: string) => {
-            try {
-                const res = await updatePaymentStatus.mutateAsync({ id: paymentId, status, reason });
-                addNotification(res.message, "success");
-                refetch();
-            } catch (err) {
-                const axiosErr = err as AxiosError<ApiResponse<null>>;
-                const message = axiosErr.response?.data?.message ?? "Erro ao atualizar status.";
-                addNotification(message, "error");
-            }
-        },
-        [updatePaymentStatus, addNotification, refetch]
-    );
+      if (successCount > 0) {
+        addNotification(
+          `${successCount} pagamento(s) excluído(s) com sucesso`,
+          "success",
+        );
+      }
+    } catch (err) {
+      const axiosErr = err as AxiosError<ApiResponse<null>>;
+      const message =
+        axiosErr?.response?.data?.message ??
+        "Erro ao excluir pagamentos selecionados";
+      addNotification(message, "error");
+    } finally {
+      setDeletingIds([]);
+      setSelectedIds([]);
+      refetch();
+    }
+  }, [
+    selectedIds,
+    setConfirmDeleteSelected,
+    setDeletingIds,
+    deletePayment,
+    addNotification,
+    setSelectedIds,
+    refetch,
+  ]);
 
-    // Pagamento de parcela
-    const handlePayInstallment = useCallback(
-        async (installmentId: number, paidAmount: number) => {
-            try {
-                const res = await payInstallment.mutateAsync({
-                    id: installmentId,
-                    data: { paidAmount },
-                });
-                addNotification(res.message, "success");
-                refetch();
-            } catch (err) {
-                const axiosErr = err as AxiosError<ApiResponse<null>>;
-                const message = axiosErr.response?.data?.message ?? "Erro ao pagar parcela.";
-                addNotification(message, "error");
-            }
-        },
-        [payInstallment, addNotification, refetch]
-    );
+  const payments: PaymentListItem[] = useMemo(
+    () => mapPaymentsToListItems(data),
+    [data],
+  );
+  const total = data?.data?.totalElements ?? 0;
 
-    // Seleção de linhas
-    const handleSelectRow = useCallback(
-        (id: string | number, checked: boolean) => {
-            setSelectedIds((prev) =>
-                checked ? [...prev, id as number] : prev.filter((i) => i !== id)
-            );
-        },
-        [setSelectedIds]
-    );
+  const isDeleting = deletePayment.isPending;
+  const isUpdatingStatus = updatePaymentStatus.isPending;
+  const isPayingInstallment = payInstallment.isPending;
 
-    const handleSelectAll = useCallback(
-        (checked: boolean, currentPageIds: (string | number)[]) => {
-            setSelectedIds(checked ? (currentPageIds as number[]) : []);
-        },
-        [setSelectedIds]
-    );
+  return {
+    // Paginação e busca
+    page,
+    limit,
+    search,
 
-    // Exclusão em massa
-    const handleDeleteSelected = useCallback(async () => {
-        if (selectedIds.length === 0) return;
+    // UI
+    drawerOpen,
+    drawerMode,
+    selectedPayment,
+    confirmDelete,
 
-        setConfirmDeleteSelected(false);
-        setDeletingIds(selectedIds);
+    // Seleção
+    selectedIds,
+    confirmDeleteSelected,
+    deletingIds,
 
-        try {
-            const deletePromises = selectedIds.map((id) => deletePayment.mutateAsync(id));
-            const results = await Promise.allSettled(deletePromises);
+    // Filtros
+    filters,
 
-            let successCount = 0;
-            results.forEach((result, index) => {
-                if (result.status === "fulfilled") {
-                    successCount++;
-                } else {
-                    addNotification(`Erro ao excluir pagamento ${selectedIds[index]}`, "error");
-                }
-            });
+    // Dados
+    payments,
+    total,
+    isLoading,
+    isFetching,
 
-            if (successCount > 0) {
-                addNotification(`${successCount} pagamento(s) excluído(s) com sucesso`, "success");
-            }
-        } catch (err) {
-            const axiosErr = err as AxiosError<ApiResponse<null>>;
-            const message =
-                axiosErr?.response?.data?.message ?? "Erro ao excluir pagamentos selecionados";
-            addNotification(message, "error");
-        } finally {
-            setDeletingIds([]);
-            setSelectedIds([]);
-            refetch();
-        }
-    }, [
-        selectedIds,
-        setConfirmDeleteSelected,
-        setDeletingIds,
-        deletePayment,
-        addNotification,
-        setSelectedIds,
-        refetch,
-    ]);
+    // Loading de mutations
+    isDeleting,
+    isUpdatingStatus,
+    isPayingInstallment,
 
-    const payments: PaymentListItem[] = useMemo(() => mapPaymentsToListItems(data), [data]);
-    const total = data?.data?.totalElements ?? 0;
+    // Setters
+    setPage,
+    setLimit,
+    setSearch,
+    setDrawerOpen,
+    setDrawerMode,
+    setSelectedPayment,
+    setConfirmDelete,
+    setConfirmDeleteSelected,
 
-    const isDeleting = deletePayment.isPending;
-    const isUpdatingStatus = updatePaymentStatus.isPending;
-    const isPayingInstallment = payInstallment.isPending;
+    // Handlers
+    handleFilterChange,
+    handleClearFilters,
+    handleOpenDrawer,
+    handleCloseDrawer,
+    handleDelete,
+    handleSelectRow,
+    handleSelectAll,
+    handleDeleteSelected,
+    refetch,
 
-    return {
-        // Paginação e busca
-        page,
-        limit,
-        search,
+    // Ações específicas
+    handleUpdateStatus,
+    handlePayInstallment,
 
-        // UI
-        drawerOpen,
-        drawerMode,
-        selectedPayment,
-        confirmDelete,
+    // Ações do drawer
+    handleDrawerEdit,
+    handleDrawerDelete,
 
-        // Seleção
-        selectedIds,
-        confirmDeleteSelected,
-        deletingIds,
-
-        // Filtros
-        filters,
-
-        // Dados
-        payments,
-        total,
-        isLoading,
-        isFetching,
-
-        // Loading de mutations
-        isDeleting,
-        isUpdatingStatus,
-        isPayingInstallment,
-
-        // Setters
-        setPage,
-        setLimit,
-        setSearch,
-        setDrawerOpen,
-        setDrawerMode,
-        setSelectedPayment,
-        setConfirmDelete,
-        setConfirmDeleteSelected,
-
-        // Handlers
-        handleFilterChange,
-        handleClearFilters,
-        handleOpenDrawer,
-        handleCloseDrawer,
-        handleDelete,
-        handleSelectRow,
-        handleSelectAll,
-        handleDeleteSelected,
-        refetch,
-
-        // Ações específicas
-        handleUpdateStatus,
-        handlePayInstallment,
-
-        // Ações do drawer
-        handleDrawerEdit,
-        handleDrawerDelete,
-
-        // Utilitários
-        addNotification,
-        hasSelectedItems: selectedIds.length > 0,
-        selectedCount: selectedIds.length,
-        isAnyMutationPending: isDeleting || isUpdatingStatus || isPayingInstallment,
-    };
+    // Utilitários
+    addNotification,
+    hasSelectedItems: selectedIds.length > 0,
+    selectedCount: selectedIds.length,
+    isAnyMutationPending: isDeleting || isUpdatingStatus || isPayingInstallment,
+  };
 }

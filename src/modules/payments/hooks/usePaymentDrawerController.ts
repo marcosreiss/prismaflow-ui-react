@@ -28,7 +28,11 @@ interface UsePaymentDrawerControllerProps {
     status: PaymentStatus,
     reason?: string,
   ) => void;
-  onPayInstallment: (installmentId: number, paidAmount: number) => void;
+  onPayInstallment: (
+    installmentId: number,
+    paidAmount: number,
+    paidAt?: string,
+  ) => void;
 }
 
 // ==============================
@@ -181,8 +185,12 @@ export function usePaymentDrawerController({
   };
 
   // Apenas repassa para o callback da página — a mutation vive no page controller
-  const handlePayInstallment = (installmentId: number, paidAmount: number) => {
-    onPayInstallment(installmentId, paidAmount);
+  const handlePayInstallment = (
+    installmentId: number,
+    paidAmount: number,
+    paidAt?: string,
+  ) => {
+    onPayInstallment(installmentId, paidAmount, paidAt);
   };
 
   // ==========================
