@@ -9,8 +9,7 @@ import {
     FormControlLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
-import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentTypes";
-import type { PaymentStatus, PaymentMethod } from "../types/paymentTypes";
+import { type PaymentStatus, type PaymentMethod, PaymentStatusLabels, PaymentMethodLabels } from "../types";
 
 // ==============================
 // 🔹 Tipagens Atualizadas

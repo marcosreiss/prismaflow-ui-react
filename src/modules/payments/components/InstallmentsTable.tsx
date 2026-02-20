@@ -14,15 +14,15 @@ import {
     Typography,
 } from "@mui/material";
 import { DollarSign, Pencil, AlertCircle } from "lucide-react";
-import type { PaymentInstallment } from "../types/paymentTypes";
+import type { PaymentInstallmentItem } from "../types";
 
 // ==============================
-// 🔹 Props
+// Props
 // ==============================
 interface InstallmentsTableProps {
-    installments: PaymentInstallment[];
+    installments: PaymentInstallmentItem[];
     onPay?: (installmentId: number, remainingAmount: number) => void;
-    onEdit?: (installment: PaymentInstallment) => void;
+    onEdit?: (installment: PaymentInstallmentItem) => void;
     loading?: boolean;
     readOnly?: boolean;
 }
@@ -40,7 +40,7 @@ export default function InstallmentsTable({
     // ==============================
     // 🔹 Helper: Calcular status da parcela
     // ==============================
-    const getInstallmentStatus = (installment: PaymentInstallment) => {
+    const getInstallmentStatus = (installment: PaymentInstallmentItem) => {
         const isPaid = installment.paidAmount >= installment.amount;
         const isPartiallyPaid = installment.paidAmount > 0 && installment.paidAmount < installment.amount;
 
@@ -55,7 +55,7 @@ export default function InstallmentsTable({
     // ==============================
     // 🔹 Helper: Calcular valor restante
     // ==============================
-    const getRemainingAmount = (installment: PaymentInstallment) => {
+    const getRemainingAmount = (installment: PaymentInstallmentItem) => {
         return Math.max(0, installment.amount - installment.paidAmount);
     };
 

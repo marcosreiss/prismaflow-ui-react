@@ -16,7 +16,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { Pencil, Calendar } from "lucide-react";
 import CurrencyInput from "@/components/imask/CurrencyInput";
-import type { PaymentInstallment } from "../types/paymentTypes";
+import type { PaymentInstallmentItem } from "../types";
 
 // ==============================
 // 🔹 Form values
@@ -32,7 +32,7 @@ interface EditInstallmentFormValues {
 // ==============================
 interface EditInstallmentDialogProps {
     open: boolean;
-    installment: PaymentInstallment | null;
+    installment: PaymentInstallmentItem | null;
     onClose: () => void;
     onConfirm: (installmentId: number, data: {
         sequence?: number;
