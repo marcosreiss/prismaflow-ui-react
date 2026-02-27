@@ -22,6 +22,7 @@ const SalesDetailsPage = lazy(() => import('@/modules/sales/pages/salesDetailsPa
 
 const PaymentPage = lazy(() => import('@/modules/payments/pages/PaymentsPage'));
 // const OverdueInstallmentsPage = lazy(() => import('@/modules/payments/pages/OverdueInstallmentsPage')); 
+const ExpensesPage = lazy(() => import('@/modules/expenses/ExpensesPage'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -63,6 +64,7 @@ export function PrivateRouter() {
                 { path: 'sales/:id', element: <SalesDetailsPage /> },
 
                 { path: 'payments', element: <PaymentPage /> },
+                { path: 'expenses', element: <ExpensesPage /> },
                 // { path: 'overdue-installments', element: <OverdueInstallmentsPage /> }, 
             ],
         },
