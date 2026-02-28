@@ -3,10 +3,8 @@ import { useState, useMemo, useEffect, type SyntheticEvent } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import {
     Box, Typography, Autocomplete, TextField, Button,
-    Stack, CircularProgress, Collapse, Paper, IconButton, Tooltip,
-    Dialog,
-    DialogContent,
-    DialogTitle,
+    Stack, CircularProgress, IconButton, Tooltip,
+    Dialog, DialogTitle, DialogContent,
 } from "@mui/material";
 import { User, Plus, XCircle, Eye } from "lucide-react";
 import dayjs from "dayjs";
@@ -19,22 +17,21 @@ import { useGetClients } from "@/modules/clients/hooks/useClient";
 import { useGetPrescriptionsByClientId } from "@/modules/clients/hooks/usePrescription";
 import type { SalePayload } from "../../../types/salesTypes";
 import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
-
-type PrescriptionOption = Prescription & { label: string };
+import type { PrescriptionOption } from "@/modules/sales/context/SaleFormContext";
 
 export default function ClientStep() {
-    const { existingSale } = useSaleFormContext();
+    const {
+        existingSale,
+        selectedClient,
+        setSelectedClient,
+        selectedPrescription,
+        setSelectedPrescription,
+    } = useSaleFormContext();
+
     const { control, setValue, formState: { errors } } = useFormContext<SalePayload>();
 
     const [searchValue, setSearchValue] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [selectedClient, setSelectedClient] = useState<ClientSelectItem | null>(
-        existingSale?.client
-            ? { id: existingSale.client.id, name: existingSale.client.name || "" }
-            : null
-    );
-    const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionOption | null>(null);
-    const [previewPrescription, setPreviewPrescription] = useState<PrescriptionOption | null>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [openPrescriptionModal, setOpenPrescriptionModal] = useState(false);
 
@@ -63,28 +60,17 @@ export default function ClientStep() {
     // hidrata receita no modo edição
     useEffect(() => {
         if (!existingSale?.prescriptionId || !prescriptionsData?.data?.content) return;
+        if (selectedPrescription) return;
         const found = prescriptionsData.data.content.find(
             (p) => p.id === existingSale.prescriptionId
         );
         if (found) {
-            const option = {
+            setSelectedPrescription({
                 ...found,
                 label: `${found.doctorName || "Médico não informado"} - ${dayjs(found.prescriptionDate).format("DD/MM/YYYY")}`,
-            };
-            setSelectedPrescription(option);
-            setPreviewPrescription(option);
-            setShowPreview(false);
+            });
         }
-    }, [existingSale?.prescriptionId, prescriptionsData]);
-
-    // sincroniza cliente ao voltar de outro step
-    useEffect(() => {
-        if (selectedClient) return;
-        const formClientId = control._formValues?.clientId;
-        if (!formClientId || !clientOptions.length) return;
-        const found = clientOptions.find((c) => c.id === formClientId);
-        if (found) setSelectedClient(found);
-    }, [clientOptions, control._formValues?.clientId, selectedClient]);
+    }, [existingSale?.prescriptionId, prescriptionsData, selectedPrescription, setSelectedPrescription]);
 
     const handleClientChange = (
         _: SyntheticEvent,
@@ -93,7 +79,6 @@ export default function ClientStep() {
     ) => {
         setSelectedClient(newClient);
         setSelectedPrescription(null);
-        setPreviewPrescription(null);
         setShowPreview(false);
         onChangeFormClientId(newClient?.id ?? null);
         setValue("prescriptionId", null);
@@ -101,14 +86,11 @@ export default function ClientStep() {
 
     const handlePrescriptionChange = (_: SyntheticEvent, newPrescription: PrescriptionOption | null) => {
         setSelectedPrescription(newPrescription);
-        setPreviewPrescription(newPrescription);
-        setShowPreview(false);
         setValue("prescriptionId", newPrescription?.id ?? null);
     };
 
     const handleClearPrescription = () => {
         setSelectedPrescription(null);
-        setPreviewPrescription(null);
         setShowPreview(false);
         setValue("prescriptionId", null);
     };
@@ -193,7 +175,7 @@ export default function ClientStep() {
                         <Typography variant="subtitle1" fontWeight={600}>
                             Receita (opcional)
                         </Typography>
-                        <Stack direction="row" spacing={1}>
+                        <Stack direction="row" spacing={1} alignItems="center">
                             {selectedPrescription && (
                                 <>
                                     <Tooltip title="Visualizar receita">
@@ -214,7 +196,6 @@ export default function ClientStep() {
                         </Stack>
                     </Stack>
 
-                    {/* Select de receita com renderOption para preview inline no dropdown */}
                     <Autocomplete<PrescriptionOption>
                         fullWidth
                         options={prescriptionOptions}
@@ -234,42 +215,11 @@ export default function ClientStep() {
                             />
                         )}
                     />
-
-                    {/* Preview expandido da receita selecionada */}
-                    <Collapse in={showPreview} timeout="auto" unmountOnExit>
-                        {previewPrescription && (
-                            <Paper variant="outlined" sx={{ p: 2, mt: 1.5, borderRadius: 2 }}>
-                                <PrescriptionPreview prescription={previewPrescription} />
-                            </Paper>
-                        )}
-                    </Collapse>
                 </Box>
             )}
 
-            {/* Modal de nova receita */}
-            <PrescriptionModal
-                open={openPrescriptionModal}
-                mode="create"
-                clientId={selectedClient?.id || null}
-                prescription={null}
-                onClose={() => setOpenPrescriptionModal(false)}
-                onCreated={(p) => {
-                    const newOption: PrescriptionOption = {
-                        ...p,
-                        label: `${p.doctorName || "Médico não informado"} - ${dayjs(p.prescriptionDate).format("DD/MM/YYYY")}`,
-                    };
-                    setSelectedPrescription(newOption);
-                    setPreviewPrescription(newOption);
-                    setValue("prescriptionId", p.id);
-                    setOpenPrescriptionModal(false);
-                }}
-                onUpdated={() => { }}
-                onEdit={() => { }}
-                onDelete={() => { }}
-                onCreateNew={() => { }}
-            />
-
-            {showPreview && previewPrescription && (
+            {/* Modal de preview da receita */}
+            {selectedPrescription && (
                 <Dialog open={showPreview} onClose={() => setShowPreview(false)} maxWidth="sm" fullWidth>
                     <DialogTitle>
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -280,10 +230,32 @@ export default function ClientStep() {
                         </Stack>
                     </DialogTitle>
                     <DialogContent dividers>
-                        <PrescriptionPreview prescription={previewPrescription} />
+                        <PrescriptionPreview prescription={selectedPrescription} />
                     </DialogContent>
                 </Dialog>
             )}
+
+            {/* Modal de nova receita */}
+            <PrescriptionModal
+                open={openPrescriptionModal}
+                mode="create"
+                clientId={selectedClient?.id || null}
+                prescription={null}
+                onClose={() => setOpenPrescriptionModal(false)}
+                onCreated={(p: Prescription) => {
+                    const newOption: PrescriptionOption = {
+                        ...p,
+                        label: `${p.doctorName || "Médico não informado"} - ${dayjs(p.prescriptionDate).format("DD/MM/YYYY")}`,
+                    };
+                    setSelectedPrescription(newOption);
+                    setValue("prescriptionId", p.id);
+                    setOpenPrescriptionModal(false);
+                }}
+                onUpdated={() => { }}
+                onEdit={() => { }}
+                onDelete={() => { }}
+                onCreateNew={() => { }}
+            />
         </Box>
     );
 }

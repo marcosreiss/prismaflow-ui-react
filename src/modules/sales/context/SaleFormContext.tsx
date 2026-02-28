@@ -1,4 +1,5 @@
-import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
+// Contexto global do fluxo de criação/edição de venda
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { FormProvider } from "react-hook-form";
 import { useSaleForm } from "../hooks/useSaleForm";
@@ -11,6 +12,11 @@ import { useCreateSale, useUpdateSale } from "../hooks/useSales";
 import type { Product } from "@/modules/products/types/productTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 import { buildSalePayload } from "../utils/salePayloadMapper";
+import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
+import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
+
+// tipo local para opção de receita
+export type PrescriptionOption = Prescription & { label: string };
 
 interface SaleFormContextValue {
     mode: "create" | "edit";
@@ -28,6 +34,11 @@ interface SaleFormContextValue {
     handleClearDraft: () => void;
     handleSubmitSale: (data: SalePayload) => Promise<void>;
     loadDraft: () => void;
+    // estado persistente do step de cliente
+    selectedClient: ClientSelectItem | null;
+    setSelectedClient: (client: ClientSelectItem | null) => void;
+    selectedPrescription: PrescriptionOption | null;
+    setSelectedPrescription: (prescription: PrescriptionOption | null) => void;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -55,6 +66,14 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
         resetForm,
     } = useSaleForm();
 
+    // ======= Estado persistente do ClientStep =======
+    const [selectedClient, setSelectedClient] = useState<ClientSelectItem | null>(
+        existingSale?.client
+            ? { id: existingSale.client.id, name: existingSale.client.name || "" }
+            : null
+    );
+    const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionOption | null>(null);
+
     // ======= Hooks auxiliares =======
     const { validateStock } = useStockValidation();
     const { saveDraft, loadDraft, clearDraft } = useSaleDraft(resetForm);
@@ -62,17 +81,15 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
     const createSale = useCreateSale();
     const updateSale = useUpdateSale();
 
-    // ======= Hidratação inicial (modo edição ou rascunho) =======
+    // ======= Hidratação inicial (modo edição) =======
     const hydratedRef = useRef(false);
     useEffect(() => {
         if (!isEditMode || !existingSale) return;
-
         if (!hydratedRef.current && existingSale?.id) {
             resetForm(existingSale as unknown as SalePayload);
             hydratedRef.current = true;
         }
     }, [isEditMode, existingSale, resetForm]);
-
 
     // ======= Adicionar Produto (com validação de estoque) =======
     const handleValidatedAddProduct = useCallback(
@@ -81,10 +98,8 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
                 addNotification("Produto inválido.", "error");
                 return;
             }
-
             const ok = await validateStock(product.id, product.quantity ?? 1);
             if (!ok) return;
-
             await handleAddProduct(product);
         },
         [handleAddProduct, validateStock, addNotification]
@@ -99,8 +114,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
                 addNotification("Serviço já adicionado.", "warning");
                 return;
             }
-
-            methods.setValue("serviceItems", [...current, { serviceId: service.id, service: service }], {
+            methods.setValue("serviceItems", [...current, { serviceId: service.id, service }], {
                 shouldValidate: true,
             });
         },
@@ -136,8 +150,6 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
                 return;
             }
 
-            // revalidar estoque
-            // Revalidação de estoque no submit — apenas via API
             const allValid = await Promise.all(
                 (data.productItems ?? []).map((p) =>
                     validateStock(p.productId ?? p.product?.id, p.quantity ?? 1)
@@ -160,25 +172,15 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
                     addNotification("Venda criada com sucesso!", "success");
                 }
 
-                // ✅ Limpar formulário e redirecionar
-                methods.reset();                  // limpa o formulário
-                window.location.href = "/sales";  // redireciona (alternativa: navigate("/sales"))
+                methods.reset();
+                window.location.href = "/sales";
             } catch (error) {
                 console.log(error);
                 addNotification("Erro ao salvar venda. Tente novamente.", "error");
             }
         },
-        [
-            isEditMode,
-            existingSale,
-            addNotification,
-            validateStock,
-            createSale,
-            updateSale,
-            methods, // precisa estar aqui para usar reset()
-        ]
+        [isEditMode, existingSale, addNotification, validateStock, createSale, updateSale, methods]
     );
-
 
     // ======= Valor do Contexto =======
     const value = useMemo(
@@ -198,6 +200,10 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
             handleClearDraft,
             handleSubmitSale,
             loadDraft,
+            selectedClient,
+            setSelectedClient,
+            selectedPrescription,
+            setSelectedPrescription,
         }),
         [
             mode,
@@ -215,6 +221,8 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
             handleClearDraft,
             handleSubmitSale,
             loadDraft,
+            selectedClient,
+            selectedPrescription,
         ]
     );
 
