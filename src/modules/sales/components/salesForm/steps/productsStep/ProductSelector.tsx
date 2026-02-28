@@ -75,6 +75,12 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
             }
         };
 
+        const productNoOptionsText = isLoading
+            ? "Buscando..."
+            : debouncedSearch.trim().length === 0
+                ? "Digite para buscar produtos."
+                : "Nenhum produto encontrado.";
+
         return (
             <Box>
                 <Typography variant="h6" sx={{ mb: 3, display: "flex", alignItems: "center", gap: 1, fontWeight: 600 }}>
@@ -115,7 +121,9 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
                                     options={products}
                                     getOptionLabel={(p) => `${p.name || "Sem nome"} - ${ProductCategoryLabels[p.category]}`}
                                     loading={isLoading}
-                                    noOptionsText="Nenhum produto encontrado"
+                                    loadingText="Buscando produtos..."
+                                    noOptionsText={productNoOptionsText}
+                                    filterOptions={(x) => x}
                                     value={selectedProduct}
                                     inputValue={searchValue}
                                     onInputChange={(_, value) => setSearchValue(value)}

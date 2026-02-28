@@ -24,6 +24,8 @@ export default function ClientStep() {
 
     const [searchValue, setSearchValue] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    // hidrata cliente diretamente no estado inicial — sem useEffect
     const [selectedClient, setSelectedClient] = useState<ClientSelectItem | null>(
         // hidrata diretamente no estado inicial — sem useEffect
         existingSale?.client
@@ -33,14 +35,16 @@ export default function ClientStep() {
     const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionOption | null>(null);
     const [openPrescriptionModal, setOpenPrescriptionModal] = useState(false);
 
-    // debounce da busca
+    // debounce da busca de clientes
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(searchValue), 500);
         return () => clearTimeout(t);
     }, [searchValue]);
 
     const { data: clientData, isFetching: isLoadingClients } = useGetClients({
-        page: 1, limit: 50, search: debouncedSearch,
+        page: 1,
+        limit: 50,
+        search: debouncedSearch,
     });
     const clientOptions = useMemo(() => clientData?.data?.content || [], [clientData]);
 
@@ -70,6 +74,15 @@ export default function ClientStep() {
         }
     }, [existingSale?.prescriptionId, prescriptionsData]);
 
+    // mantém selectedClient sincronizado com o valor do form ao voltar de outro step
+    useEffect(() => {
+        if (selectedClient) return;
+        const formClientId = control._formValues?.clientId;
+        if (!formClientId || !clientOptions.length) return;
+        const found = clientOptions.find((c) => c.id === formClientId);
+        if (found) setSelectedClient(found);
+    }, [clientOptions, control._formValues?.clientId, selectedClient]);
+
     const handleClientChange = (
         _: SyntheticEvent,
         newClient: ClientSelectItem | null,
@@ -90,6 +103,13 @@ export default function ClientStep() {
         setSelectedPrescription(null);
         setValue("prescriptionId", null);
     };
+
+    // texto do autocomplete de cliente baseado no estado da busca
+    const clientNoOptionsText = isLoadingClients
+        ? "Buscando..."
+        : debouncedSearch.trim().length === 0
+            ? "Digite para buscar clientes."
+            : "Nenhum cliente encontrado.";
 
     return (
         <Box>
@@ -128,12 +148,14 @@ export default function ClientStep() {
                         fullWidth
                         options={clientOptions}
                         loading={isLoadingClients}
+                        loadingText="Buscando clientes..."
+                        noOptionsText={clientNoOptionsText}
                         getOptionLabel={(option) => option.name || ""}
                         value={selectedClient}
                         onInputChange={(_, value) => setSearchValue(value)}
                         onChange={(e, val) => handleClientChange(e, val, field.onChange)}
-                        noOptionsText="Digite para buscar clientes."
                         isOptionEqualToValue={(option, value) => option.id === value.id}
+                        filterOptions={(x) => x}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -145,7 +167,9 @@ export default function ClientStep() {
                                     ...params.InputProps,
                                     endAdornment: (
                                         <>
-                                            {isLoadingClients ? <CircularProgress color="inherit" size={20} /> : null}
+                                            {isLoadingClients
+                                                ? <CircularProgress color="inherit" size={20} />
+                                                : null}
                                             {params.InputProps.endAdornment}
                                         </>
                                     ),
@@ -184,6 +208,7 @@ export default function ClientStep() {
                         value={selectedPrescription}
                         onChange={handlePrescriptionChange}
                         isOptionEqualToValue={(option, value) => option.id === value.id}
+                        noOptionsText="Nenhuma receita encontrada para este cliente."
                         freeSolo={false}
                         renderInput={(params) => (
                             <TextField
