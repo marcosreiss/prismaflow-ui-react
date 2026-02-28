@@ -68,16 +68,16 @@ export default function ClientsPage() {
             label: "E-mail",
             render: (row) => row.email ?? "-",
         },
-        {
-            key: "phone01",
-            label: "Telefone",
-            render: (row) => row.phone01 ?? "-",
-        },
-        {
-            key: "city",
-            label: "Cidade",
-            render: (row) => row.city ?? "-",
-        },
+        // {
+        //     key: "phone01",
+        //     label: "Telefone",
+        //     render: (row) => row.phone01 ?? "-",
+        // },
+        // {
+        //     key: "city",
+        //     label: "Cidade",
+        //     render: (row) => row.city ?? "-",
+        // },
     ];
 
     // ==============================
