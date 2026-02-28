@@ -12,7 +12,7 @@ export function useExpensePageController() {
   // 🔹 Estados locais
   // ==========================
   const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(50);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [drawerOpen, setDrawerOpen] = useState(false);

@@ -20,7 +20,7 @@ export default function ClientPrescriptionsPage() {
     const clientId = Number(id);
 
     const [page, setPage] = useState(0);
-    const [limit, setLimit] = useState(5);
+    const [limit, setLimit] = useState(50);
     const [selectedPrescription, setSelectedPrescription] =
         useState<Prescription | null>(null);
     const [modalOpen, setModalOpen] = useState(false);

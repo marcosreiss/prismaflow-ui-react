@@ -19,7 +19,7 @@ export function useSalesPageController() {
   // 🔹 Estados locais
   // ==========================
   const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(5);
+  const [limit, setLimit] = useState(50);
   const [search, setSearch] = useState("");
 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);

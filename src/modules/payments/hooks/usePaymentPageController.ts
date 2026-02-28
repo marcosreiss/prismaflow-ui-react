@@ -151,7 +151,7 @@ export function usePaymentPageController() {
   console.log("usePaymentPageController render");
 
   const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(50);
   const [search, setSearch] = useState("");
 
   const { filters, setFilters } = usePaymentsFiltersState();
