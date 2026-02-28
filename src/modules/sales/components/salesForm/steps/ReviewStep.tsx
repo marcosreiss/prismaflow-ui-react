@@ -1,26 +1,21 @@
-import {
-    Box,
-    Typography,
-    Paper,
-    Stack,
-    Divider,
-} from "@mui/material";
-import { CheckCircle } from "lucide-react";
+// Step 4: revisão completa dos dados da venda antes do submit
+import { Box, Typography, Paper, Stack, Divider, Collapse, IconButton, Tooltip } from "@mui/material";
+import { CheckCircle, Eye } from "lucide-react";
+import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useGetClientById } from "@/modules/clients/hooks/useClient";
-import type {
-    SalePayload,
-    SaleProductItem,
-    SaleServiceItem,
-} from "@/modules/sales/types/salesTypes";
+import { useGetPrescriptionById } from "@/modules/clients/hooks/usePrescription";
+import type { SalePayload, SaleProductItem, SaleServiceItem } from "@/modules/sales/types/salesTypes";
+import PrescriptionPreview from "@/modules/sales/components/salesForm/PrescriptionPreview";
 import dayjs from "dayjs";
 
 export default function ReviewStep() {
     const { watch } = useFormContext<SalePayload>();
+    const [showRx, setShowRx] = useState(false);
 
-    // Dados observados do formulário
     const clientId = watch("clientId");
     const saleDate = watch("saleDate");
+    const prescriptionId = watch("prescriptionId");
     const productItems = watch("productItems") || [];
     const serviceItems = watch("serviceItems") || [];
     const protocol = watch("protocol");
@@ -28,16 +23,15 @@ export default function ReviewStep() {
     const discount = watch("discount") || 0;
     const total = watch("total") || 0;
 
-    // Busca do cliente
     const { data: clientResponse } = useGetClientById(clientId ?? undefined);
     const client = clientResponse?.data ?? null;
 
+    const { data: prescriptionResponse } = useGetPrescriptionById(prescriptionId ?? undefined);
+    const prescription = prescriptionResponse?.data ?? null;
+
     return (
         <Box>
-            <Typography
-                variant="h6"
-                sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="h6" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
                 <CheckCircle size={24} />
                 Revisão Final
             </Typography>
@@ -54,21 +48,42 @@ export default function ReviewStep() {
                         </Typography>
                     </Paper>
 
-
                     {/* CLIENTE */}
                     <Box>
-                        <Typography variant="subtitle2" color="text.secondary">
-                            Cliente
-                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">Cliente</Typography>
                         <Typography variant="body1" fontWeight="medium">
                             {client?.name || "Não selecionado"}
                         </Typography>
                         {client?.phone01 && (
-                            <Typography variant="body2" color="text.secondary">
-                                {client.phone01}
-                            </Typography>
+                            <Typography variant="body2" color="text.secondary">{client.phone01}</Typography>
                         )}
                     </Box>
+
+                    {/* RECEITA */}
+                    {prescription && (
+                        <>
+                            <Divider />
+                            <Box>
+                                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                    <Typography variant="subtitle2" color="text.secondary">Receita</Typography>
+                                    <Tooltip title={showRx ? "Ocultar" : "Visualizar receita"}>
+                                        <IconButton size="small" onClick={() => setShowRx((prev) => !prev)}>
+                                            <Eye size={16} />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Stack>
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                    {prescription.doctorName || "Médico não informado"} —{" "}
+                                    {dayjs(prescription.prescriptionDate).format("DD/MM/YYYY")}
+                                </Typography>
+                                <Collapse in={showRx} timeout="auto" unmountOnExit>
+                                    <Paper variant="outlined" sx={{ p: 2, mt: 1.5, borderRadius: 2 }}>
+                                        <PrescriptionPreview prescription={prescription} />
+                                    </Paper>
+                                </Collapse>
+                            </Box>
+                        </>
+                    )}
 
                     <Divider />
 
@@ -77,13 +92,9 @@ export default function ReviewStep() {
                         <Typography variant="subtitle2" color="text.secondary">
                             Produtos ({productItems.length})
                         </Typography>
-
                         {productItems.length === 0 && (
-                            <Typography variant="body2" color="text.disabled">
-                                Nenhum produto adicionado
-                            </Typography>
+                            <Typography variant="body2" color="text.disabled">Nenhum produto adicionado</Typography>
                         )}
-
                         {productItems.map((item: SaleProductItem, index: number) => (
                             <Box key={item.id ?? index} sx={{ ml: 1, mt: 0.5 }}>
                                 <Typography variant="body2" fontWeight="medium">
@@ -107,25 +118,13 @@ export default function ReviewStep() {
                         <Typography variant="subtitle2" color="text.secondary">
                             Serviços ({serviceItems.length})
                         </Typography>
-
                         {serviceItems.length === 0 && (
-                            <Typography variant="body2" color="text.disabled">
-                                Nenhum serviço adicionado
-                            </Typography>
+                            <Typography variant="body2" color="text.disabled">Nenhum serviço adicionado</Typography>
                         )}
-
                         {serviceItems.map((item: SaleServiceItem, index: number) => (
-                            <Typography
-                                key={item.id ?? index}
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ ml: 1, mt: 0.5 }}
-                            >
+                            <Typography key={item.id ?? index} variant="body2" color="text.secondary" sx={{ ml: 1, mt: 0.5 }}>
                                 • {item.service?.name} —{" "}
-                                {item.service?.price?.toLocaleString("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                })}
+                                {item.service?.price?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                             </Typography>
                         ))}
                     </Box>
@@ -135,9 +134,7 @@ export default function ReviewStep() {
                         <>
                             <Divider />
                             <Box>
-                                <Typography variant="subtitle2" color="text.secondary">
-                                    Protocolo
-                                </Typography>
+                                <Typography variant="subtitle2" color="text.secondary">Protocolo</Typography>
                                 <Stack spacing={0.5} sx={{ ml: 1 }}>
                                     {protocol.book && (
                                         <Typography variant="body2">Livro: {protocol.book}</Typography>
@@ -158,44 +155,21 @@ export default function ReviewStep() {
                     {/* RESUMO FINANCEIRO */}
                     <Stack spacing={1}>
                         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                            <Typography variant="subtitle2" color="text.secondary">
-                                Subtotal
-                            </Typography>
+                            <Typography variant="subtitle2" color="text.secondary">Subtotal</Typography>
                             <Typography variant="body1">
-                                {subtotal.toLocaleString("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                })}
+                                {subtotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                             </Typography>
                         </Box>
-
                         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                            <Typography variant="subtitle2" color="text.secondary">
-                                Desconto
-                            </Typography>
+                            <Typography variant="subtitle2" color="text.secondary">Desconto</Typography>
                             <Typography variant="body1" color="error.main">
-                                -{(discount || 0).toLocaleString("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                })}
+                                -{(discount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                             </Typography>
                         </Box>
-
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                pt: 1,
-                                borderTop: 1,
-                                borderColor: "divider",
-                            }}
-                        >
+                        <Box sx={{ display: "flex", justifyContent: "space-between", pt: 1, borderTop: 1, borderColor: "divider" }}>
                             <Typography variant="h6">Total</Typography>
                             <Typography variant="h6" color="primary.main">
-                                {total.toLocaleString("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                })}
+                                {total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                             </Typography>
                         </Box>
                     </Stack>

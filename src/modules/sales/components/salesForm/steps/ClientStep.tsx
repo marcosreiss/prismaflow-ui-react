@@ -4,6 +4,9 @@ import { Controller, useFormContext } from "react-hook-form";
 import {
     Box, Typography, Autocomplete, TextField, Button,
     Stack, CircularProgress, Collapse, Paper, IconButton, Tooltip,
+    Dialog,
+    DialogContent,
+    DialogTitle,
 } from "@mui/material";
 import { User, Plus, XCircle, Eye } from "lucide-react";
 import dayjs from "dayjs";
@@ -193,11 +196,8 @@ export default function ClientStep() {
                         <Stack direction="row" spacing={1}>
                             {selectedPrescription && (
                                 <>
-                                    <Tooltip title={showPreview ? "Ocultar receita" : "Visualizar receita"}>
-                                        <IconButton
-                                            size="small"
-                                            onClick={() => setShowPreview((prev) => !prev)}
-                                        >
+                                    <Tooltip title="Visualizar receita">
+                                        <IconButton size="small" onClick={() => setShowPreview(true)}>
                                             <Eye size={16} />
                                         </IconButton>
                                     </Tooltip>
@@ -224,24 +224,6 @@ export default function ClientStep() {
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                         noOptionsText="Nenhuma receita encontrada para este cliente."
                         freeSolo={false}
-                        renderOption={(props, option) => (
-                            <li {...props} key={option.id}>
-                                <Box sx={{ width: "100%", py: 0.5 }}>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                        <Typography variant="body2" fontWeight={500}>
-                                            {option.doctorName || "Médico não informado"}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {dayjs(option.prescriptionDate).format("DD/MM/YYYY")}
-                                        </Typography>
-                                    </Stack>
-                                    {/* preview compacto no dropdown */}
-                                    <Box sx={{ mt: 0.5 }}>
-                                        <PrescriptionPreview prescription={option} />
-                                    </Box>
-                                </Box>
-                            </li>
-                        )}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -286,6 +268,22 @@ export default function ClientStep() {
                 onDelete={() => { }}
                 onCreateNew={() => { }}
             />
+
+            {showPreview && previewPrescription && (
+                <Dialog open={showPreview} onClose={() => setShowPreview(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                            <Typography variant="h6">Detalhes da Receita</Typography>
+                            <IconButton size="small" onClick={() => setShowPreview(false)}>
+                                <XCircle size={18} />
+                            </IconButton>
+                        </Stack>
+                    </DialogTitle>
+                    <DialogContent dividers>
+                        <PrescriptionPreview prescription={previewPrescription} />
+                    </DialogContent>
+                </Dialog>
+            )}
         </Box>
     );
 }
