@@ -1,25 +1,16 @@
-import { useState, forwardRef } from "react";
+// Seletor de produtos com busca paginada e filtro por categoria
+import { useState, useEffect, forwardRef } from "react";
 import type { Product, ProductCategory } from "@/modules/products/types/productTypes";
 import { ProductCategoryLabels } from "@/modules/products/types/productTypes";
 import {
-    Autocomplete,
-    TextField,
-    Button,
-    Stack,
-    Typography,
-    Box,
-    Paper,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Select,
-    CircularProgress,
-    keyframes,
+    Autocomplete, TextField, Button, Stack, Typography, Box,
+    Paper, MenuItem, FormControl, InputLabel, Select,
+    CircularProgress, keyframes,
 } from "@mui/material";
 import { Plus, Package } from "lucide-react";
 import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
+import { useGetProducts } from "@/modules/products/hooks/useProduct";
 
-// 🔹 Animação de erro (shake)
 const shake = keyframes`
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-4px); }
@@ -27,23 +18,34 @@ const shake = keyframes`
 `;
 
 interface ProductSelectorProps {
-    products: Product[];
-    isLoading: boolean;
     disabled?: boolean;
 }
 
-/**
- * 🔹 Seletor de produtos com filtro por categoria e busca
- */
 const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
-    ({ products, isLoading, disabled = false }, ref) => {
+    ({ disabled = false }, ref) => {
         const { handleAddProduct } = useSaleFormContext();
 
         const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
         const [quantity, setQuantity] = useState<string>("1");
         const [quantityError, setQuantityError] = useState<string | null>(null);
         const [searchValue, setSearchValue] = useState("");
+        const [debouncedSearch, setDebouncedSearch] = useState("");
         const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "ALL">("ALL");
+
+        // debounce da busca
+        useEffect(() => {
+            const t = setTimeout(() => setDebouncedSearch(searchValue), 400);
+            return () => clearTimeout(t);
+        }, [searchValue]);
+
+        const { data: productsResponse, isFetching: isLoading } = useGetProducts({
+            page: 1,
+            limit: 50,
+            search: debouncedSearch,
+            category: selectedCategory !== "ALL" ? selectedCategory : undefined,
+        });
+
+        const products = productsResponse?.data?.content || [];
 
         const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const value = e.target.value;
@@ -73,59 +75,21 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
             }
         };
 
-        const filteredProducts = products.filter((product) => {
-            if (!product) return false;
-            const matchesCategory = selectedCategory === "ALL" || product.category === selectedCategory;
-            const productName = product.name?.toLowerCase() || "";
-            const productDescription = product.description?.toLowerCase() || "";
-            const searchTerm = searchValue.toLowerCase();
-            return matchesCategory && (productName.includes(searchTerm) || productDescription.includes(searchTerm));
-        });
-
         return (
             <Box>
-                <Typography
-                    variant="h6"
-                    sx={{
-                        mb: 3,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        fontWeight: 600
-                    }}
-                >
+                <Typography variant="h6" sx={{ mb: 3, display: "flex", alignItems: "center", gap: 1, fontWeight: 600 }}>
                     <Package size={24} />
                     Adicionar Produtos
                 </Typography>
 
-                <Paper
-                    variant="outlined"
-                    sx={{
-                        p: 3,
-                        mb: 2,
-                        borderRadius: 2
-                    }}
-                >
+                <Paper variant="outlined" sx={{ p: 3, mb: 2, borderRadius: 2 }}>
                     <Stack spacing={3}>
-                        {/* Filtros */}
+                        {/* Filtro por categoria */}
                         <Box>
-                            <Typography
-                                variant="subtitle2"
-                                sx={{
-                                    mb: 1.5,
-                                    color: "text.secondary",
-                                    fontWeight: 500
-                                }}
-                            >
+                            <Typography variant="subtitle2" sx={{ mb: 1.5, color: "text.secondary", fontWeight: 500 }}>
                                 Filtros
                             </Typography>
-                            <FormControl
-                                size="small"
-                                sx={{
-                                    minWidth: 180,
-                                    height: 48
-                                }}
-                            >
+                            <FormControl size="small" sx={{ minWidth: 180, height: 48 }}>
                                 <InputLabel>Categoria</InputLabel>
                                 <Select
                                     value={selectedCategory}
@@ -135,35 +99,20 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
                                 >
                                     <MenuItem value="ALL">Todas as categorias</MenuItem>
                                     {Object.entries(ProductCategoryLabels).map(([key, label]) => (
-                                        <MenuItem key={key} value={key}>
-                                            {label}
-                                        </MenuItem>
+                                        <MenuItem key={key} value={key}>{label}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         </Box>
 
-                        {/* Busca e Adição */}
+                        {/* Busca e adição */}
                         <Box>
-                            <Typography
-                                variant="subtitle2"
-                                sx={{
-                                    mb: 1.5,
-                                    color: "text.secondary",
-                                    fontWeight: 500
-                                }}
-                            >
+                            <Typography variant="subtitle2" sx={{ mb: 1.5, color: "text.secondary", fontWeight: 500 }}>
                                 Seleção do produto
                             </Typography>
-
-                            <Stack
-                                direction={{ xs: "column", sm: "row" }}
-                                spacing={2}
-                                alignItems={{ xs: "stretch", sm: "flex-end" }}
-                            >
-                                {/* Busca */}
+                            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "flex-end" }}>
                                 <Autocomplete
-                                    options={filteredProducts}
+                                    options={products}
                                     getOptionLabel={(p) => `${p.name || "Sem nome"} - ${ProductCategoryLabels[p.category]}`}
                                     loading={isLoading}
                                     noOptionsText="Nenhum produto encontrado"
@@ -173,10 +122,7 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
                                     onChange={(_, newValue) => setSelectedProduct(newValue)}
                                     onKeyPress={handleKeyPress}
                                     disabled={disabled}
-                                    sx={{
-                                        flex: 2,
-                                        minWidth: 280
-                                    }}
+                                    sx={{ flex: 2, minWidth: 280 }}
                                     renderInput={(params) => (
                                         <TextField
                                             {...params}
@@ -199,7 +145,6 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
                                     )}
                                 />
 
-                                {/* Quantidade */}
                                 <TextField
                                     label="Quantidade"
                                     type="text"
@@ -208,29 +153,17 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
                                     onChange={handleQuantityChange}
                                     error={!!quantityError}
                                     helperText={quantityError ? "Quantidade inválida" : ""}
-                                    sx={{
-                                        width: { xs: "100%", sm: 120 },
-                                        height: 48,
-                                        animation: quantityError ? `${shake} 0.3s ease` : "none",
-                                    }}
-                                    inputProps={{
-                                        inputMode: "numeric",
-                                        pattern: "[0-9]*",
-                                    }}
+                                    sx={{ width: { xs: "100%", sm: 120 }, height: 48, animation: quantityError ? `${shake} 0.3s ease` : "none" }}
+                                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
                                     InputProps={{ sx: { height: 48 } }}
                                 />
 
-                                {/* Botão */}
                                 <Button
                                     variant="contained"
                                     onClick={handleAdd}
                                     disabled={!selectedProduct || disabled}
                                     startIcon={<Plus size={18} />}
-                                    sx={{
-                                        height: 48,
-                                        minWidth: 140,
-                                        px: 3
-                                    }}
+                                    sx={{ height: 48, minWidth: 140, px: 3 }}
                                 >
                                     Adicionar
                                 </Button>
@@ -243,7 +176,5 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
     }
 );
 
-// Definir display name para melhor debugging
 ProductSelector.displayName = "ProductSelector";
-
 export default ProductSelector;

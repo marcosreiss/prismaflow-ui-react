@@ -1,40 +1,43 @@
-import { useState } from "react";
+// Seletor de serviços ópticos com busca paginada
+import { useState, useEffect } from "react";
 import {
-    Autocomplete,
-    TextField,
-    Button,
-    Stack,
-    Typography,
-    Box,
-    Chip,
-    Paper,
-    CircularProgress,
+    Autocomplete, TextField, Button, Stack, Typography,
+    Box, Chip, Paper, CircularProgress,
 } from "@mui/material";
 import { Plus, Settings } from "lucide-react";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
+import { useGetOpticalServices } from "@/modules/opticalservices/hooks/useOpticalService";
 
 interface ServiceSelectorProps {
-    services: OpticalService[];
-    isLoading: boolean;
     disabled?: boolean;
 }
 
-/**
- * 🔹 Seletor de serviços com preview e botão de adicionar
- */
-export default function SaleServiceSelector({
-    services,
-    isLoading,
-    disabled = false,
-}: ServiceSelectorProps) {
+export default function SaleServiceSelector({ disabled = false }: ServiceSelectorProps) {
     const { handleAddService } = useSaleFormContext();
     const [selectedService, setSelectedService] = useState<OpticalService | null>(null);
+    const [searchValue, setSearchValue] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    // debounce da busca
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(searchValue), 400);
+        return () => clearTimeout(t);
+    }, [searchValue]);
+
+    const { data: servicesResponse, isFetching: isLoading } = useGetOpticalServices({
+        page: 1,
+        limit: 50,
+        search: debouncedSearch,
+    });
+
+    const services = servicesResponse?.data?.content || [];
 
     const handleAdd = () => {
         if (selectedService) {
             handleAddService(selectedService);
             setSelectedService(null);
+            setSearchValue("");
         }
     };
 
@@ -48,10 +51,7 @@ export default function SaleServiceSelector({
     const formatPrice = (price?: number | null): string =>
         (price ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-    const renderOption = (
-        props: React.HTMLAttributes<HTMLLIElement>,
-        service: OpticalService
-    ) => (
+    const renderOption = (props: React.HTMLAttributes<HTMLLIElement>, service: OpticalService) => (
         <li {...props}>
             <Box sx={{ width: "100%" }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -60,25 +60,14 @@ export default function SaleServiceSelector({
                     </Typography>
                     <Chip label={formatPrice(service.price)} size="small" color="primary" variant="outlined" />
                 </Box>
-
                 {service.description && (
-                    <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: "block", mt: 0.5 }}
-                    >
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                         {service.description}
                     </Typography>
                 )}
             </Box>
         </li>
     );
-
-    const getOptionLabel = (service: OpticalService): string => {
-        const name = service.name || "Serviço sem nome";
-        const price = formatPrice(service.price);
-        return `${name} - ${price}`;
-    };
 
     return (
         <Box>
@@ -91,10 +80,12 @@ export default function SaleServiceSelector({
                 <Stack direction="row" spacing={2} alignItems="flex-start">
                     <Autocomplete
                         sx={{ flexGrow: 1 }}
-                        options={services || []}
-                        getOptionLabel={getOptionLabel}
+                        options={services}
+                        getOptionLabel={(s) => `${s.name || "Serviço sem nome"} - ${formatPrice(s.price)}`}
                         loading={isLoading}
                         value={selectedService}
+                        inputValue={searchValue}
+                        onInputChange={(_, value) => setSearchValue(value)}
                         onChange={(_, newValue) => setSelectedService(newValue)}
                         onKeyPress={handleKeyPress}
                         disabled={disabled}
@@ -131,41 +122,29 @@ export default function SaleServiceSelector({
                 </Stack>
             </Paper>
 
+            {/* Preview do serviço selecionado */}
             {selectedService && (
                 <Paper variant="outlined" sx={{ p: 2, bgcolor: "action.hover" }}>
-                    <Typography
-                        variant="subtitle2"
-                        sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
-                    >
+                    <Typography variant="subtitle2" sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}>
                         <Settings size={16} />
                         Serviço Selecionado
                     </Typography>
-
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={3}>
                         <Stack spacing={1} sx={{ flex: 1 }}>
                             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                                <Typography variant="body2" fontWeight="medium">
-                                    Nome:
-                                </Typography>
+                                <Typography variant="body2" fontWeight="medium">Nome:</Typography>
                                 <Typography variant="body2">{selectedService.name}</Typography>
                             </Box>
                             {selectedService.description && (
                                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                                    <Typography variant="body2" fontWeight="medium">
-                                        Descrição:
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {selectedService.description}
-                                    </Typography>
+                                    <Typography variant="body2" fontWeight="medium">Descrição:</Typography>
+                                    <Typography variant="body2" color="text.secondary">{selectedService.description}</Typography>
                                 </Box>
                             )}
                         </Stack>
-
                         <Stack spacing={1} sx={{ flex: 1 }}>
                             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                                <Typography variant="body2" fontWeight="medium">
-                                    Preço:
-                                </Typography>
+                                <Typography variant="body2" fontWeight="medium">Preço:</Typography>
                                 <Typography variant="body2" fontWeight="bold" color="primary.main">
                                     {formatPrice(selectedService.price)}
                                 </Typography>
