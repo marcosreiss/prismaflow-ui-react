@@ -120,8 +120,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
     // ======= Rascunho =======
     const handleSaveDraft = useCallback(() => {
         const data = methods.getValues();
-        const sanitized = buildSalePayload(data);
-        saveDraft(sanitized);
+        saveDraft(data);
     }, [methods, saveDraft]);
 
     const handleClearDraft = useCallback(() => {
