@@ -3,12 +3,13 @@ import { useState, useMemo, useEffect, type SyntheticEvent } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import {
     Box, Typography, Autocomplete, TextField, Button,
-    Stack, CircularProgress,
+    Stack, CircularProgress, Collapse, Paper, IconButton, Tooltip,
 } from "@mui/material";
-import { User, Plus, XCircle } from "lucide-react";
+import { User, Plus, XCircle, Eye } from "lucide-react";
 import dayjs from "dayjs";
 
 import PrescriptionModal from "@/modules/clients/components/prescriptionModal/PrescriptionModal";
+import PrescriptionPreview from "@/modules/sales/components/salesForm/PrescriptionPreview";
 import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import { useGetClients } from "@/modules/clients/hooks/useClient";
@@ -24,27 +25,23 @@ export default function ClientStep() {
 
     const [searchValue, setSearchValue] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
-
-    // hidrata cliente diretamente no estado inicial — sem useEffect
     const [selectedClient, setSelectedClient] = useState<ClientSelectItem | null>(
-        // hidrata diretamente no estado inicial — sem useEffect
         existingSale?.client
             ? { id: existingSale.client.id, name: existingSale.client.name || "" }
             : null
     );
     const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionOption | null>(null);
+    const [previewPrescription, setPreviewPrescription] = useState<PrescriptionOption | null>(null);
+    const [showPreview, setShowPreview] = useState(false);
     const [openPrescriptionModal, setOpenPrescriptionModal] = useState(false);
 
-    // debounce da busca de clientes
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(searchValue), 500);
         return () => clearTimeout(t);
     }, [searchValue]);
 
     const { data: clientData, isFetching: isLoadingClients } = useGetClients({
-        page: 1,
-        limit: 50,
-        search: debouncedSearch,
+        page: 1, limit: 50, search: debouncedSearch,
     });
     const clientOptions = useMemo(() => clientData?.data?.content || [], [clientData]);
 
@@ -60,21 +57,24 @@ export default function ClientStep() {
             label: `${p.doctorName || "Médico não informado"} - ${dayjs(p.prescriptionDate).format("DD/MM/YYYY")}`,
         })) || [];
 
-    // hidrata receita quando as opções carregarem (modo edição)
+    // hidrata receita no modo edição
     useEffect(() => {
         if (!existingSale?.prescriptionId || !prescriptionsData?.data?.content) return;
         const found = prescriptionsData.data.content.find(
             (p) => p.id === existingSale.prescriptionId
         );
         if (found) {
-            setSelectedPrescription({
+            const option = {
                 ...found,
                 label: `${found.doctorName || "Médico não informado"} - ${dayjs(found.prescriptionDate).format("DD/MM/YYYY")}`,
-            });
+            };
+            setSelectedPrescription(option);
+            setPreviewPrescription(option);
+            setShowPreview(false);
         }
     }, [existingSale?.prescriptionId, prescriptionsData]);
 
-    // mantém selectedClient sincronizado com o valor do form ao voltar de outro step
+    // sincroniza cliente ao voltar de outro step
     useEffect(() => {
         if (selectedClient) return;
         const formClientId = control._formValues?.clientId;
@@ -90,21 +90,26 @@ export default function ClientStep() {
     ) => {
         setSelectedClient(newClient);
         setSelectedPrescription(null);
+        setPreviewPrescription(null);
+        setShowPreview(false);
         onChangeFormClientId(newClient?.id ?? null);
         setValue("prescriptionId", null);
     };
 
     const handlePrescriptionChange = (_: SyntheticEvent, newPrescription: PrescriptionOption | null) => {
         setSelectedPrescription(newPrescription);
+        setPreviewPrescription(newPrescription);
+        setShowPreview(false);
         setValue("prescriptionId", newPrescription?.id ?? null);
     };
 
     const handleClearPrescription = () => {
         setSelectedPrescription(null);
+        setPreviewPrescription(null);
+        setShowPreview(false);
         setValue("prescriptionId", null);
     };
 
-    // texto do autocomplete de cliente baseado no estado da busca
     const clientNoOptionsText = isLoadingClients
         ? "Buscando..."
         : debouncedSearch.trim().length === 0
@@ -167,9 +172,7 @@ export default function ClientStep() {
                                     ...params.InputProps,
                                     endAdornment: (
                                         <>
-                                            {isLoadingClients
-                                                ? <CircularProgress color="inherit" size={20} />
-                                                : null}
+                                            {isLoadingClients ? <CircularProgress color="inherit" size={20} /> : null}
                                             {params.InputProps.endAdornment}
                                         </>
                                     ),
@@ -189,10 +192,20 @@ export default function ClientStep() {
                         </Typography>
                         <Stack direction="row" spacing={1}>
                             {selectedPrescription && (
-                                <Button size="small" color="error" variant="outlined"
-                                    startIcon={<XCircle size={16} />} onClick={handleClearPrescription}>
-                                    Limpar
-                                </Button>
+                                <>
+                                    <Tooltip title={showPreview ? "Ocultar receita" : "Visualizar receita"}>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setShowPreview((prev) => !prev)}
+                                        >
+                                            <Eye size={16} />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Button size="small" color="error" variant="outlined"
+                                        startIcon={<XCircle size={16} />} onClick={handleClearPrescription}>
+                                        Limpar
+                                    </Button>
+                                </>
                             )}
                             <Button size="small" variant="contained"
                                 startIcon={<Plus size={16} />} onClick={() => setOpenPrescriptionModal(true)}>
@@ -201,6 +214,7 @@ export default function ClientStep() {
                         </Stack>
                     </Stack>
 
+                    {/* Select de receita com renderOption para preview inline no dropdown */}
                     <Autocomplete<PrescriptionOption>
                         fullWidth
                         options={prescriptionOptions}
@@ -210,6 +224,24 @@ export default function ClientStep() {
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                         noOptionsText="Nenhuma receita encontrada para este cliente."
                         freeSolo={false}
+                        renderOption={(props, option) => (
+                            <li {...props} key={option.id}>
+                                <Box sx={{ width: "100%", py: 0.5 }}>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                        <Typography variant="body2" fontWeight={500}>
+                                            {option.doctorName || "Médico não informado"}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {dayjs(option.prescriptionDate).format("DD/MM/YYYY")}
+                                        </Typography>
+                                    </Stack>
+                                    {/* preview compacto no dropdown */}
+                                    <Box sx={{ mt: 0.5 }}>
+                                        <PrescriptionPreview prescription={option} />
+                                    </Box>
+                                </Box>
+                            </li>
+                        )}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -220,6 +252,15 @@ export default function ClientStep() {
                             />
                         )}
                     />
+
+                    {/* Preview expandido da receita selecionada */}
+                    <Collapse in={showPreview} timeout="auto" unmountOnExit>
+                        {previewPrescription && (
+                            <Paper variant="outlined" sx={{ p: 2, mt: 1.5, borderRadius: 2 }}>
+                                <PrescriptionPreview prescription={previewPrescription} />
+                            </Paper>
+                        )}
+                    </Collapse>
                 </Box>
             )}
 
@@ -236,6 +277,7 @@ export default function ClientStep() {
                         label: `${p.doctorName || "Médico não informado"} - ${dayjs(p.prescriptionDate).format("DD/MM/YYYY")}`,
                     };
                     setSelectedPrescription(newOption);
+                    setPreviewPrescription(newOption);
                     setValue("prescriptionId", p.id);
                     setOpenPrescriptionModal(false);
                 }}
