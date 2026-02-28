@@ -30,7 +30,7 @@ export default function ProductsStep({ isLoading }: ProductsStepProps) {
     }, []);
 
     return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 3, pb: 2, minHeight: "80vh" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1, pb: 2 }}>
             {/* Produtos */}
             <Paper
                 variant="outlined"

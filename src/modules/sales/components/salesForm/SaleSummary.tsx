@@ -25,7 +25,7 @@ export default function SaleSummary() {
     const prescription = prescriptionResponse?.data ?? null;
 
     return (
-        <Paper variant="outlined" sx={{ p: 2, position: "sticky", top: 80 }}>
+        <Paper variant="outlined" sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
                 Resumo da Venda
             </Typography>
