@@ -1,12 +1,10 @@
+// Página de entrada do fluxo de criação/edição de venda
 import { useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography, Alert } from "@mui/material";
 import { useGetSaleById } from "@/modules/sales/hooks/useSales";
 import SaleFormManager from "@/modules/sales/components/salesForm/SaleFormManager";
-import SaleFormProvider from "@/modules/sales/context/SaleFormProvider";
+import { SaleFormProvider } from "@/modules/sales/context/SaleFormContext";
 
-// ==============================
-// 🔹 Página principal de criação/edição de venda
-// ==============================
 export default function CreateSalePage() {
     const { id } = useParams<{ id: string }>();
     const isEditMode = Boolean(id);
@@ -19,33 +17,17 @@ export default function CreateSalePage() {
     // Estados de carregamento e erro
     if (isEditMode && isLoading) {
         return (
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                minHeight="60vh"
-            >
+            <Box display="flex" alignItems="center" justifyContent="center" minHeight="60vh">
                 <CircularProgress />
-                <Typography sx={{ ml: 2 }}>
-                    Carregando dados da venda...
-                </Typography>
+                <Typography sx={{ ml: 2 }}>Carregando dados da venda...</Typography>
             </Box>
         );
     }
 
     if (isEditMode && isError) {
         return (
-            <Box
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                justifyContent="center"
-                minHeight="60vh"
-                gap={2}
-            >
-                <Alert severity="error">
-                    Ocorreu um erro ao carregar os dados da venda.
-                </Alert>
+            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="60vh" gap={2}>
+                <Alert severity="error">Ocorreu um erro ao carregar os dados da venda.</Alert>
             </Box>
         );
     }
@@ -53,13 +35,9 @@ export default function CreateSalePage() {
     // Venda carregada (modo edição)
     const existingSale = saleResponse?.data ?? null;
 
-    // Envolve toda a tela com o contexto global
     return (
         <Box sx={{ py: 3 }}>
-            <SaleFormProvider
-                mode={isEditMode ? "edit" : "create"}
-                existingSale={existingSale}
-            >
+            <SaleFormProvider mode={isEditMode ? "edit" : "create"} existingSale={existingSale}>
                 <SaleFormManager />
             </SaleFormProvider>
         </Box>

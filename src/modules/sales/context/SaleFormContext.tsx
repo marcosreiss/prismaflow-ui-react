@@ -6,11 +6,11 @@ import { useStockValidation } from "./useStockValidation";
 import { useSaleDraft } from "./useSaleDraft";
 import { useNotification } from "@/context/NotificationContext";
 import type { SalePayload, Sale } from "../types/salesTypes";
-import { sanitizeSaleData, mapSaleToPayload } from "../utils/salePayloadMapper";
 import { canSubmitSale } from "../utils/saleValidators";
 import { useCreateSale, useUpdateSale } from "../hooks/useSales";
 import type { Product } from "@/modules/products/types/productTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
+import { buildSalePayload } from "../utils/salePayloadMapper";
 
 interface SaleFormContextValue {
     mode: "create" | "edit";
@@ -120,7 +120,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
     // ======= Rascunho =======
     const handleSaveDraft = useCallback(() => {
         const data = methods.getValues();
-        const sanitized = sanitizeSaleData(data);
+        const sanitized = buildSalePayload(data);
         saveDraft(sanitized);
     }, [methods, saveDraft]);
 
@@ -149,8 +149,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
                 return;
             }
 
-            const sanitizedData = sanitizeSaleData(data);
-            const payload = mapSaleToPayload(sanitizedData);
+            const payload = buildSalePayload(data);
 
             try {
                 if (isEditMode && existingSale?.id) {
