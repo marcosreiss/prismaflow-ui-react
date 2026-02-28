@@ -51,11 +51,6 @@ export default function BrandsPage() {
     const columns: ColumnDef<Brand>[] = [
         { key: "id", label: "ID", width: 80 },
         { key: "name", label: "Nome" },
-        {
-            key: "createdBy",
-            label: "Criado por",
-            render: (row) => row.createdBy?.name ?? "-",
-        },
     ];
 
     // ==========================
