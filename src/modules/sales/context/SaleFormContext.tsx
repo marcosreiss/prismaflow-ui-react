@@ -137,6 +137,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
             }
 
             // revalidar estoque
+            // Revalidação de estoque no submit — apenas via API
             const allValid = await Promise.all(
                 (data.productItems ?? []).map((p) =>
                     validateStock(p.productId ?? p.product?.id, p.quantity ?? 1)

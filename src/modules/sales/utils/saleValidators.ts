@@ -1,112 +1,67 @@
+// Validações do formulário de venda por step e para o submit final
 import type {
   FrameDetails,
   Sale,
   SaleProductItem,
 } from "@/modules/sales/types/salesTypes";
 import type { Product } from "@/modules/products/types/productTypes";
-type ValidatorOptions = { isEditMode?: boolean };
-/**
- * Validações para o formulário de venda
- */
 
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
 }
 
-/**
- * Validação principal do formulário por etapa
- */
+// Validação principal por step
 export const validateSaleForm = (
   data: Sale,
   step: number,
-  options?: ValidatorOptions,
 ): ValidationResult => {
   const errors: string[] = [];
 
   switch (step) {
-    case 0: // Cliente
-      if (!data.clientId) {
-        errors.push("Por favor, selecione um cliente.");
-      }
-      // ✅ ADICIONAR validação de data
-      if (!data.saleDate) {
-        errors.push("Data da venda é obrigatória.");
-      }
+    case 0:
+      if (!data.clientId) errors.push("Por favor, selecione um cliente.");
+      if (!data.saleDate) errors.push("Data da venda é obrigatória.");
       break;
 
-    case 1: // Produtos
+    case 1:
       if (!data.productItems || data.productItems.length === 0) {
         errors.push("Por favor, adicione pelo menos um produto.");
       } else {
-        // Validações específicas dos produtos
-        const productErrors = validateProductItems(data.productItems, options);
-        errors.push(...productErrors);
+        errors.push(...validateProductItems(data.productItems));
       }
       break;
 
-    case 3: // Revisão
-      {
-        const reviewErrors = validateReview(data);
-        errors.push(...reviewErrors);
-      }
+    case 3:
+      errors.push(...validateReview(data));
       break;
   }
 
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  return { isValid: errors.length === 0, errors };
 };
 
-/**
- * Validações específicas dos itens de produto
- */
+// Validação dos itens de produto — apenas quantidade e existência do produto
 export const validateProductItems = (
   productItems: Sale["productItems"],
-  options?: ValidatorOptions,
 ): string[] => {
   const errors: string[] = [];
 
   productItems?.forEach((item: SaleProductItem) => {
-    const product = item?.product as Product;
     const quantity = Number(item?.quantity || 0);
 
-    if (!product) return;
+    if (!item?.product) return;
 
-    // regras básicas
     if (!quantity || quantity < 1) {
       errors.push(
-        `Produto "${product.name}": quantidade deve ser pelo menos 1.`,
+        `Produto "${(item.product as Product).name}": quantidade deve ser pelo menos 1.`,
       );
-      return;
-    }
-
-    // detectar se é um item existente e inalterado (edição)
-    const unchanged =
-      !!options?.isEditMode &&
-      !!item?.id && // id do item da venda (não do produto)
-      item?._original &&
-      Number(item?._original?.quantity) === quantity &&
-      String(item?._original?.productId) === String(product?.id);
-
-    if (!unchanged) {
-      const available = Number((product as Product)?.stockQuantity ?? 0);
-      if (available < quantity) {
-        errors.push(
-          `Produto "${product.name}": estoque insuficiente. Disponível: ${available}, Solicitado: ${quantity}.`,
-        );
-      }
     }
   });
 
   return errors;
 };
 
-/**
- * Validações dos detalhes da armação
- */
-// Adicione esta validação específica:
+// Validação dos detalhes da armação
 export const validateFrameDetails = (
   frameDetails: FrameDetails,
   productName: string,
@@ -119,11 +74,9 @@ export const validateFrameDetails = (
     );
     return errors;
   }
-
   if (!frameDetails.material) {
     errors.push(`Armação "${productName}": tipo de material é obrigatório.`);
   }
-
   if (!frameDetails.color) {
     errors.push(`Armação "${productName}": cor é obrigatória.`);
   }
@@ -131,85 +84,49 @@ export const validateFrameDetails = (
   return errors;
 };
 
-/**
- * Validações finais da revisão
- */
+// Validação dos campos financeiros na revisão
 export const validateReview = (data: Sale): string[] => {
   const errors: string[] = [];
 
-  // Validação de valores financeiros
-  if (data.subtotal < 0) {
-    errors.push("Subtotal não pode ser negativo.");
-  }
-
-  if (data.discount < 0) {
-    errors.push("Desconto não pode ser negativo.");
-  }
-
-  if (data.discount > data.subtotal) {
+  if (data.subtotal < 0) errors.push("Subtotal não pode ser negativo.");
+  if (data.discount < 0) errors.push("Desconto não pode ser negativo.");
+  if (data.discount > data.subtotal)
     errors.push("Desconto não pode ser maior que o subtotal.");
-  }
+  if (data.total < 0) errors.push("Total não pode ser negativo.");
 
-  if (data.total < 0) {
-    errors.push("Total não pode ser negativo.");
-  }
-
-  // Validação de consistência dos cálculos
   const expectedTotal = data.subtotal - data.discount;
   if (Math.abs(data.total - expectedTotal) > 0.01) {
-    // Permite pequena diferença de arredondamento
     errors.push("Inconsistência nos cálculos financeiros.");
   }
 
   return errors;
 };
 
-/**
- * Validação rápida para habilitar/desabilitar botões
- */
+// Habilitar/desabilitar avanço de step
 export const canProceedToNextStep = (
   data: Sale,
   currentStep: number,
-): boolean => {
-  const validation = validateSaleForm(data, currentStep);
-  return validation.isValid;
-};
+): boolean => validateSaleForm(data, currentStep).isValid;
 
-/**
- * Validação para submit final
- */
+// Validação completa para o submit
 export const canSubmitSale = (data: Sale): ValidationResult => {
   const errors: string[] = [];
 
-  const isEditMode = Boolean(data?.id); // venda existente => edição
-
   for (let step = 0; step < 4; step++) {
-    const stepValidation = validateSaleForm(data, step, { isEditMode });
-    errors.push(...stepValidation.errors);
+    errors.push(...validateSaleForm(data, step).errors);
   }
 
   return { isValid: errors.length === 0, errors };
 };
 
-/**
- * Validação de produto individual antes de adicionar
- */
+// Validação de produto individual antes de adicionar
 export const validateProductBeforeAdd = (
-  product: Product,
+  _product: Product,
   quantity: number = 1,
 ): ValidationResult => {
   const errors: string[] = [];
 
-  if (product.stockQuantity < quantity) {
-    errors.push(`Estoque insuficiente. Disponível: ${product.stockQuantity}`);
-  }
+  if (quantity < 1) errors.push("Quantidade deve ser pelo menos 1.");
 
-  if (quantity < 1) {
-    errors.push("Quantidade deve ser pelo menos 1.");
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  return { isValid: errors.length === 0, errors };
 };
