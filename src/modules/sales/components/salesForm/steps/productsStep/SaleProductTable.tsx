@@ -1,35 +1,22 @@
+// Tabela de produtos adicionados à venda
 import { useState } from "react";
 import React from "react";
+import { useFormContext, useFieldArray, Controller } from "react-hook-form";
 import {
-    useFormContext,
-    useFieldArray,
-    Controller,
-} from "react-hook-form";
-import {
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    IconButton,
-    TextField,
-    Typography,
-    Collapse,
+    Paper, Table, TableBody, TableCell, TableContainer,
+    TableHead, TableRow, IconButton, TextField, Typography, Collapse,
 } from "@mui/material";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import type { SalePayload, SaleProductItem } from "@/modules/sales/types/salesTypes";
+import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
 import FrameDetailsForm from "./FrameDetailsForm";
 
 export default function SaleProductTable() {
     const { control } = useFormContext<SalePayload>();
+    const { handleRemoveProduct } = useSaleFormContext();
     const [expandedRows, setExpandedRows] = useState<number[]>([]);
 
-    const { fields, remove } = useFieldArray({
-        control,
-        name: "productItems",
-    });
+    const { fields } = useFieldArray({ control, name: "productItems" });
 
     const toggleRowExpansion = (index: number) => {
         setExpandedRows((prev) =>
@@ -52,20 +39,12 @@ export default function SaleProductTable() {
             <Table size="small">
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{ width: 40 }}></TableCell>
+                        <TableCell sx={{ width: 40 }} />
                         <TableCell>Produto</TableCell>
-                        <TableCell align="center" sx={{ width: 120 }}>
-                            Quantidade
-                        </TableCell>
-                        <TableCell align="right" sx={{ width: 130 }}>
-                            Preço Unit.
-                        </TableCell>
-                        <TableCell align="right" sx={{ width: 130 }}>
-                            Subtotal
-                        </TableCell>
-                        <TableCell align="center" sx={{ width: 80 }}>
-                            Ações
-                        </TableCell>
+                        <TableCell align="center" sx={{ width: 120 }}>Quantidade</TableCell>
+                        <TableCell align="right" sx={{ width: 130 }}>Preço Unit.</TableCell>
+                        <TableCell align="right" sx={{ width: 130 }}>Subtotal</TableCell>
+                        <TableCell align="center" sx={{ width: 80 }}>Ações</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -74,7 +53,6 @@ export default function SaleProductTable() {
                         const product = productItem.product;
                         const quantity = productItem.quantity ?? 0;
                         const unitPrice = product?.salePrice ?? 0;
-                        const subtotal = quantity * unitPrice;
                         const isExpanded = expandedRows.includes(index);
                         const hasFrameDetails = product?.category === "FRAME";
 
@@ -117,10 +95,7 @@ export default function SaleProductTable() {
                                                     helperText={error?.message}
                                                     sx={{
                                                         width: 80,
-                                                        "& .MuiInputBase-input": {
-                                                            textAlign: "center",
-                                                            padding: "8px 6px",
-                                                        },
+                                                        "& .MuiInputBase-input": { textAlign: "center", padding: "8px 6px" },
                                                     }}
                                                     inputProps={{ min: 1, step: 1 }}
                                                     onChange={(e) => {
@@ -134,24 +109,19 @@ export default function SaleProductTable() {
 
                                     <TableCell align="right">
                                         <Typography variant="body2" fontWeight="medium">
-                                            {unitPrice.toLocaleString("pt-BR", {
-                                                style: "currency",
-                                                currency: "BRL",
-                                            })}
+                                            {unitPrice.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                                         </Typography>
                                     </TableCell>
 
                                     <TableCell align="right">
                                         <Typography variant="body2" fontWeight="medium" color="primary">
-                                            {subtotal.toLocaleString("pt-BR", {
-                                                style: "currency",
-                                                currency: "BRL",
-                                            })}
+                                            {(quantity * unitPrice).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                                         </Typography>
                                     </TableCell>
 
                                     <TableCell align="center">
-                                        <IconButton size="small" onClick={() => remove(index)} color="error">
+                                        {/* remove via contexto para garantir limpeza do protocol */}
+                                        <IconButton size="small" color="error" onClick={() => handleRemoveProduct(index)}>
                                             <Trash2 size={18} />
                                         </IconButton>
                                     </TableCell>
