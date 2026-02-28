@@ -5,7 +5,7 @@ import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 
 import ProductDrawer from "./components/ProductDrawer";
 import { useProductPageController } from "./hooks/useProductPageController";
-import type { Product } from "./types/productTypes";
+import { ProductCategoryLabels, type Product } from "./types/productTypes";
 
 // ==============================
 // 🔹 Página principal de produtos
@@ -52,13 +52,18 @@ export default function ProductsPage() {
         handleDrawerCreateNew,
     } = controller;
 
+
     // ==============================
     // 🔹 Colunas da tabela
     // ==============================
     const columns: ColumnDef<Product>[] = [
         { key: "id", label: "ID", width: 80 },
         { key: "name", label: "Nome" },
-        { key: "category", label: "Categoria" },
+        {
+            key: "category",
+            label: "Categoria",
+            render: (row) => ProductCategoryLabels[row.category] ?? row.category,
+        },
         {
             key: "salePrice",
             label: "Preço de venda",
