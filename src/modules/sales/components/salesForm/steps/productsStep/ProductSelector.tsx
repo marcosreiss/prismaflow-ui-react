@@ -1,5 +1,5 @@
-// Seletor de produtos com busca paginada e filtro por categoria
 import { useState, useEffect, forwardRef } from "react";
+import { useFormContext } from "react-hook-form";
 import type { Product, ProductCategory } from "@/modules/products/types/productTypes";
 import { ProductCategoryLabels } from "@/modules/products/types/productTypes";
 import {
@@ -10,6 +10,7 @@ import {
 import { Plus, Package } from "lucide-react";
 import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
 import { useGetProducts } from "@/modules/products/hooks/useProduct";
+import type { SalePayload } from "@/modules/sales/types/salesTypes";
 
 const shake = keyframes`
   0%, 100% { transform: translateX(0); }
@@ -24,6 +25,13 @@ interface ProductSelectorProps {
 const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
     ({ disabled = false }, ref) => {
         const { handleAddProduct } = useSaleFormContext();
+        const { watch } = useFormContext<SalePayload>();
+
+        // ids dos produtos já adicionados — para excluir das options
+        const productItems = watch("productItems") ?? [];
+        const addedProductIds = new Set(
+            productItems.map((item) => item.productId ?? item.product?.id)
+        );
 
         const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
         const [quantity, setQuantity] = useState<string>("1");
@@ -32,7 +40,6 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
         const [debouncedSearch, setDebouncedSearch] = useState("");
         const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "ALL">("ALL");
 
-        // debounce da busca
         useEffect(() => {
             const t = setTimeout(() => setDebouncedSearch(searchValue), 400);
             return () => clearTimeout(t);
@@ -45,7 +52,12 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
             category: selectedCategory !== "ALL" ? selectedCategory : undefined,
         });
 
-        const products = productsResponse?.data?.content || [];
+        const products = isLoading
+            ? []
+            : (productsResponse?.data?.content || []).filter(
+                (p) => !addedProductIds.has(p.id)
+            );
+
 
         const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const value = e.target.value;
