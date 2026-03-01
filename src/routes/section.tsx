@@ -7,7 +7,7 @@ import BlankLayout from '../layout/blanckLayout';
 import DashboardLayout from '../layout/dashboardLayout';
 
 const SignInPage = lazy(() => import('@/modules/auth/pages/LoginPage'));
-const DashboardPage = lazy(() => import('@/modules/home/HomePage'));
+const HomePage = lazy(() => import('@/modules/home/HomePage'));
 const BrandPage = lazy(() => import('@/modules/brands/BrandsPage'));
 const ProductPage = lazy(() => import('@/modules/products/ProductsPage'));
 const OpticalServicePage = lazy(() => import('@/modules/opticalservices/OpticalServicesPage'));
@@ -23,6 +23,8 @@ const SalesDetailsPage = lazy(() => import('@/modules/sales/pages/salesDetailsPa
 const PaymentPage = lazy(() => import('@/modules/payments/pages/PaymentsPage'));
 // const OverdueInstallmentsPage = lazy(() => import('@/modules/payments/pages/OverdueInstallmentsPage')); 
 const ExpensesPage = lazy(() => import('@/modules/expenses/ExpensesPage'));
+
+const DashboardPage = lazy(() => import('@/modules/dashboard/DashboardPage'));
 
 const renderFallback = (
     <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -49,7 +51,7 @@ export function PrivateRouter() {
                 </DashboardLayout>
             ),
             children: [
-                { index: true, element: <DashboardPage /> },
+                { index: true, element: <HomePage /> },
                 { path: 'brands', element: <BrandPage /> },
                 { path: 'products', element: <ProductPage /> },
                 { path: 'services', element: <OpticalServicePage /> },
@@ -66,6 +68,8 @@ export function PrivateRouter() {
                 { path: 'payments', element: <PaymentPage /> },
                 { path: 'expenses', element: <ExpensesPage /> },
                 // { path: 'overdue-installments', element: <OverdueInstallmentsPage /> }, 
+
+                {path: "dashboard", element: <DashboardPage />}
             ],
         },
         { path: '*', element: <Navigate to="/" replace /> },

@@ -47,5 +47,6 @@ export const navData: NavItem[] = [
     title: "Despesas",
     path: "/expenses",
     icon: "FileText",
-  }
+  },
+  { title: "Balanço", path: "/dashboard", icon: "BarChart2" },
 ];
