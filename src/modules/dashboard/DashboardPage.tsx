@@ -7,7 +7,6 @@ export default function DashboardPage() {
     const {
         filters,
         handleFilterChange,
-        handleClearFilters,
         balance,
         salesSummary,
         overdueCount,
@@ -28,7 +27,6 @@ export default function DashboardPage() {
             <DashboardFiltersBar
                 filters={filters}
                 onChange={handleFilterChange}
-                onClear={handleClearFilters}
             />
 
             {/* Métricas principais */}

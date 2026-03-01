@@ -32,10 +32,6 @@ export function useDashboardController() {
     [],
   );
 
-  const handleClearFilters = useCallback(() => {
-    setFilters(getCurrentMonthRange());
-  }, []);
-
   const { data: balanceData, isLoading: loadingBalance } =
     useGetBalance(filters);
   const { data: salesSummaryData, isLoading: loadingSales } =
@@ -77,7 +73,6 @@ export function useDashboardController() {
   return {
     filters,
     handleFilterChange,
-    handleClearFilters,
 
     balance,
     salesSummary,
