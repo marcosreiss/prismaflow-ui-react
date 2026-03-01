@@ -1,16 +1,16 @@
 // src/modules/dashboard/DashboardPage.tsx
 import { Box, Typography } from "@mui/material";
-import DashboardHeader from "@/modules/dashboard/components/DashboardHeader";
-import DashboardTodayCards from "@/modules/dashboard/components/DashboardTodayCards";
+import HomeHeader from "@/modules/home/components/HomeHeader";
+import TodayCards from "@/modules/home/components/HomeTodayCards";
 import {
-    DashboardMainActions,
-    DashboardCadastros,
-} from "@/modules/dashboard/components/DashboardQuickLinks";
+    HomeCadastros,
+    HomeMainActions,
+} from "@/modules/home/components/HomeQuickLinks";
 
-export default function DashboardPage() {
+export default function HomePage() {
     return (
         <Box id="dashboardpage">
-            <DashboardHeader />
+            <HomeHeader />
 
             {/* Hoje */}
             <Box sx={{ mb: 3 }}>
@@ -20,7 +20,7 @@ export default function DashboardPage() {
                 >
                     Hoje
                 </Typography>
-                <DashboardTodayCards />
+                <TodayCards />
             </Box>
 
             {/* Operação */}
@@ -31,7 +31,7 @@ export default function DashboardPage() {
                 >
                     Operação
                 </Typography>
-                <DashboardMainActions />
+                <HomeMainActions />
             </Box>
 
             {/* Cadastros */}
@@ -42,7 +42,7 @@ export default function DashboardPage() {
                 >
                     Cadastros
                 </Typography>
-                <DashboardCadastros />
+                <HomeCadastros />
             </Box>
         </Box>
     );

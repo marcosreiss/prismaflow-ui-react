@@ -152,7 +152,7 @@ function QuickCard({ item }: { item: QuickLink }) {
     );
 }
 
-export function DashboardMainActions() {
+export function HomeMainActions() {
     return (
         <Box
             sx={{
@@ -172,7 +172,7 @@ export function DashboardMainActions() {
     );
 }
 
-export function DashboardCadastros() {
+export function HomeCadastros() {
     return (
         <Box
             sx={{

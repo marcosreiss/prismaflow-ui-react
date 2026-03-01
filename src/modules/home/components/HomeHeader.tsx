@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Button, Typography } from "@mui/material";
 import { Home, Plus } from "lucide-react";
 
-export default function DashboardHeader() {
+export default function HomeHeader() {
     const navigate = useNavigate();
 
     return (

@@ -14,7 +14,7 @@ function formatToday(): string {
     return d.toISOString().substring(0, 10); // [web:28]
 }
 
-export default function DashboardTodayCards() {
+export default function HomeTodayCards() {
     const navigate = useNavigate();
     const today = useMemo(() => formatToday(), []);
 

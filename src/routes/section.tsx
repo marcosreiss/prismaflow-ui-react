@@ -7,7 +7,7 @@ import BlankLayout from '../layout/blanckLayout';
 import DashboardLayout from '../layout/dashboardLayout';
 
 const SignInPage = lazy(() => import('@/modules/auth/pages/LoginPage'));
-const DashboardPage = lazy(() => import('@/modules/dashboard/DashboardPage'));
+const DashboardPage = lazy(() => import('@/modules/home/HomePage'));
 const BrandPage = lazy(() => import('@/modules/brands/BrandsPage'));
 const ProductPage = lazy(() => import('@/modules/products/ProductsPage'));
 const OpticalServicePage = lazy(() => import('@/modules/opticalservices/OpticalServicesPage'));
