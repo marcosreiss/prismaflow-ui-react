@@ -143,41 +143,37 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
                                     </Select>
                                 </FormControl>
 
-                                {/* ← adicionar bloco abaixo */}
-                                <FormControl size="small" sx={{ minWidth: 180, height: 48 }}>
-                                    <InputLabel>Marca</InputLabel>
-                                    <Autocomplete
-                                        options={brands}
-                                        getOptionLabel={(b) => b.name}
-                                        loading={isBrandLoading}
-                                        loadingText="Buscando marcas..."
-                                        noOptionsText={debouncedBrandSearch.trim() === "" ? "Digite para buscar." : "Nenhuma marca encontrada."}
-                                        filterOptions={(x) => x}
-                                        value={selectedBrand}
-                                        inputValue={brandSearch}
-                                        onInputChange={(_, value) => setBrandSearch(value)}
-                                        onChange={(_, newValue) => setSelectedBrand(newValue)}
-                                        disabled={disabled}
-                                        sx={{ minWidth: 180 }}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                label="Marca"
-                                                placeholder="Digite a marca..."
-                                                size="small"
-                                                InputProps={{
-                                                    ...params.InputProps,
-                                                    endAdornment: (
-                                                        <>
-                                                            {isBrandLoading ? <CircularProgress color="inherit" size={18} /> : null}
-                                                            {params.InputProps.endAdornment}
-                                                        </>
-                                                    ),
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                </FormControl>
+                                <Autocomplete
+                                    options={brands}
+                                    getOptionLabel={(b) => b.name}
+                                    loading={isBrandLoading}
+                                    loadingText="Buscando marcas..."
+                                    noOptionsText={debouncedBrandSearch.trim() === "" ? "Digite para buscar." : "Nenhuma marca encontrada."}
+                                    filterOptions={(x) => x}
+                                    value={selectedBrand}
+                                    inputValue={brandSearch}
+                                    onInputChange={(_, value) => setBrandSearch(value)}
+                                    onChange={(_, newValue) => setSelectedBrand(newValue)}
+                                    disabled={disabled}
+                                    sx={{ minWidth: 180 }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Marca"
+                                            placeholder="Digite a marca..."
+                                            size="small"
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {isBrandLoading ? <CircularProgress color="inherit" size={18} /> : null}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                />
                             </Stack>
                         </Box>
 
