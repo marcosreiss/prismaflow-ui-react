@@ -11,6 +11,8 @@ import { Plus, Package } from "lucide-react";
 import { useSaleFormContext } from "@/modules/sales/context/useSaleFormContext";
 import { useGetProducts } from "@/modules/products/hooks/useProduct";
 import type { SalePayload } from "@/modules/sales/types/salesTypes";
+import { useGetBrands } from "@/modules/brands/hooks/useBrand";
+
 
 const shake = keyframes`
   0%, 100% { transform: translateX(0); }
@@ -27,7 +29,6 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
         const { handleAddProduct } = useSaleFormContext();
         const { watch } = useFormContext<SalePayload>();
 
-        // ids dos produtos já adicionados — para excluir das options
         const productItems = watch("productItems") ?? [];
         const addedProductIds = new Set(
             productItems.map((item) => item.productId ?? item.product?.id)
@@ -40,16 +41,35 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
         const [debouncedSearch, setDebouncedSearch] = useState("");
         const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "ALL">("ALL");
 
+        const [selectedBrand, setSelectedBrand] = useState<{ id: number; name: string } | null>(null);
+        const [brandSearch, setBrandSearch] = useState("");
+        const [debouncedBrandSearch, setDebouncedBrandSearch] = useState("");
+
+
         useEffect(() => {
             const t = setTimeout(() => setDebouncedSearch(searchValue), 400);
             return () => clearTimeout(t);
         }, [searchValue]);
+
+        useEffect(() => {
+            const t = setTimeout(() => setDebouncedBrandSearch(brandSearch), 400);
+            return () => clearTimeout(t);
+        }, [brandSearch]);
+
+        const { data: brandsResponse, isFetching: isBrandLoading } = useGetBrands({
+            page: 1,
+            limit: 50,
+            search: debouncedBrandSearch,
+        });
+
+        const brands = brandsResponse?.data?.content || [];
 
         const { data: productsResponse, isFetching: isLoading } = useGetProducts({
             page: 1,
             limit: 50,
             search: debouncedSearch,
             category: selectedCategory !== "ALL" ? selectedCategory : undefined,
+            brandId: selectedBrand?.id ?? undefined,
         });
 
         const products = isLoading
@@ -107,20 +127,58 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
                             <Typography variant="subtitle2" sx={{ mb: 1.5, color: "text.secondary", fontWeight: 500 }}>
                                 Filtros
                             </Typography>
-                            <FormControl size="small" sx={{ minWidth: 180, height: 48 }}>
-                                <InputLabel>Categoria</InputLabel>
-                                <Select
-                                    value={selectedCategory}
-                                    label="Categoria"
-                                    onChange={(e) => setSelectedCategory(e.target.value as ProductCategory | "ALL")}
-                                    sx={{ height: 48 }}
-                                >
-                                    <MenuItem value="ALL">Todas as categorias</MenuItem>
-                                    {Object.entries(ProductCategoryLabels).map(([key, label]) => (
-                                        <MenuItem key={key} value={key}>{label}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <Stack direction="row" spacing={2} flexWrap="wrap">
+                                <FormControl size="small" sx={{ minWidth: 180, height: 48 }}>
+                                    <InputLabel>Categoria</InputLabel>
+                                    <Select
+                                        value={selectedCategory}
+                                        label="Categoria"
+                                        onChange={(e) => setSelectedCategory(e.target.value as ProductCategory | "ALL")}
+                                        sx={{ height: 48 }}
+                                    >
+                                        <MenuItem value="ALL">Todas as categorias</MenuItem>
+                                        {Object.entries(ProductCategoryLabels).map(([key, label]) => (
+                                            <MenuItem key={key} value={key}>{label}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                {/* ← adicionar bloco abaixo */}
+                                <FormControl size="small" sx={{ minWidth: 180, height: 48 }}>
+                                    <InputLabel>Marca</InputLabel>
+                                    <Autocomplete
+                                        options={brands}
+                                        getOptionLabel={(b) => b.name}
+                                        loading={isBrandLoading}
+                                        loadingText="Buscando marcas..."
+                                        noOptionsText={debouncedBrandSearch.trim() === "" ? "Digite para buscar." : "Nenhuma marca encontrada."}
+                                        filterOptions={(x) => x}
+                                        value={selectedBrand}
+                                        inputValue={brandSearch}
+                                        onInputChange={(_, value) => setBrandSearch(value)}
+                                        onChange={(_, newValue) => setSelectedBrand(newValue)}
+                                        disabled={disabled}
+                                        sx={{ minWidth: 180 }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Marca"
+                                                placeholder="Digite a marca..."
+                                                size="small"
+                                                InputProps={{
+                                                    ...params.InputProps,
+                                                    endAdornment: (
+                                                        <>
+                                                            {isBrandLoading ? <CircularProgress color="inherit" size={18} /> : null}
+                                                            {params.InputProps.endAdornment}
+                                                        </>
+                                                    ),
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </FormControl>
+                            </Stack>
                         </Box>
 
                         {/* Busca e adição */}

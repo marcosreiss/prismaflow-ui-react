@@ -23,17 +23,25 @@ export const useGetProducts = ({
   limit,
   search,
   category,
+  brandId, 
 }: {
   page: number;
   limit: number;
   search?: string;
   category?: string;
+  brandId?: number; 
 }) => {
   return useQuery<ProductsResponse, AxiosError<ApiResponse<null>>>({
-    queryKey: ["products", page, limit, search, category],
+    queryKey: ["products", page, limit, search, category, brandId],
     queryFn: async () => {
       const { data } = await baseApi.get<ProductsResponse>("/api/products", {
-        params: { page, limit, search: search || "", category: category || "" },
+        params: {
+          page,
+          limit,
+          search: search || "",
+          category: category || "",
+          brandId: brandId || "", 
+        },
       });
       return data;
     },
@@ -55,7 +63,7 @@ export const useCreateProduct = () => {
     mutationFn: async (payload) => {
       const { data } = await baseApi.post<ProductResponse>(
         "/api/products",
-        payload
+        payload,
       );
       return data;
     },
@@ -83,7 +91,7 @@ export const useUpdateProduct = () => {
     mutationFn: async ({ id, data }) => {
       const res = await baseApi.put<ProductResponse>(
         `/api/products/${id}`,
-        data
+        data,
       );
       return res.data;
     },
@@ -94,7 +102,7 @@ export const useUpdateProduct = () => {
     onError: (err) => {
       console.error(
         "❌ Erro ao atualizar produto:",
-        err.response?.data?.message
+        err.response?.data?.message,
       );
     },
   });
@@ -109,7 +117,7 @@ export const useDeleteProduct = () => {
   return useMutation<ApiResponse<null>, AxiosError<ApiResponse<null>>, number>({
     mutationFn: async (id) => {
       const { data } = await baseApi.delete<ApiResponse<null>>(
-        `/api/products/${id}`
+        `/api/products/${id}`,
       );
       return data;
     },
@@ -131,7 +139,7 @@ export const useGetProductById = (id?: number) => {
     queryKey: ["product", id],
     queryFn: async () => {
       const { data } = await baseApi.get<ProductResponse>(
-        `/api/products/${id}`
+        `/api/products/${id}`,
       );
       return data;
     },
@@ -143,15 +151,12 @@ export const useGetProductById = (id?: number) => {
 // 🔹 HOOK: GET PRODUCT STOCK
 // =============================
 export const useGetProductStock = (id?: number) => {
-  return useQuery<
-    ApiResponse<ProductResponse>,
-    AxiosError<ApiResponse<null>>
-  >({
+  return useQuery<ApiResponse<ProductResponse>, AxiosError<ApiResponse<null>>>({
     queryKey: ["productStock", id],
     queryFn: async () => {
-      const { data } = await baseApi.get<
-        ApiResponse<ProductResponse>
-      >(`/api/products/${id}/stock`);
+      const { data } = await baseApi.get<ApiResponse<ProductResponse>>(
+        `/api/products/${id}/stock`,
+      );
       return data;
     },
     enabled: !!id,
