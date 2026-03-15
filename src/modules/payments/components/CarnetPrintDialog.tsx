@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { getCroppedImageDataUrl } from "../utils/cropImage";
 
-const COVER_LOGO_ASPECT = 4 / 3;
+const COVER_LOGO_ASPECT = 16 / 9;
 
 type CarnetPrintDialogProps = {
     open: boolean;
