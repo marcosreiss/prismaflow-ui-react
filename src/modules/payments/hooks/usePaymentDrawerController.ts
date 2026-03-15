@@ -106,12 +106,23 @@ export function usePaymentDrawerController({
         return;
       }
 
+      if (values.discount < 0) {
+        addNotification("Desconto não pode ser negativo.", "error");
+        return;
+      }
+
+      if (values.discount > values.total) {
+        addNotification("Desconto não pode ser maior que o valor total.", "error");
+        return;
+      }
+
+      const payableTotal = Math.max(0, values.total - values.discount);
       const methodsSum = values.methods.reduce((acc, m) => acc + m.amount, 0);
-      const diff = Math.abs(methodsSum - values.total);
+      const diff = Math.abs(methodsSum - payableTotal);
 
       if (diff > 0.01) {
         addNotification(
-          `A soma dos métodos (R$ ${methodsSum.toFixed(2)}) não corresponde ao total (R$ ${values.total.toFixed(2)}).`,
+          `A soma dos métodos (R$ ${methodsSum.toFixed(2)}) não corresponde ao total com desconto (R$ ${payableTotal.toFixed(2)}).`,
           "error",
         );
         return;
@@ -144,6 +155,7 @@ export function usePaymentDrawerController({
 
       const payload: ConfigurePaymentPayload = {
         total: values.total,
+        discount: values.discount,
         methods: values.methods.map(
           (m): PaymentMethodPayload => ({
             method: m.method,

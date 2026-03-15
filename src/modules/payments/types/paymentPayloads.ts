@@ -14,6 +14,7 @@ export type PaymentMethodPayload = {
 // PUT /payments/:id — único endpoint para configurar o pagamento após a venda
 export type ConfigurePaymentPayload = {
   total: number;
+  discount: number;
   methods: PaymentMethodPayload[];
 };
 

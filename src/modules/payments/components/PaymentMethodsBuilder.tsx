@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { Plus, Trash2 } from "lucide-react";
 import { useFieldArray, useFormContext, useWatch, Controller } from "react-hook-form";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import CurrencyInput from "@/components/imask/CurrencyInput";
 import { PaymentMethodLabels } from "../types/paymentEnums";
 import type { PaymentMethod } from "../types/paymentEnums";
@@ -26,6 +26,7 @@ export default function PaymentMethodsBuilder() {
     const {
         control,
         register,
+        setValue,
         formState: { errors },
     } = useFormContext<PaymentFormValues>();
 
@@ -35,7 +36,9 @@ export default function PaymentMethodsBuilder() {
     });
 
     const total = useWatch({ control, name: "total" });
+    const discount = useWatch({ control, name: "discount" });
     const watchedMethods = useWatch({ control, name: "methods" });
+    const payableTotal = Math.max(0, (Number(total) || 0) - (Number(discount) || 0));
 
     const usedTypes = useMemo(
         () => new Set(watchedMethods?.map((m) => m.method) ?? []),
@@ -47,7 +50,19 @@ export default function PaymentMethodsBuilder() {
         [watchedMethods]
     );
 
-    const difference = total - methodsSum;
+    useEffect(() => {
+        if (fields.length !== 1) return;
+
+        const currentAmount = Number(watchedMethods?.[0]?.amount) || 0;
+        if (Math.abs(currentAmount - payableTotal) <= 0.01) return;
+
+        setValue("methods.0.amount", Number(payableTotal.toFixed(2)), {
+            shouldDirty: true,
+            shouldValidate: true,
+        });
+    }, [fields.length, payableTotal, setValue, watchedMethods]);
+
+    const difference = payableTotal - methodsSum;
     const isBalanced = Math.abs(difference) <= 0.01;
     const canAddMethod = fields.length < MAX_PAYMENT_METHODS;
 
@@ -63,7 +78,7 @@ export default function PaymentMethodsBuilder() {
         append({
             _key: crypto.randomUUID(),
             method: availableMethod,
-            amount: 0,
+            amount: fields.length === 0 ? Number(payableTotal.toFixed(2)) : Math.max(0, Number(difference.toFixed(2))),
         });
     };
 
@@ -101,10 +116,56 @@ export default function PaymentMethodsBuilder() {
             </Stack>
 
             <Stack spacing={2}>
+                <Box
+                    sx={{
+                        border: "1px solid",
+                        borderColor: "grey.200",
+                        borderRadius: 2,
+                        p: 2,
+                    }}
+                >
+                    <Stack spacing={2}>
+                        <Controller
+                            name="discount"
+                            control={control}
+                            render={({ field, fieldState }) => (
+                                <CurrencyInput
+                                    value={typeof field.value === "number" ? field.value : 0}
+                                    onChange={(value) => field.onChange(Math.min(value, Number(total) || 0))}
+                                    label="Desconto"
+                                    fullWidth
+                                    size="small"
+                                    error={!!fieldState.error}
+                                    helperText={
+                                        fieldState.error?.message ??
+                                        "Esse desconto reduz o total a ser distribuído entre os métodos"
+                                    }
+                                />
+                            )}
+                        />
+
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                            <Typography variant="body2" color="text.secondary">
+                                Total com desconto
+                            </Typography>
+                            <Typography variant="subtitle2" fontWeight={700}>
+                                {payableTotal.toLocaleString("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                })}
+                            </Typography>
+                        </Stack>
+                    </Stack>
+                </Box>
+
                 {fields.map((field, index) => {
                     const methodValue = watchedMethods?.[index]?.method;
                     const isInstallment = methodValue ? isInstallmentMethod(methodValue) : false;
                     const fieldError = errors.methods?.[index];
+                    const installments = Number(watchedMethods?.[index]?.installments) || 0;
+                    const amount = Number(watchedMethods?.[index]?.amount) || 0;
+                    const installmentAmount =
+                        isInstallment && installments > 0 ? amount / installments : 0;
 
                     return (
                         <Box
@@ -221,6 +282,15 @@ export default function PaymentMethodsBuilder() {
                                                 "Parcelas geradas automaticamente pelo sistema"
                                             }
                                         />
+
+                                        {installments > 0 && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                {`${installments}x de ${installmentAmount.toLocaleString("pt-BR", {
+                                                    style: "currency",
+                                                    currency: "BRL",
+                                                })}`}
+                                            </Typography>
+                                        )}
 
                                         <TextField
                                             {...register(`methods.${index}.firstDueDate`, {
