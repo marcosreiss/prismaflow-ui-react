@@ -25,6 +25,7 @@ import ProductAccordion from "@/modules/sales/components/saleDetails/ProductAcco
 import ServiceAccordion from "@/modules/sales/components/saleDetails/ServiceAccordion";
 import ProtocolAccordion from "@/modules/sales/components/saleDetails/ProtocolAccordion";
 import { useGetSaleById } from "../hooks/useSales";
+import formatDate from "@/utils/format-date";
 
 interface InfoCardProps {
     title: string;
@@ -164,18 +165,18 @@ export default function SalesDetailsPage() {
                     </Box>
                     <Box>
                         <Typography variant="body2" color="text.secondary">
-                            Data
+                            Data da Venda
                         </Typography>
                         <Typography variant="body1">
-                            {sale.createdAt ? new Date(sale.createdAt).toLocaleDateString('pt-BR') : "-"}
+                            {formatDate(sale.saleDate)}
                         </Typography>
                     </Box>
                     <Box>
                         <Typography variant="body2" color="text.secondary">
-                            Status
+                            Ultima atualização
                         </Typography>
                         <Typography variant="body1">
-                            {sale.isActive ? "Ativa" : "Finalizada"}
+                            {formatDate(sale.updatedAt)}
                         </Typography>
                     </Box>
                 </Box>
