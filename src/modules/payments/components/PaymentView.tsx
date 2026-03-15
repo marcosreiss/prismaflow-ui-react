@@ -14,6 +14,7 @@ import { Printer } from "lucide-react";
 import { useGetPaymentById } from "../hooks/usePayments";
 import { PaymentMethodLabels, PaymentStatusLabels } from "../types/paymentEnums";
 import { CarnetTemplate } from "./CarnetTemplate";
+import CarnetPrintDialog from "./CarnetPrintDialog";
 import InstallmentsTable from "./InstallmentsTable";
 import PayInstallmentDialog from "./PayInstallmentDialog";
 import EditInstallmentDialog from "./EditInstallmentDialog";
@@ -47,6 +48,8 @@ export default function PaymentView({
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedInstallment, setSelectedInstallment] =
         useState<PaymentInstallmentItem | null>(null);
+    const [printDialogOpen, setPrintDialogOpen] = useState(false);
+    const [carnetCoverLogoSrc, setCarnetCoverLogoSrc] = useState<string | null>(null);
 
     const carnetRef = useRef<HTMLDivElement>(null);
 
@@ -81,6 +84,22 @@ export default function PaymentView({
             }
         `,
     });
+
+    const handleOpenPrintDialog = () => {
+        setPrintDialogOpen(true);
+    };
+
+    const handleClosePrintDialog = () => {
+        setPrintDialogOpen(false);
+    };
+
+    const handleConfirmCarnetPrint = (logoSrc: string | null) => {
+        setCarnetCoverLogoSrc(logoSrc);
+        setPrintDialogOpen(false);
+        window.setTimeout(() => {
+            handlePrint();
+        }, 50);
+    };
 
     // Valor pendente total do pagamento
     const pendingAmount = useMemo(() => {
@@ -352,7 +371,7 @@ export default function PaymentView({
                                     variant="outlined"
                                     size="small"
                                     startIcon={<Printer size={16} />}
-                                    onClick={handlePrint}
+                                    onClick={handleOpenPrintDialog}
                                 >
                                     Imprimir Carnê
                                 </Button>
@@ -409,9 +428,19 @@ export default function PaymentView({
                 loading={isFetching}
             />
 
+            <CarnetPrintDialog
+                open={printDialogOpen}
+                onClose={handleClosePrintDialog}
+                onConfirm={handleConfirmCarnetPrint}
+            />
+
             {/* Template do carnê — oculto, usado apenas para impressão */}
             <Box sx={{ display: "none" }}>
-                <CarnetTemplate ref={carnetRef} payment={payment} />
+                <CarnetTemplate
+                    ref={carnetRef}
+                    payment={payment}
+                    coverLogoSrc={carnetCoverLogoSrc}
+                />
             </Box>
         </>
     );
