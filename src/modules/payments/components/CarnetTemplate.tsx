@@ -122,10 +122,33 @@ export const CarnetTemplate = forwardRef<HTMLDivElement, CarnetTemplateProps>(
                                         justifyContent: "center",
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-                                        <Typography variant="caption" fontWeight="bold" sx={{ fontSize: "0.74rem" }}>
-                                            1a VIA - CLIENTE
-                                        </Typography>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            mb: 0.5,
+                                        }}
+                                    >
+
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            {coverLogoSrc && (
+                                                <Box
+                                                    component="img"
+                                                    src={coverLogoSrc}
+                                                    alt="Logo"
+                                                    sx={{
+                                                        height: 18,
+                                                        maxWidth: 60,
+                                                        objectFit: "contain",
+                                                    }}
+                                                />
+                                            )}
+
+                                            <Typography variant="caption" fontWeight="bold" sx={{ fontSize: "0.74rem" }}>
+                                                1a VIA - CLIENTE
+                                            </Typography>
+                                        </Box>
                                         <Typography variant="caption" fontWeight="bold" sx={{ fontSize: "0.74rem" }}>
                                             PARCELA {installment.sequence}/{installments.length}
                                         </Typography>
