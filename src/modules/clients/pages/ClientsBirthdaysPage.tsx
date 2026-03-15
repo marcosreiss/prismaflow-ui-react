@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Paper } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
+import formatDateBR from "@/utils/format-date";
 import BirthdayMessageModal from "../components/BirthdayMessageModal";
 import type { Client } from "../types/clientTypes";
 import { useGetBirthdays } from "../hooks/useClient";
@@ -49,10 +50,7 @@ export default function ClientsBirthdaysPage() {
         {
             key: "bornDate",
             label: "Data de Nascimento",
-            render: (row) =>
-                row.bornDate
-                    ? new Date(row.bornDate).toLocaleDateString("pt-BR")
-                    : "-",
+            render: (row) => formatDateBR(row.bornDate),
         },
     ];
 

@@ -2,6 +2,7 @@ import { Paper, Button, Box } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
+import formatDateBR from "@/utils/format-date";
 import PaymentDrawer from "../components/paymentDrawer";
 import PaymentFilters from "../components/PaymentFilters";
 import { usePaymentPageController } from "../hooks/usePaymentPageController";
@@ -103,8 +104,7 @@ export default function PaymentsPage() {
         {
             key: "createdAt",
             label: "Data",
-            render: (row) =>
-                new Date(row.createdAt).toLocaleDateString("pt-BR"),
+            render: (row) => formatDateBR(row.createdAt),
         },
     ];
 

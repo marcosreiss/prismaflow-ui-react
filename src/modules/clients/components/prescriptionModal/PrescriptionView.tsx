@@ -6,6 +6,7 @@ import {
     Box,
 } from "@mui/material";
 import { Pencil, Trash2 } from "lucide-react";
+import formatDateBR from "@/utils/format-date";
 import type { Prescription } from "../../types/prescriptionTypes";
 
 type PrescriptionViewProps = {
@@ -57,11 +58,7 @@ export default function PrescriptionView({
             <Row label="CRM" value={prescription.crm} />
             <Row
                 label="Data da Receita"
-                value={
-                    prescription.prescriptionDate
-                        ? new Date(prescription.prescriptionDate).toLocaleDateString("pt-BR")
-                        : "-"
-                }
+                value={formatDateBR(prescription.prescriptionDate)}
             />
 
             {/* Informações Gerais */}

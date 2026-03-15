@@ -1,5 +1,6 @@
 import { Box, Typography, Divider, Paper } from "@mui/material";
 import { forwardRef } from "react";
+import formatDateBR from "@/utils/format-date";
 import type { PaymentDetails } from "../types";
 import type { PaymentInstallmentItem } from "../types";
 
@@ -28,12 +29,7 @@ export const CarnetTemplate = forwardRef<HTMLDivElement, CarnetTemplateProps>(
             value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
         const formatDate = (dateString: string | null) => {
-            if (!dateString) return "-";
-            try {
-                return new Date(dateString).toLocaleDateString("pt-BR");
-            } catch {
-                return "-";
-            }
+            return formatDateBR(dateString);
         };
 
         return (

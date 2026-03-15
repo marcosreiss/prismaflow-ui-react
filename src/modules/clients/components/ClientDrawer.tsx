@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { useClientDrawerController } from "../hooks/useClientDrawerController";
 import type { Client } from "../types/clientTypes";
 import { GenderLabels, type Gender } from "../types/clientTypes";
+import formatDateBR from "@/utils/format-date";
 
 // ==========================
 // 🔹 Tipagens e Props
@@ -172,11 +173,7 @@ export default function ClientDrawer({
                             <Row label="RG" value={client.rg} />
                             <Row
                                 label="Data de nascimento"
-                                value={
-                                    client.bornDate
-                                        ? new Date(client.bornDate).toLocaleDateString("pt-BR")
-                                        : "-"
-                                }
+                                value={formatDateBR(client.bornDate)}
                             />
                             <Row
                                 label="Gênero"

@@ -16,6 +16,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useState } from "react";
 import { DollarSign, Calendar } from "lucide-react";
 import CurrencyInput from "@/components/imask/CurrencyInput";
+import formatDateBR from "@/utils/format-date";
 import type { PaymentInstallmentItem } from "../types/paymentEntities";
 
 // ==============================
@@ -340,10 +341,5 @@ function formatCurrency(value: number): string {
 }
 
 function formatDate(dateString: string | null): string {
-    if (!dateString) return "-";
-    try {
-        return new Date(dateString).toLocaleDateString("pt-BR");
-    } catch {
-        return "-";
-    }
+    return formatDateBR(dateString);
 }

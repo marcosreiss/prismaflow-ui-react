@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Paper, Button, Stack } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
+import formatDateBR from "@/utils/format-date";
 import PFDateToolbar from "../components/PFDateToolbar";
 
 import ExpiringPrescriptionMessageModal from "../components/ExpiringPrescriptionMessageModal";
@@ -51,10 +52,7 @@ export default function ExpiringPrescriptionsPage() {
         {
             key: "prescriptionDate",
             label: "Data da Receita",
-            render: (row) =>
-                row.prescriptionDate
-                    ? new Date(row.prescriptionDate).toLocaleDateString("pt-BR")
-                    : "-",
+            render: (row) => formatDateBR(row.prescriptionDate),
         },
         {
             key: "doctorName",
