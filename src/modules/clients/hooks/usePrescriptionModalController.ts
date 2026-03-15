@@ -61,6 +61,27 @@ const getDefaultFormValues = (
   clientId: number | null,
   prescription?: Prescription | null
 ): CreatePrescriptionPayload => {
+  const hasFarData = Boolean(
+    prescription?.odSphericalFar ||
+      prescription?.odCylindricalFar ||
+      prescription?.odAxisFar ||
+      prescription?.odDnpFar ||
+      prescription?.oeSphericalFar ||
+      prescription?.oeCylindricalFar ||
+      prescription?.oeAxisFar ||
+      prescription?.oeDnpFar
+  );
+  const hasNearData = Boolean(
+    prescription?.odSphericalNear ||
+      prescription?.odCylindricalNear ||
+      prescription?.odAxisNear ||
+      prescription?.odDnpNear ||
+      prescription?.oeSphericalNear ||
+      prescription?.oeCylindricalNear ||
+      prescription?.oeAxisNear ||
+      prescription?.oeDnpNear
+  );
+
   const emptyValues: CreatePrescriptionPayload = {
     clientId: clientId ?? 0,
     prescriptionDate: "",
@@ -93,6 +114,7 @@ const getDefaultFormValues = (
     additionLeft: "",
     opticalCenterRight: "",
     opticalCenterLeft: "",
+    monofocalVisionType: "far",
     isActive: true,
   };
 
@@ -132,6 +154,12 @@ const getDefaultFormValues = (
     additionLeft: prescription.additionLeft ?? "",
     opticalCenterRight: prescription.opticalCenterRight ?? "",
     opticalCenterLeft: prescription.opticalCenterLeft ?? "",
+    monofocalVisionType:
+      prescription.lensType === "monofocal"
+        ? hasNearData && !hasFarData
+          ? "near"
+          : "far"
+        : "",
     isActive: prescription.isActive ?? true,
   };
 };
@@ -211,7 +239,7 @@ export function usePrescriptionModalController({
   // ==============================
   const preparePayloadForAPI = useCallback(
     (values: CreatePrescriptionPayload): CreatePrescriptionPayload => {
-      const payload = { ...values };
+      const { monofocalVisionType, ...payload } = { ...values };
 
       if (payload.prescriptionDate) {
         payload.prescriptionDate = formatDateForAPI(payload.prescriptionDate);
@@ -219,6 +247,38 @@ export function usePrescriptionModalController({
 
       if (isCreate && clientId) {
         payload.clientId = clientId;
+      }
+
+      if (payload.lensType !== "bifocal") {
+        payload.odPellicleFar = "";
+        payload.odPellicleNear = "";
+        payload.oePellicleFar = "";
+        payload.oePellicleNear = "";
+      }
+
+      if (payload.lensType === "monofocal") {
+        payload.additionRight = "";
+        payload.additionLeft = "";
+
+        if (monofocalVisionType === "near") {
+          payload.odSphericalFar = "";
+          payload.odCylindricalFar = "";
+          payload.odAxisFar = "";
+          payload.odDnpFar = "";
+          payload.oeSphericalFar = "";
+          payload.oeCylindricalFar = "";
+          payload.oeAxisFar = "";
+          payload.oeDnpFar = "";
+        } else {
+          payload.odSphericalNear = "";
+          payload.odCylindricalNear = "";
+          payload.odAxisNear = "";
+          payload.odDnpNear = "";
+          payload.oeSphericalNear = "";
+          payload.oeCylindricalNear = "";
+          payload.oeAxisNear = "";
+          payload.oeDnpNear = "";
+        }
       }
 
       return payload;

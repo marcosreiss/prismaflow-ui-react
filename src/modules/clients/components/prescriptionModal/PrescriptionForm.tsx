@@ -11,7 +11,7 @@ import {
     Tab,
     Divider,
 } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FormProvider, Controller, useFormContext, type UseFormReturn } from "react-hook-form";
 import AdditionInput from "@/components/imask/protocolo/AdditionInput";
 import CylindricalInput from "@/components/imask/protocolo/CylindricalInput";
@@ -30,7 +30,6 @@ type PrescriptionControllerType = {
     creating: boolean;
     updating: boolean;
     isCreate: boolean;
-    // Novas propriedades de draft
     saveDraft: () => void;
     clearDraft: () => void;
     hasDraft: boolean;
@@ -41,6 +40,104 @@ type PrescriptionFormProps = {
     controller: PrescriptionControllerType;
     onClose: () => void;
 };
+
+type EyeSide = "od" | "oe";
+type VisionType = "far" | "near";
+type SphericalFieldName =
+    | "odSphericalFar"
+    | "odSphericalNear"
+    | "oeSphericalFar"
+    | "oeSphericalNear";
+type CylindricalFieldName =
+    | "odCylindricalFar"
+    | "odCylindricalNear"
+    | "oeCylindricalFar"
+    | "oeCylindricalNear";
+type AxisFieldName =
+    | "odAxisFar"
+    | "odAxisNear"
+    | "oeAxisFar"
+    | "oeAxisNear";
+type DnpFieldName =
+    | "odDnpFar"
+    | "odDnpNear"
+    | "oeDnpFar"
+    | "oeDnpNear";
+type PellicleFieldName =
+    | "odPellicleFar"
+    | "odPellicleNear"
+    | "oePellicleFar"
+    | "oePellicleNear";
+type AdditionFieldName = "additionRight" | "additionLeft";
+
+const degreeGridSx = {
+    display: "grid",
+    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
+    gap: 2,
+};
+
+const coerceStringValue = (value: unknown): string => {
+    if (typeof value === "string") return value;
+    return "";
+};
+
+const normalizeNumericValue = (value: unknown): number | null => {
+    const normalizedValue = coerceStringValue(value);
+    if (!normalizedValue.trim()) return null;
+    const parsed = Number.parseFloat(normalizedValue.replace(",", "."));
+    return Number.isNaN(parsed) ? null : parsed;
+};
+
+const formatQuarterValue = (value: number): string => {
+    const rounded = Math.round(value * 4) / 4;
+    const signal = rounded > 0 ? "+" : "";
+    return `${signal}${rounded.toFixed(2).replace(".", ",")}`;
+};
+
+const getSphericalFieldName = (eye: EyeSide, vision: VisionType): SphericalFieldName =>
+    eye === "od"
+        ? vision === "far"
+            ? "odSphericalFar"
+            : "odSphericalNear"
+        : vision === "far"
+          ? "oeSphericalFar"
+          : "oeSphericalNear";
+
+const getCylindricalFieldName = (eye: EyeSide, vision: VisionType): CylindricalFieldName =>
+    eye === "od"
+        ? vision === "far"
+            ? "odCylindricalFar"
+            : "odCylindricalNear"
+        : vision === "far"
+          ? "oeCylindricalFar"
+          : "oeCylindricalNear";
+
+const getAxisFieldName = (eye: EyeSide, vision: VisionType): AxisFieldName =>
+    eye === "od"
+        ? vision === "far"
+            ? "odAxisFar"
+            : "odAxisNear"
+        : vision === "far"
+          ? "oeAxisFar"
+          : "oeAxisNear";
+
+const getDnpFieldName = (eye: EyeSide, vision: VisionType): DnpFieldName =>
+    eye === "od"
+        ? vision === "far"
+            ? "odDnpFar"
+            : "odDnpNear"
+        : vision === "far"
+          ? "oeDnpFar"
+          : "oeDnpNear";
+
+const getPellicleFieldName = (eye: EyeSide, vision: VisionType): PellicleFieldName =>
+    eye === "od"
+        ? vision === "far"
+            ? "odPellicleFar"
+            : "odPellicleNear"
+        : vision === "far"
+          ? "oePellicleFar"
+          : "oePellicleNear";
 
 export default function PrescriptionForm({
     controller,
@@ -85,9 +182,30 @@ function PrescriptionFormContent({
     onClose,
     handleSubmit,
 }: PrescriptionFormContentProps) {
-    const { control, register, formState } = useFormContext<CreatePrescriptionPayload>();
+    const { control, register, formState, watch, setValue, getValues } = useFormContext<CreatePrescriptionPayload>();
     const validation = usePrescriptionValidation();
     const [currentTab, setCurrentTab] = useState(0);
+    const [rightNearAutoFilled, setRightNearAutoFilled] = useState(false);
+    const [leftNearAutoFilled, setLeftNearAutoFilled] = useState(false);
+
+    const lensType = watch("lensType") ?? "";
+    const monofocalVisionType = watch("monofocalVisionType") ?? "far";
+    const additionRight = watch("additionRight") ?? "";
+    const additionLeft = watch("additionLeft") ?? "";
+    const odSphericalFar = watch("odSphericalFar") ?? "";
+    const odCylindricalFar = watch("odCylindricalFar") ?? "";
+    const odAxisFar = watch("odAxisFar") ?? "";
+    const odDnpFar = watch("odDnpFar") ?? "";
+    const oeSphericalFar = watch("oeSphericalFar") ?? "";
+    const oeCylindricalFar = watch("oeCylindricalFar") ?? "";
+    const oeAxisFar = watch("oeAxisFar") ?? "";
+    const oeDnpFar = watch("oeDnpFar") ?? "";
+
+    const isMonofocal = lensType === "monofocal";
+    const isAutoNearLens = lensType === "multifocal" || lensType === "ocupacional";
+    const showAddition = lensType === "bifocal" || lensType === "multifocal" || lensType === "ocupacional";
+    const showPellicle = lensType === "bifocal";
+    const showNearVision = !isMonofocal;
 
     const handleFormSubmit = async (e?: React.BaseSyntheticEvent) => {
         e?.preventDefault();
@@ -99,10 +217,273 @@ function PrescriptionFormContent({
         setCurrentTab(newValue);
     };
 
+    const autoFillNearFields = useCallback((eye: EyeSide, additionValue: string) => {
+        const sphericalFar = getValues(getSphericalFieldName(eye, "far"));
+        const sphericalFarNumber = normalizeNumericValue(sphericalFar);
+        const additionNumber = normalizeNumericValue(additionValue);
+
+        if (sphericalFarNumber !== null && additionNumber !== null) {
+            setValue(
+                getSphericalFieldName(eye, "near"),
+                formatQuarterValue(sphericalFarNumber + additionNumber),
+                { shouldDirty: true, shouldValidate: true }
+            );
+        }
+
+        const cylindricalFar = coerceStringValue(getValues(getCylindricalFieldName(eye, "far")));
+        const axisFar = coerceStringValue(getValues(getAxisFieldName(eye, "far")));
+        const dnpFar = coerceStringValue(getValues(getDnpFieldName(eye, "far")));
+
+        setValue(getCylindricalFieldName(eye, "near"), cylindricalFar, { shouldDirty: true, shouldValidate: true });
+        setValue(getAxisFieldName(eye, "near"), axisFar, { shouldDirty: true, shouldValidate: true });
+        setValue(getDnpFieldName(eye, "near"), dnpFar, { shouldDirty: true, shouldValidate: true });
+    }, [getValues, setValue]);
+
+    const hasNearValues = useCallback((eye: EyeSide) => {
+        return Boolean(
+            getValues(getSphericalFieldName(eye, "near")) ||
+            getValues(getCylindricalFieldName(eye, "near")) ||
+            getValues(getAxisFieldName(eye, "near")) ||
+            getValues(getDnpFieldName(eye, "near"))
+        );
+    }, [getValues]);
+
+    useEffect(() => {
+        if (!isAutoNearLens) {
+            setRightNearAutoFilled(false);
+            setLeftNearAutoFilled(false);
+            return;
+        }
+
+        if (!additionRight) setRightNearAutoFilled(false);
+        if (!additionLeft) setLeftNearAutoFilled(false);
+    }, [isAutoNearLens, additionRight, additionLeft]);
+
+    useEffect(() => {
+        if (!isAutoNearLens || !additionRight || rightNearAutoFilled) return;
+        if (!odSphericalFar && !odCylindricalFar && !odAxisFar && !odDnpFar) return;
+        if (hasNearValues("od")) {
+            setRightNearAutoFilled(true);
+            return;
+        }
+
+        autoFillNearFields("od", additionRight);
+        setRightNearAutoFilled(true);
+    }, [
+        isAutoNearLens,
+        additionRight,
+        rightNearAutoFilled,
+        odSphericalFar,
+        odCylindricalFar,
+        odAxisFar,
+        odDnpFar,
+        autoFillNearFields,
+        hasNearValues,
+    ]);
+
+    useEffect(() => {
+        if (!isAutoNearLens || !additionLeft || leftNearAutoFilled) return;
+        if (!oeSphericalFar && !oeCylindricalFar && !oeAxisFar && !oeDnpFar) return;
+        if (hasNearValues("oe")) {
+            setLeftNearAutoFilled(true);
+            return;
+        }
+
+        autoFillNearFields("oe", additionLeft);
+        setLeftNearAutoFilled(true);
+    }, [
+        isAutoNearLens,
+        additionLeft,
+        leftNearAutoFilled,
+        oeSphericalFar,
+        oeCylindricalFar,
+        oeAxisFar,
+        oeDnpFar,
+        autoFillNearFields,
+        hasNearValues,
+    ]);
+
+    useEffect(() => {
+        if (isMonofocal && !monofocalVisionType) {
+            setValue("monofocalVisionType", "far");
+        }
+
+        if (!isMonofocal) {
+            setValue("monofocalVisionType", "");
+        }
+    }, [isMonofocal, monofocalVisionType, setValue]);
+
+    const renderEyeFields = (eye: EyeSide, vision: VisionType) => {
+        const eyeLabel = eye === "od" ? "Olho Direito (OD)" : "Olho Esquerdo (OE)";
+        const additionName: AdditionFieldName = eye === "od" ? "additionRight" : "additionLeft";
+        const isNear = vision === "near";
+        const shouldShowAdditionFirst = isNear && isAutoNearLens;
+        const shouldShowAddition = isNear && showAddition;
+        const fieldPrefix = eye === "od" ? "Od" : "Oe";
+        const sphericalName = getSphericalFieldName(eye, vision);
+        const cylindricalName = getCylindricalFieldName(eye, vision);
+        const axisName = getAxisFieldName(eye, vision);
+        const dnpName = getDnpFieldName(eye, vision);
+        const pellicleName = getPellicleFieldName(eye, vision);
+
+        return (
+            <Box>
+                <Typography variant="subtitle2" fontWeight={600} mb={2}>
+                    {eyeLabel}
+                </Typography>
+                <Box sx={degreeGridSx}>
+                    {shouldShowAdditionFirst && (
+                        <Controller
+                            name={additionName}
+                            control={control}
+                            rules={{
+                                validate: eye === "od"
+                                    ? validation.validateAdditionRight
+                                    : validation.validateAdditionLeft,
+                            }}
+                            render={({ field, fieldState }) => (
+                                <AdditionInput
+                                    label="Adição"
+                                    size="small"
+                                    value={field.value ?? ""}
+                                    onChange={(value) => {
+                                        field.onChange(value);
+                                        if (eye === "od") {
+                                            setRightNearAutoFilled(false);
+                                        } else {
+                                            setLeftNearAutoFilled(false);
+                                        }
+                                    }}
+                                    helperText={fieldState.error?.message}
+                                />
+                            )}
+                        />
+                    )}
+                    <Controller
+                        name={sphericalName}
+                        control={control}
+                        rules={{
+                            validate:
+                                fieldPrefix === "Od"
+                                    ? isNear
+                                        ? validation.validateOdSphericalNear
+                                        : validation.validateOdSphericalFar
+                                    : isNear
+                                      ? validation.validateOeSphericalNear
+                                      : validation.validateOeSphericalFar,
+                        }}
+                        render={({ field, fieldState }) => (
+                            <SphericalInput
+                                label="Esférico"
+                                size="small"
+                                value={field.value ?? ""}
+                                onChange={field.onChange}
+                                helperText={fieldState.error?.message}
+                            />
+                        )}
+                    />
+                    <Controller
+                        name={cylindricalName}
+                        control={control}
+                        rules={{
+                            validate:
+                                fieldPrefix === "Od"
+                                    ? isNear
+                                        ? validation.validateOdCylindricalNear
+                                        : validation.validateOdCylindricalFar
+                                    : isNear
+                                      ? validation.validateOeCylindricalNear
+                                      : validation.validateOeCylindricalFar,
+                        }}
+                        render={({ field, fieldState }) => (
+                            <CylindricalInput
+                                label="Cilíndrico"
+                                size="small"
+                                value={field.value ?? ""}
+                                onChange={field.onChange}
+                                helperText={fieldState.error?.message}
+                            />
+                        )}
+                    />
+                    <Controller
+                        name={axisName}
+                        control={control}
+                        rules={{
+                            validate:
+                                fieldPrefix === "Od"
+                                    ? isNear
+                                        ? validation.validateOdAxisNear
+                                        : validation.validateOdAxisFar
+                                    : isNear
+                                      ? validation.validateOeAxisNear
+                                      : validation.validateOeAxisFar,
+                        }}
+                        render={({ field, fieldState }) => (
+                            <AxisInput
+                                label="Eixo"
+                                size="small"
+                                value={field.value ?? ""}
+                                onChange={field.onChange}
+                                helperText={fieldState.error?.message}
+                            />
+                        )}
+                    />
+                    <Controller
+                        name={dnpName}
+                        control={control}
+                        rules={{ validate: validation.validateDNP }}
+                        render={({ field, fieldState }) => (
+                            <DnpInput
+                                label="DNP"
+                                size="small"
+                                value={field.value ?? ""}
+                                onChange={field.onChange}
+                                helperText={fieldState.error?.message}
+                            />
+                        )}
+                    />
+                    {showPellicle && (
+                        <Controller
+                            name={pellicleName}
+                            control={control}
+                            render={({ field }) => (
+                                <PellicleInput
+                                    label="Película"
+                                    size="small"
+                                    value={field.value ?? ""}
+                                    onChange={field.onChange}
+                                />
+                            )}
+                        />
+                    )}
+                    {shouldShowAddition && !shouldShowAdditionFirst && (
+                        <Controller
+                            name={additionName}
+                            control={control}
+                            rules={{
+                                validate: eye === "od"
+                                    ? validation.validateAdditionRight
+                                    : validation.validateAdditionLeft,
+                            }}
+                            render={({ field, fieldState }) => (
+                                <AdditionInput
+                                    label="Adição"
+                                    size="small"
+                                    value={field.value ?? ""}
+                                    onChange={field.onChange}
+                                    helperText={fieldState.error?.message}
+                                />
+                            )}
+                        />
+                    )}
+                </Box>
+            </Box>
+        );
+    };
+
     return (
         <form onSubmit={handleFormSubmit}>
             <Stack spacing={3}>
-                {/* ========== INFORMAÇÕES BÁSICAS ========== */}
                 <Stack spacing={2}>
                     <Typography variant="h6" fontWeight={600}>
                         Informações da Receita
@@ -170,7 +551,7 @@ function PrescriptionFormContent({
                                     size="small"
                                     label="Tipo de Lente *"
                                     value={field.value || ""}
-                                    onChange={e => field.onChange(e.target.value)}
+                                    onChange={(e) => field.onChange(e.target.value)}
                                     error={!!fieldState.error}
                                     helperText={fieldState.error?.message}
                                 >
@@ -179,12 +560,31 @@ function PrescriptionFormContent({
                                     <MenuItem value="bifocal">Bifocal</MenuItem>
                                     <MenuItem value="multifocal">Multifocal</MenuItem>
                                     <MenuItem value="ocupacional">Ocupacional</MenuItem>
-                                    {/* <MenuItem value="fotossensivel">Fotossensível</MenuItem>
-                                    <MenuItem value="comFiltroAzul">Com Filtro Azul</MenuItem> */}
                                 </TextField>
                             )}
                         />
                     </Stack>
+
+                    {isMonofocal && (
+                        <Controller
+                            name="monofocalVisionType"
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    select
+                                    fullWidth
+                                    size="small"
+                                    label="Tipo de Grau"
+                                    value={field.value || "far"}
+                                    onChange={(e) => field.onChange(e.target.value)}
+                                >
+                                    <MenuItem value="far">Grau de Longe</MenuItem>
+                                    <MenuItem value="near">Grau de Perto</MenuItem>
+                                </TextField>
+                            )}
+                        />
+                    )}
 
                     <TextField
                         fullWidth
@@ -202,376 +602,50 @@ function PrescriptionFormContent({
 
                 <Divider />
 
-                {/* ========== TABS PARA GRAUS ========== */}
                 <Box>
                     <Typography variant="h6" fontWeight={600} mb={2}>
                         Medidas Oftalmológicas
                     </Typography>
 
-                    <Tabs
-                        value={currentTab}
-                        onChange={handleTabChange}
-                        variant="fullWidth"
-                        sx={{ borderBottom: 1, borderColor: 'divider' }}
-                    >
-                        <Tab label="Grau de Longe" />
-                        <Tab label="Grau de Perto" />
-                    </Tabs>
+                    {showNearVision ? (
+                        <>
+                            <Tabs
+                                value={currentTab}
+                                onChange={handleTabChange}
+                                variant="fullWidth"
+                                sx={{ borderBottom: 1, borderColor: "divider" }}
+                            >
+                                <Tab label="Grau de Longe" />
+                                <Tab label="Grau de Perto" />
+                            </Tabs>
 
-                    {/* TAB 0: GRAU DE LONGE */}
-                    <TabPanel value={currentTab} index={0}>
+                            <TabPanel value={currentTab} index={0}>
+                                <Stack spacing={3}>
+                                    {renderEyeFields("od", "far")}
+                                    <Divider />
+                                    {renderEyeFields("oe", "far")}
+                                </Stack>
+                            </TabPanel>
+
+                            <TabPanel value={currentTab} index={1}>
+                                <Stack spacing={3}>
+                                    {renderEyeFields("od", "near")}
+                                    <Divider />
+                                    {renderEyeFields("oe", "near")}
+                                </Stack>
+                            </TabPanel>
+                        </>
+                    ) : (
                         <Stack spacing={3}>
-                            {/* OD - Olho Direito */}
-                            <Box>
-                                <Typography variant="subtitle2" fontWeight={600} mb={2}>
-                                    Olho Direito (OD)
-                                </Typography>
-                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2 }}>
-                                    <Controller
-                                        name="odSphericalFar"
-                                        control={control}
-                                        rules={{ validate: validation.validateOdSphericalFar }}
-                                        render={({ field, fieldState }) => (
-                                            <SphericalInput
-                                                label="Esférico"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="odCylindricalFar"
-                                        control={control}
-                                        rules={{ validate: validation.validateOdCylindricalFar }}
-                                        render={({ field, fieldState }) => (
-                                            <CylindricalInput
-                                                label="Cilíndrico"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="odAxisFar"
-                                        control={control}
-                                        rules={{ validate: validation.validateOdAxisFar }}
-                                        render={({ field, fieldState }) => (
-                                            <AxisInput
-                                                label="Eixo"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="odDnpFar"
-                                        control={control}
-                                        rules={{ validate: validation.validateDNP }}
-                                        render={({ field, fieldState }) => (
-                                            <DnpInput
-                                                label="DNP"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="odPellicleFar"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <PellicleInput
-                                                label="Película"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                            />
-                                        )}
-                                    />
-                                </Box>
-                            </Box>
-
+                            {monofocalVisionType === "near" ? renderEyeFields("od", "near") : renderEyeFields("od", "far")}
                             <Divider />
-
-                            {/* OE - Olho Esquerdo */}
-                            <Box>
-                                <Typography variant="subtitle2" fontWeight={600} mb={2}>
-                                    Olho Esquerdo (OE)
-                                </Typography>
-                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2 }}>
-                                    <Controller
-                                        name="oeSphericalFar"
-                                        control={control}
-                                        rules={{ validate: validation.validateOeSphericalFar }}
-                                        render={({ field, fieldState }) => (
-                                            <SphericalInput
-                                                label="Esférico"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="oeCylindricalFar"
-                                        control={control}
-                                        rules={{ validate: validation.validateOeCylindricalFar }}
-                                        render={({ field, fieldState }) => (
-                                            <CylindricalInput
-                                                label="Cilíndrico"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="oeAxisFar"
-                                        control={control}
-                                        rules={{ validate: validation.validateOeAxisFar }}
-                                        render={({ field, fieldState }) => (
-                                            <AxisInput
-                                                label="Eixo"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="oeDnpFar"
-                                        control={control}
-                                        rules={{ validate: validation.validateDNP }}
-                                        render={({ field, fieldState }) => (
-                                            <DnpInput
-                                                label="DNP"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="oePellicleFar"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <PellicleInput
-                                                label="Película"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                            />
-                                        )}
-                                    />
-                                </Box>
-                            </Box>
+                            {monofocalVisionType === "near" ? renderEyeFields("oe", "near") : renderEyeFields("oe", "far")}
                         </Stack>
-                    </TabPanel>
-
-                    {/* TAB 1: GRAU DE PERTO */}
-                    <TabPanel value={currentTab} index={1}>
-                        <Stack spacing={3}>
-                            {/* OD - Olho Direito */}
-                            <Box>
-                                <Typography variant="subtitle2" fontWeight={600} mb={2}>
-                                    Olho Direito (OD)
-                                </Typography>
-                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2 }}>
-                                    <Controller
-                                        name="odSphericalNear"
-                                        control={control}
-                                        rules={{ validate: validation.validateOdSphericalNear }}
-                                        render={({ field, fieldState }) => (
-                                            <SphericalInput
-                                                label="Esférico"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="odCylindricalNear"
-                                        control={control}
-                                        rules={{ validate: validation.validateOdCylindricalNear }}
-                                        render={({ field, fieldState }) => (
-                                            <CylindricalInput
-                                                label="Cilíndrico"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="odAxisNear"
-                                        control={control}
-                                        rules={{ validate: validation.validateOdAxisNear }}
-                                        render={({ field, fieldState }) => (
-                                            <AxisInput
-                                                label="Eixo"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="odDnpNear"
-                                        control={control}
-                                        rules={{ validate: validation.validateDNP }}
-                                        render={({ field, fieldState }) => (
-                                            <DnpInput
-                                                label="DNP"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="odPellicleNear"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <PellicleInput
-                                                label="Película"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="additionRight"
-                                        control={control}
-                                        rules={{ validate: validation.validateAdditionRight }}
-                                        render={({ field, fieldState }) => (
-                                            <AdditionInput
-                                                label="Adição"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                </Box>
-                            </Box>
-
-                            <Divider />
-
-                            {/* OE - Olho Esquerdo */}
-                            <Box>
-                                <Typography variant="subtitle2" fontWeight={600} mb={2}>
-                                    Olho Esquerdo (OE)
-                                </Typography>
-                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2 }}>
-                                    <Controller
-                                        name="oeSphericalNear"
-                                        control={control}
-                                        rules={{ validate: validation.validateOeSphericalNear }}
-                                        render={({ field, fieldState }) => (
-                                            <SphericalInput
-                                                label="Esférico"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="oeCylindricalNear"
-                                        control={control}
-                                        rules={{ validate: validation.validateOeCylindricalNear }}
-                                        render={({ field, fieldState }) => (
-                                            <CylindricalInput
-                                                label="Cilíndrico"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="oeAxisNear"
-                                        control={control}
-                                        rules={{ validate: validation.validateOeAxisNear }}
-                                        render={({ field, fieldState }) => (
-                                            <AxisInput
-                                                label="Eixo"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="oeDnpNear"
-                                        control={control}
-                                        rules={{ validate: validation.validateDNP }}
-                                        render={({ field, fieldState }) => (
-                                            <DnpInput
-                                                label="DNP"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="oePellicleNear"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <PellicleInput
-                                                label="Película"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        name="additionLeft"
-                                        control={control}
-                                        rules={{ validate: validation.validateAdditionLeft }}
-                                        render={({ field, fieldState }) => (
-                                            <AdditionInput
-                                                label="Adição"
-                                                size="small"
-                                                value={field.value ?? ""}
-                                                onChange={field.onChange}
-                                                helperText={fieldState.error?.message}
-                                            />
-                                        )}
-                                    />
-                                </Box>
-                            </Box>
-                        </Stack>
-                    </TabPanel>
+                    )}
                 </Box>
 
                 <Divider />
 
-                {/* ========== CENTRO ÓPTICO ========== */}
                 <Box>
                     <Typography variant="subtitle2" fontWeight={600} mb={1}>
                         Centro Óptico (Altura)
@@ -612,7 +686,6 @@ function PrescriptionFormContent({
                 </Box>
             </Stack>
 
-            {/* ========== AÇÕES DO FORMULÁRIO ========== */}
             <DialogActions sx={{ mt: 3, px: 0, gap: 1, justifyContent: "flex-end" }}>
                 <Button onClick={onClose} variant="outlined">
                     Cancelar
@@ -626,12 +699,10 @@ function PrescriptionFormContent({
                     {isCreate ? (creating ? "Salvando..." : "Criar") : (updating ? "Salvando..." : "Salvar")}
                 </Button>
             </DialogActions>
-
         </form>
     );
 }
 
-// ✅ Componente TabPanel
 interface TabPanelProps {
     children?: React.ReactNode;
     index: number;
@@ -649,11 +720,7 @@ function TabPanel(props: TabPanelProps) {
             aria-labelledby={`prescription-tab-${index}`}
             {...other}
         >
-            {value === index && (
-                <Box sx={{ py: 3 }}>
-                    {children}
-                </Box>
-            )}
+            {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
         </div>
     );
 }

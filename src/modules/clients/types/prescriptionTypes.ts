@@ -90,6 +90,7 @@ export type CreatePrescriptionPayload = Omit<
   clientId: number;
   prescriptionDate: string;
   lensType: string;
+  monofocalVisionType?: "far" | "near" | "";
 };
 
 /**

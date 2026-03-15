@@ -1,6 +1,8 @@
 import { useWatch } from "react-hook-form";
 import type { CreatePrescriptionPayload } from "../types/prescriptionTypes";
 
+type FormFieldValue = string | number | boolean | null | undefined;
+
 /**
  * Hook centralizado para todas as validações do formulário de prescrição
  */
@@ -25,35 +27,43 @@ export function usePrescriptionValidation() {
         return isNaN(numValue) || numValue === 0;
     };
 
-    const isFieldEmpty = (value: string | null | undefined): boolean => {
-        return !value || value.trim() === "";
+    const toOptionalString = (value: FormFieldValue): string | null => {
+        return typeof value === "string" ? value : null;
     };
 
-    const requiresBifocalMultifocal = (): boolean => {
-        return lensType === "bifocal" || lensType === "multifocal";
+    const isFieldEmpty = (value: FormFieldValue): boolean => {
+        const stringValue = toOptionalString(value);
+        return !stringValue || stringValue.trim() === "";
+    };
+
+    const requiresAddition = (): boolean => {
+        return lensType === "bifocal" || lensType === "multifocal" || lensType === "ocupacional";
     };
 
     // RN01: Nome do médico
-    const validateDoctorName = (value: string | null | undefined): string | boolean => {
+    const validateDoctorName = (value: FormFieldValue): string | boolean => {
+        const stringValue = toOptionalString(value);
         if (isFieldEmpty(value)) return true;
-        if (value!.trim().length < 3) return "Nome do médico deve ter pelo menos 3 caracteres";
+        if (stringValue!.trim().length < 3) return "Nome do médico deve ter pelo menos 3 caracteres";
         const namePattern = /^[a-zA-ZÀ-ÿ\s]+$/;
-        if (!namePattern.test(value!.trim())) return "Nome deve conter apenas letras";
+        if (!namePattern.test(stringValue!.trim())) return "Nome deve conter apenas letras";
         return true;
     };
 
     // RN02: CRM
-    const validateCRM = (value: string | null | undefined): string | boolean => {
+    const validateCRM = (value: FormFieldValue): string | boolean => {
+        const stringValue = toOptionalString(value);
         if (isFieldEmpty(value)) return true;
-        const cleaned = value!.replace(/\D/g, "");
+        const cleaned = stringValue!.replace(/\D/g, "");
         if (cleaned.length < 4 || cleaned.length > 10) return "CRM deve ter entre 4 e 10 dígitos";
         return true;
     };
 
     // RN03: Data
-    const validatePrescriptionDate = (value: string | null | undefined): string | boolean => {
+    const validatePrescriptionDate = (value: FormFieldValue): string | boolean => {
+        const stringValue = toOptionalString(value);
         if (isFieldEmpty(value)) return "Data da receita é obrigatória";
-        const selectedDate = new Date(value!);
+        const selectedDate = new Date(stringValue!);
         const today = new Date(); today.setHours(23, 59, 59, 999);
         if (selectedDate > today) return "Data da receita não pode ser futura";
         const fiveYearsAgo = new Date(); fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
@@ -63,23 +73,24 @@ export function usePrescriptionValidation() {
 
     // RN04: Validação de Eixo
     const validateAxis = (
-        axisValue: string | null | undefined,
-        cylindricalValue: string | null | undefined
+        axisValue: FormFieldValue,
+        cylindricalValue: FormFieldValue
     ): string | boolean => {
-        if (isCylindricalZero(cylindricalValue)) return true;
+        if (isCylindricalZero(toOptionalString(cylindricalValue))) return true;
         if (isFieldEmpty(axisValue)) return "Eixo obrigatório quando Cilíndrico ≠ 0";
         return true;
     };
 
     // RN05: Adição
-    const validateAddition = (value: string | null | undefined): string | boolean => {
-        if (!requiresBifocalMultifocal()) return true;
-        if (isFieldEmpty(value)) return "Adição obrigatória para lentes Bifocal/Multifocal";
+    const validateAddition = (value: FormFieldValue): string | boolean => {
+        if (!requiresAddition()) return true;
+        if (isFieldEmpty(value)) return "Adição obrigatória para lentes Bifocal/Multifocal/Ocupacional";
         return true;
     };
 
     // RN06: Tipo de lente
-    const validateLensType = (value: string | null | undefined): string | boolean => {
+    const validateLensType = (value: FormFieldValue): string | boolean => {
+        const stringValue = toOptionalString(value);
         if (isFieldEmpty(value)) return "Tipo de lente é obrigatório";
         const validTypes = [
             "monofocal",
@@ -89,17 +100,18 @@ export function usePrescriptionValidation() {
             "fotossensivel",
             "comFiltroAzul",
         ];
-        if (!validTypes.includes(value!)) return "Tipo de lente inválido";
+        if (!stringValue || !validTypes.includes(stringValue)) return "Tipo de lente inválido";
         return true;
     };
 
     // RN07: Grau (Esférico/Cilíndrico)
     const validateDegreeValue = (
-        value: string | null | undefined,
+        value: FormFieldValue,
         fieldName: string
     ): string | boolean => {
+        const stringValue = toOptionalString(value);
         if (isFieldEmpty(value)) return true;
-        const cleaned = value!.trim().replace(",", ".");
+        const cleaned = stringValue!.trim().replace(",", ".");
         const num = parseFloat(cleaned);
         if (isNaN(num)) return `${fieldName} deve ser um número válido`;
         if (fieldName.includes("Esférico")) {
@@ -112,9 +124,10 @@ export function usePrescriptionValidation() {
     };
 
     // RN08: DNP
-    const validateDNP = (value: string | null | undefined): string | boolean => {
+    const validateDNP = (value: FormFieldValue): string | boolean => {
+        const stringValue = toOptionalString(value);
         if (isFieldEmpty(value)) return true;
-        const cleaned = value!.replace(",", ".");
+        const cleaned = stringValue!.replace(",", ".");
         const num = parseFloat(cleaned);
         if (isNaN(num)) return "DNP deve ser um número válido";
         if (num < 25 || num > 40) return "DNP deve estar entre 25 e 40 mm";
@@ -122,9 +135,10 @@ export function usePrescriptionValidation() {
     };
 
     // RN09: Centro Óptico
-    const validateOpticalCenter = (value: string | null | undefined): string | boolean => {
+    const validateOpticalCenter = (value: FormFieldValue): string | boolean => {
+        const stringValue = toOptionalString(value);
         if (isFieldEmpty(value)) return true;
-        const cleaned = value!.replace(",", ".");
+        const cleaned = stringValue!.replace(",", ".");
         const num = parseFloat(cleaned);
         if (isNaN(num)) return "Centro Óptico deve ser um número válido";
         if (num < 14 || num > 40) return "Centro Óptico deve estar entre 10 e 40 mm";
@@ -132,9 +146,10 @@ export function usePrescriptionValidation() {
     };
 
     // RN10: Observações
-    const validateNotes = (value: string | null | undefined): string | boolean => {
+    const validateNotes = (value: FormFieldValue): string | boolean => {
+        const stringValue = toOptionalString(value);
         if (isFieldEmpty(value)) return true;
-        if (value!.length > 500) return "Observações devem ter no máximo 500 caracteres";
+        if (stringValue!.length > 500) return "Observações devem ter no máximo 500 caracteres";
         return true;
     };
 
@@ -148,28 +163,29 @@ export function usePrescriptionValidation() {
         validateLensType,
         validateNotes,
 
-        validateOdAxisFar: (value: string | null | undefined) => validateAxis(value, odCylindricalFar),
-        validateOeAxisFar: (value: string | null | undefined) => validateAxis(value, oeCylindricalFar),
-        validateOdAxisNear: (value: string | null | undefined) => validateAxis(value, odCylindricalNear),
-        validateOeAxisNear: (value: string | null | undefined) => validateAxis(value, oeCylindricalNear),
+        validateOdAxisFar: (value: FormFieldValue) => validateAxis(value, odCylindricalFar),
+        validateOeAxisFar: (value: FormFieldValue) => validateAxis(value, oeCylindricalFar),
+        validateOdAxisNear: (value: FormFieldValue) => validateAxis(value, odCylindricalNear),
+        validateOeAxisNear: (value: FormFieldValue) => validateAxis(value, oeCylindricalNear),
 
         validateAdditionRight: validateAddition,
         validateAdditionLeft: validateAddition,
 
-        validateOdSphericalFar: (value: string | null | undefined) => validateDegreeValue(value, "Esférico OD Longe"),
-        validateOeSphericalFar: (value: string | null | undefined) => validateDegreeValue(value, "Esférico OE Longe"),
-        validateOdSphericalNear: (value: string | null | undefined) => validateDegreeValue(value, "Esférico OD Perto"),
-        validateOeSphericalNear: (value: string | null | undefined) => validateDegreeValue(value, "Esférico OE Perto"),
+        validateOdSphericalFar: (value: FormFieldValue) => validateDegreeValue(value, "Esférico OD Longe"),
+        validateOeSphericalFar: (value: FormFieldValue) => validateDegreeValue(value, "Esférico OE Longe"),
+        validateOdSphericalNear: (value: FormFieldValue) => validateDegreeValue(value, "Esférico OD Perto"),
+        validateOeSphericalNear: (value: FormFieldValue) => validateDegreeValue(value, "Esférico OE Perto"),
 
-        validateOdCylindricalFar: (value: string | null | undefined) => validateDegreeValue(value, "Cilíndrico OD Longe"),
-        validateOeCylindricalFar: (value: string | null | undefined) => validateDegreeValue(value, "Cilíndrico OE Longe"),
-        validateOdCylindricalNear: (value: string | null | undefined) => validateDegreeValue(value, "Cilíndrico OD Perto"),
-        validateOeCylindricalNear: (value: string | null | undefined) => validateDegreeValue(value, "Cilíndrico OE Perto"),
+        validateOdCylindricalFar: (value: FormFieldValue) => validateDegreeValue(value, "Cilíndrico OD Longe"),
+        validateOeCylindricalFar: (value: FormFieldValue) => validateDegreeValue(value, "Cilíndrico OE Longe"),
+        validateOdCylindricalNear: (value: FormFieldValue) => validateDegreeValue(value, "Cilíndrico OD Perto"),
+        validateOeCylindricalNear: (value: FormFieldValue) => validateDegreeValue(value, "Cilíndrico OE Perto"),
 
         validateDNP,
         validateOpticalCenter,
 
         isCylindricalZero,
-        requiresBifocalMultifocal,
+        requiresBifocalMultifocal: requiresAddition,
+        requiresAddition,
     };
 }
