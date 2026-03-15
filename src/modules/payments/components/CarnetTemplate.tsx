@@ -55,42 +55,40 @@ export const CarnetTemplate = forwardRef<HTMLDivElement, CarnetTemplateProps>(
                         pageBreakInside: "avoid",
                     }}
                 >
-                    <Box>
-                        <Typography variant="overline" sx={{ letterSpacing: "0.28em", fontSize: "0.68rem" }}>
-                            CARNÊ DE PAGAMENTO
-                        </Typography>
-                        <Typography variant="h5" fontWeight={800} sx={{ mt: 1, maxWidth: "70%", lineHeight: 1.1 }}>
-                            Plano de parcelas da venda #{saleId}
-                        </Typography>
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            Cliente: {clientName}
-                        </Typography>
-                    </Box>
-
                     <Box
                         sx={{
-                            alignSelf: "center",
-                            width: "100%",
-                            maxWidth: 210,
-                            aspectRatio: "16 / 9",
-                            overflow: "hidden",
-                            backgroundColor: "#fff",
-                            border: coverLogoSrc ? "1px solid #d1d5db" : "none",
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            p: 0,
-                            my: coverLogoSrc ? 1.5 : 0,
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: 2,
                         }}
                     >
-                        {coverLogoSrc ? (
+                        <Box sx={{ maxWidth: "70%" }}>
+                            <Typography variant="overline" sx={{ letterSpacing: "0.28em", fontSize: "0.68rem" }}>
+                                CARNÊ DE PAGAMENTO
+                            </Typography>
+
+                            <Typography variant="h5" fontWeight={800} sx={{ mt: 1, lineHeight: 1.1 }}>
+                                Plano de parcelas da venda #{saleId}
+                            </Typography>
+
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                Cliente: {clientName}
+                            </Typography>
+                        </Box>
+
+                        {coverLogoSrc && (
                             <Box
                                 component="img"
                                 src={coverLogoSrc}
                                 alt="Logo da ótica"
-                                sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                sx={{
+                                    width: 120,
+                                    height: 60,
+                                    objectFit: "contain",
+                                }}
                             />
-                        ) : null}
+                        )}
                     </Box>
 
                     <Box
