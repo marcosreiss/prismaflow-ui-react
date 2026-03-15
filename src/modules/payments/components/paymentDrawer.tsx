@@ -217,6 +217,7 @@ export default function PaymentDrawer({
 
                         <PaymentView
                             paymentId={currentPayment.id}
+                            initialPayment={currentPayment}
                             onPayInstallment={handlePayInstallment}
                         />
                     </Box>

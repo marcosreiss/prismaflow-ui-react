@@ -19,12 +19,14 @@ import PayInstallmentDialog from "./PayInstallmentDialog";
 import EditInstallmentDialog from "./EditInstallmentDialog";
 import type { PaymentStatus } from "../types/paymentEnums";
 import type { PaymentInstallmentItem, PaymentMethodItem } from "../types/paymentEntities";
+import type { PaymentDetails } from "../types";
 
 // ==============================
 // Props
 // ==============================
 interface PaymentViewProps {
     paymentId: number | undefined;
+    initialPayment?: PaymentDetails | null;
     onPayInstallment?: (installmentId: number, paidAmount: number, paidAt?: string) => void;
     onEditInstallment?: (
         installmentId: number,
@@ -37,6 +39,7 @@ interface PaymentViewProps {
 // ==============================
 export default function PaymentView({
     paymentId,
+    initialPayment,
     onPayInstallment,
     onEditInstallment,
 }: PaymentViewProps) {
@@ -48,7 +51,25 @@ export default function PaymentView({
     const carnetRef = useRef<HTMLDivElement>(null);
 
     const { data: apiResponse, isLoading, error, isFetching } = useGetPaymentById(paymentId);
-    const payment = apiResponse?.data;
+    const payment = useMemo(() => {
+        const fetchedPayment = apiResponse?.data;
+
+        if (!fetchedPayment) {
+            return initialPayment ?? undefined;
+        }
+
+        return {
+            ...fetchedPayment,
+            clientName:
+                fetchedPayment.clientName ||
+                fetchedPayment.sale?.clientName ||
+                fetchedPayment.sale?.client?.name ||
+                initialPayment?.clientName ||
+                initialPayment?.sale?.clientName ||
+                initialPayment?.sale?.client?.name ||
+                "Cliente não informado",
+        };
+    }, [apiResponse?.data, initialPayment]);
 
     const handlePrint = useReactToPrint({
         contentRef: carnetRef,
