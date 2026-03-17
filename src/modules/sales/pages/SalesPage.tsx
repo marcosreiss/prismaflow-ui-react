@@ -4,6 +4,7 @@ import PFTopToolbar from "@/components/crud/PFTopToolbar";
 import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import { useSalesPageController } from "../hooks/useSalesPageController";
 import type { Sale } from "../types/salesTypes";
+import formatDateBR from "@/utils/format-date";
 
 
 // ==============================
@@ -70,12 +71,7 @@ export default function SalesPage() {
         {
             key: "saleDate",
             label: "Data",
-            render: (row) =>
-                new Date(row.saleDate).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                }),
+            render: (row) => formatDateBR(row.saleDate),
         },
     ];
 
