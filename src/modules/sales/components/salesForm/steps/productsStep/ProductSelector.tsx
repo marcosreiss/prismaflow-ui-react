@@ -58,7 +58,7 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
 
         const { data: brandsResponse, isFetching: isBrandLoading } = useGetBrands({
             page: 1,
-            limit: 50,
+            limit: 500,
             search: debouncedBrandSearch,
         });
 
@@ -66,7 +66,7 @@ const ProductSelector = forwardRef<HTMLDivElement, ProductSelectorProps>(
 
         const { data: productsResponse, isFetching: isLoading } = useGetProducts({
             page: 1,
-            limit: 50,
+            limit: 500,
             search: debouncedSearch,
             category: selectedCategory !== "ALL" ? selectedCategory : undefined,
             brandId: selectedBrand?.id ?? undefined,
