@@ -21,6 +21,7 @@ import EditInstallmentDialog from "./EditInstallmentDialog";
 import type { PaymentStatus } from "../types/paymentEnums";
 import type { PaymentInstallmentItem, PaymentMethodItem } from "../types/paymentEntities";
 import type { PaymentDetails } from "../types";
+import formatDateBR from "@/utils/format-date";
 
 // ==============================
 // Props
@@ -294,7 +295,7 @@ export default function PaymentView({
                                     {/* Data do pagamento — apenas para métodos à vista já pagos */}
                                     {m.paidAt && (
                                         <Typography variant="caption" color="text.secondary">
-                                            Pago em {formatDate(m.paidAt)}
+                                            Pago em {formatDateBR(m.paidAt)}
                                         </Typography>
                                     )}
                                 </Box>
@@ -343,9 +344,9 @@ export default function PaymentView({
                     <Stack spacing={1}>
                         <Row
                             label="Data da venda"
-                            value={formatDate(payment.saleDate ?? payment.sale?.saleDate)}
+                            value={formatDateBR(payment.saleDate ?? payment.sale?.saleDate)}
                         />
-                        <Row label="Último pagamento" value={formatDate(payment.lastPaymentAt)} />
+                        <Row label="Último pagamento" value={formatDateBR(payment.lastPaymentAt)} />
                     </Stack>
                 </Box>
 
@@ -480,21 +481,4 @@ function Row({
 function formatCurrency(value: number | undefined | null): string {
     if (value == null || isNaN(value)) return "R$ 0,00";
     return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatDate(dateString: string | null | undefined): string {
-    if (!dateString) return "-";
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return "-";
-        return date.toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    } catch {
-        return "-";
-    }
 }
