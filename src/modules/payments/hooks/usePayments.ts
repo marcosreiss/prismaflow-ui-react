@@ -41,6 +41,7 @@ export const useGetPayments = ({
   hasOverdueInstallments,
   isPartiallyPaid,
   dueDaysAhead,
+  sortOrder,
 }: {
   page: number;
   limit: number;
@@ -53,6 +54,7 @@ export const useGetPayments = ({
   hasOverdueInstallments?: boolean;
   isPartiallyPaid?: boolean;
   dueDaysAhead?: number;
+  sortOrder?: "asc" | "desc";
 }) => {
   return useQuery<
     ApiResponse<{
@@ -77,6 +79,7 @@ export const useGetPayments = ({
       hasOverdueInstallments,
       isPartiallyPaid,
       dueDaysAhead,
+      sortOrder,
     ],
     queryFn: async () => {
       const { data } = await baseApi.get<
@@ -100,6 +103,7 @@ export const useGetPayments = ({
           hasOverdueInstallments: hasOverdueInstallments || undefined,
           isPartiallyPaid: isPartiallyPaid || undefined,
           dueDaysAhead: dueDaysAhead || undefined,
+          sortOrder: sortOrder || undefined,
         },
       });
       return data;

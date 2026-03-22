@@ -17,6 +17,7 @@ import { type PaymentStatus, type PaymentMethod, PaymentStatusLabels, PaymentMet
 interface PaymentFiltersProps {
     status: PaymentStatus | '';
     method: PaymentMethod | '';
+    sortOrder: 'asc' | 'desc';
     dateRange: { start: string; end: string };
     clientSearch: string;
     // ✅ NOVOS FILTROS AVANÇADOS:
@@ -27,6 +28,7 @@ interface PaymentFiltersProps {
     // Handlers
     onStatusChange: (status: PaymentStatus | '') => void;
     onMethodChange: (method: PaymentMethod | '') => void;
+    onSortOrderChange: (sortOrder: 'asc' | 'desc') => void;
     onDateChange: (dateRange: { start: string; end: string }) => void;
     onClientSearchChange: (clientSearch: string) => void;
     // ✅ NOVOS HANDLERS:
@@ -41,6 +43,7 @@ interface PaymentFiltersProps {
 export default function PaymentFilters({
     status,
     method,
+    sortOrder,
     dateRange,
     clientSearch,
     hasOverdueInstallments,
@@ -48,6 +51,7 @@ export default function PaymentFilters({
     dueDaysAhead,
     onStatusChange,
     onMethodChange,
+    onSortOrderChange,
     onDateChange,
     onClientSearchChange,
     onOverdueChange,
@@ -59,6 +63,7 @@ export default function PaymentFilters({
     const handleClearFilters = () => {
         onStatusChange('');
         onMethodChange('');
+        onSortOrderChange('desc');
         onDateChange({ start: '', end: '' });
         onClientSearchChange('');
         // Novos filtros
@@ -71,6 +76,7 @@ export default function PaymentFilters({
     const hasActiveFilters =
         status ||
         method ||
+        sortOrder === 'asc' ||
         dateRange.start ||
         dateRange.end ||
         clientSearch ||
@@ -132,7 +138,7 @@ export default function PaymentFilters({
                     gridTemplateColumns: {
                         xs: '1fr',
                         sm: '1fr 1fr',
-                        md: '140px 180px 1fr'
+                        md: '140px 180px 220px 1fr'
                     },
                     gap: 2,
                     alignItems: 'start'
@@ -169,6 +175,18 @@ export default function PaymentFilters({
                                 {label}
                             </MenuItem>
                         ))}
+                    </TextField>
+
+                    <TextField
+                        select
+                        size="small"
+                        label="Ordenação"
+                        value={sortOrder}
+                        onChange={(e) => onSortOrderChange(e.target.value as 'asc' | 'desc')}
+                        fullWidth
+                    >
+                        <MenuItem value="desc">Mais recentes primeiro</MenuItem>
+                        <MenuItem value="asc">Mais antigos primeiro</MenuItem>
                     </TextField>
 
                     {/* Filtro por Período */}

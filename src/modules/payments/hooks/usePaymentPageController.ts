@@ -46,6 +46,7 @@ function buildPaymentsQueryParams(
     ...(filters.dueDaysAhead !== undefined && {
       dueDaysAhead: filters.dueDaysAhead,
     }),
+    ...(filters.sortOrder && { sortOrder: filters.sortOrder }),
   };
 }
 
@@ -84,6 +85,7 @@ function usePaymentsFiltersState() {
     hasOverdueInstallments: undefined,
     isPartiallyPaid: undefined,
     dueDaysAhead: undefined,
+    sortOrder: "desc",
   });
 
   return { filters, setFilters };
@@ -206,6 +208,7 @@ export function usePaymentPageController() {
       hasOverdueInstallments: undefined,
       isPartiallyPaid: undefined,
       dueDaysAhead: undefined,
+      sortOrder: "desc",
     });
     setSearch("");
     setPage(0);
@@ -374,10 +377,7 @@ export function usePaymentPageController() {
     refetch,
   ]);
 
-  const payments: PaymentListItem[] = useMemo(
-    () => mapPaymentsToListItems(data),
-    [data],
-  );
+  const payments: PaymentListItem[] = useMemo(() => mapPaymentsToListItems(data), [data]);
   const total = data?.data?.totalElements ?? 0;
 
   const isDeleting = deletePayment.isPending;

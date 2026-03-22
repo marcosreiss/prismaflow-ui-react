@@ -152,6 +152,7 @@ export default function PaymentsPage() {
                 <PaymentFilters
                     status={filters.status || ""}
                     method={filters.method || ""}
+                    sortOrder={filters.sortOrder || "desc"}
                     dateRange={{
                         start: filters.startDate || "",
                         end: filters.endDate || "",
@@ -165,6 +166,9 @@ export default function PaymentsPage() {
                     }
                     onMethodChange={(method) =>
                         handleFilterChange({ method: method || undefined })
+                    }
+                    onSortOrderChange={(sortOrder) =>
+                        handleFilterChange({ sortOrder })
                     }
                     onDateChange={(dateRange) =>
                         handleFilterChange({

@@ -12,6 +12,7 @@ export type PaymentFilters = {
   hasOverdueInstallments?: boolean;
   isPartiallyPaid?: boolean;
   dueDaysAhead?: number;
+  sortOrder?: "asc" | "desc";
 };
 
 export type PaymentListQuery = PaymentFilters & {
