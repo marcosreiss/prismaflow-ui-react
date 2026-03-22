@@ -102,9 +102,9 @@ export default function PaymentsPage() {
             },
         },
         {
-            key: "createdAt",
-            label: "Data",
-            render: (row) => formatDateBR(row.createdAt),
+            key: "saleDate",
+            label: "Data da Venda",
+            render: (row) => formatDateBR(row.saleDate || row.sale?.saleDate || ""),
         },
     ];
 

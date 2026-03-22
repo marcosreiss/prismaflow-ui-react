@@ -482,6 +482,7 @@ function mapApiResponseToPaymentDetails(
   return {
     id: apiData.id,
     saleId: apiData.saleId,
+    saleDate: apiData.saleDate ?? apiData.sale?.saleDate ?? null,
     status: apiData.status,
     total: apiData.total,
     discount: apiData.discount,
@@ -498,6 +499,7 @@ function mapApiResponseToPaymentDetails(
     sale: apiData.sale
       ? {
           id: apiData.sale.id,
+          saleDate: apiData.sale.saleDate ?? apiData.saleDate ?? null,
           subtotal: apiData.sale.subtotal,
           discount: apiData.sale.discount,
           total: apiData.sale.total,

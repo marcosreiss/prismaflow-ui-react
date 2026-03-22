@@ -57,6 +57,7 @@ function mapPaymentsToListItems(
 
   return content.map((item: PaymentListItem) => ({
     ...item,
+    saleDate: item.saleDate ?? item.sale?.saleDate ?? null,
     clientName:
       item.sale?.client?.name || item.clientName || "Cliente não informado",
     discount: item.discount ?? 0,

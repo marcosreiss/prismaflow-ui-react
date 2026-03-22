@@ -341,8 +341,10 @@ export default function PaymentView({
                         Datas
                     </Typography>
                     <Stack spacing={1}>
-                        <Row label="Criado em" value={formatDate(payment.createdAt)} />
-                        <Row label="Última atualização" value={formatDate(payment.updatedAt)} />
+                        <Row
+                            label="Data da venda"
+                            value={formatDate(payment.saleDate ?? payment.sale?.saleDate)}
+                        />
                         <Row label="Último pagamento" value={formatDate(payment.lastPaymentAt)} />
                     </Stack>
                 </Box>

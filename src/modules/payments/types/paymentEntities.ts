@@ -31,6 +31,7 @@ export type PaymentMethodItem = {
 export type Payment = {
   id: number;
   saleId: number;
+  saleDate?: string | null;
   status: PaymentStatus;
   total: number;
   discount: number;
@@ -45,6 +46,7 @@ export type Payment = {
   methods: PaymentMethodItem[];
   sale?: {
     id: number;
+    saleDate?: string | null;
     total: number;
     clientName?: string;
   };

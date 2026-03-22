@@ -5,6 +5,7 @@ import type { PaymentMethodItem } from "./paymentEntities";
 export type PaymentListItem = {
   id: number;
   saleId: number;
+  saleDate?: string | null;
   clientName: string;
   status: PaymentStatus;
   total: number;
@@ -20,6 +21,7 @@ export type PaymentListItem = {
   tenantId?: string;
   sale?: {
     id: number;
+    saleDate?: string | null;
     total: number;
     client?: {
       name: string;

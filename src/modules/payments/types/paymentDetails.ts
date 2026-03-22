@@ -16,6 +16,7 @@ export type PaymentDetails = Payment & {
   methods: PaymentMethodItem[];
   sale?: {
     id: number;
+    saleDate?: string | null;
     subtotal?: number;
     discount?: number;
     total: number;
@@ -37,6 +38,7 @@ export type PaymentDetails = Payment & {
 export type PaymentApiDetailResponse = {
   id: number;
   saleId: number;
+  saleDate?: string | null;
   status: PaymentStatus;
   total: number;
   discount: number;
@@ -51,6 +53,7 @@ export type PaymentApiDetailResponse = {
   methods: PaymentMethodItem[];
   sale?: {
     id: number;
+    saleDate?: string | null;
     subtotal: number;
     discount: number;
     total: number;
