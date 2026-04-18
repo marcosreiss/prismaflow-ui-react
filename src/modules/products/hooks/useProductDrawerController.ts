@@ -85,14 +85,17 @@ export function useProductDrawerController({
   // ==========================
   // 🔹 Marcas (autocomplete)
   // ==========================
+  const [brandSearch, setBrandSearch] = useState("");
+
   const { data: brandData, refetch: refetchBrands } = useGetBrands({
     page: 1,
-    limit: 100,
+    limit: 20,
+    search: brandSearch,
   });
 
   const brandOptions = useMemo(
     () => brandData?.data?.content ?? [],
-    [brandData]
+    [brandData],
   );
 
   // ==========================
@@ -236,6 +239,10 @@ export function useProductDrawerController({
     updating,
     selectedBrand,
     openCreateBrandModal,
+
+    // brand search
+    brandSearch,
+    setBrandSearch,
 
     // dados
     brandOptions,

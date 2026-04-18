@@ -71,6 +71,8 @@ export default function ProductDrawer({
         updating,
         selectedBrand,
         openCreateBrandModal,
+        brandSearch,
+        setBrandSearch,
         brandOptions,
         handleBrandChange,
         handleOpenCreateBrandModal,
@@ -352,6 +354,10 @@ export default function ProductDrawer({
                                                 getOptionLabel={(option: Brand) => option.name}
                                                 value={selectedBrand}
                                                 onChange={(_, newValue) => handleBrandChange(newValue)}
+                                                inputValue={brandSearch}                   
+                                                onInputChange={(_, value) => setBrandSearch(value)} 
+                                                filterOptions={(x) => x}                   
+                                                isOptionEqualToValue={(option, value) => option.id === value.id}
                                                 renderInput={(params) => (
                                                     <TextField {...params} label="Marca" fullWidth size="small" />
                                                 )}
