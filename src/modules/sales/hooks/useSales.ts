@@ -1,3 +1,4 @@
+// src/modules/sales/hooks/useSales.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/utils/axios";
 import type {
@@ -83,8 +84,7 @@ export function useUpdateSale() {
 
   return useMutation<SaleResponse, unknown, SalePayload>({
     mutationFn: async (payload) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { clientId, id, ...updatePayload } = payload;
+      const { id, ...updatePayload } = payload;
       console.log("Updating sale with payload:", updatePayload);
       const { data } = await api.put(`${SALES_ENDPOINT}/${id}`, updatePayload);
       return data;

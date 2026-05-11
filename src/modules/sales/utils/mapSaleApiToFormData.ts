@@ -1,6 +1,4 @@
-// ==============================
-// 🔹 mapSaleApiToFormData.ts
-// ==============================
+// src/modules/sales/utils/mapSaleApiToFormData.ts
 import type {
   Sale,
   SalePayload,
@@ -24,6 +22,7 @@ export const mapSaleApiToFormData = (sale: Sale): SalePayload => {
     sale.productItems?.map((item: SaleProductItem) => ({
       productId: item.productId,
       quantity: item.quantity,
+      product: item.product,
       frameDetails: item.frameDetails
         ? {
             material: item.frameDetails.material,
@@ -39,6 +38,7 @@ export const mapSaleApiToFormData = (sale: Sale): SalePayload => {
   const serviceItems =
     sale.serviceItems?.map((item: SaleServiceItem) => ({
       serviceId: item.serviceId,
+      service: item.service,
     })) ?? [];
 
   // ==============================

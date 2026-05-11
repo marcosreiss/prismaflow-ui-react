@@ -1,3 +1,4 @@
+// src/modules/sales/context/SaleFormContext.tsx
 // Contexto global do fluxo de criação/edição de venda
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -12,6 +13,7 @@ import { useCreateSale, useUpdateSale } from "../hooks/useSales";
 import type { Product } from "@/modules/products/types/productTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
 import { buildSalePayload } from "../utils/salePayloadMapper";
+import { mapSaleApiToFormData } from "../utils/mapSaleApiToFormData";
 import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 
@@ -86,7 +88,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
     useEffect(() => {
         if (!isEditMode || !existingSale) return;
         if (!hydratedRef.current && existingSale?.id) {
-            resetForm(existingSale as unknown as SalePayload);
+            resetForm(mapSaleApiToFormData(existingSale));
             hydratedRef.current = true;
         }
     }, [isEditMode, existingSale, resetForm]);

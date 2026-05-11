@@ -1,9 +1,18 @@
+// src/modules/sales/types/salesTypes.ts
 import type { Client } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
 import type { OpticalService } from "@/modules/opticalservices/types/opticalServiceTypes";
-import type { Payment } from "@/modules/payments/types";
 import type { Product } from "@/modules/products/types/productTypes";
 import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
+
+export type SaleClientSummary = Pick<
+  Client,
+  "id" | "name" | "cpf" | "email" | "phone01"
+>;
+
+export type SalePaymentSummary = {
+  status: "PENDING" | "CONFIRMED" | "CANCELED";
+};
 
 // ==============================
 // 🔹 ENTIDADE: SALE
@@ -24,11 +33,11 @@ export type Sale = {
   updatedAt: string;
 
   // 🔹 Relações
-  client?: Client | null;
+  client?: SaleClientSummary | null;
   prescription?: Prescription | null;
   productItems?: SaleProductItem[];
   serviceItems?: SaleServiceItem[];
-  payment?: Payment | null;
+  payment?: SalePaymentSummary | null;
   protocol?: Protocol | null;
 };
 
