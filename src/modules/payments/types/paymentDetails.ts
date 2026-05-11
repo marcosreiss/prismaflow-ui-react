@@ -17,14 +17,15 @@ export type PaymentDetails = Payment & {
   sale?: {
     id: number;
     saleDate?: string | null;
+    clientId?: number;
     subtotal?: number;
     discount?: number;
     total: number;
     notes?: string | null;
-    clientName?: string;
     client?: {
       id: number;
       name: string;
+      phone01?: string | null;
     };
   };
   clientName?: string;
@@ -39,6 +40,7 @@ export type PaymentApiDetailResponse = {
   id: number;
   saleId: number;
   saleDate?: string | null;
+  subtotal: number;
   status: PaymentStatus;
   total: number;
   discount: number;
@@ -54,15 +56,15 @@ export type PaymentApiDetailResponse = {
   sale?: {
     id: number;
     saleDate?: string | null;
+    clientId: number;
     subtotal: number;
     discount: number;
     total: number;
     notes: string | null;
-    clientName: string;
-    client?: {
+    client: {
       id: number;
       name: string;
+      phone01?: string | null;
     };
   };
-  clientName?: string;
 };

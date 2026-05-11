@@ -2,7 +2,8 @@ import type { PaymentMethod, PaymentStatus } from "./paymentEnums";
 
 export type PaymentInstallmentItem = {
   id: number;
-  paymentMethodId: number;
+  paymentMethodItemId?: number;
+  paymentMethodId?: number;
   sequence: number;
   amount: number;
   paidAmount: number;
@@ -13,6 +14,24 @@ export type PaymentInstallmentItem = {
   tenantId: string;
   createdAt: string;
   updatedAt: string;
+  method?: PaymentMethod;
+  isPaid?: boolean;
+  isPartiallyPaid?: boolean;
+  isOverdue?: boolean;
+  daysOverdue?: number;
+  remainingAmount?: number;
+  paymentMethodItem?: {
+    id: number;
+    method: PaymentMethod;
+    amount: number;
+    payment: {
+      id: number;
+      saleId: number;
+      total: number;
+      status: PaymentStatus;
+      tenantId: string;
+    };
+  };
 };
 
 export type PaymentMethodItem = {
@@ -32,6 +51,7 @@ export type Payment = {
   id: number;
   saleId: number;
   saleDate?: string | null;
+  subtotal?: number;
   status: PaymentStatus;
   total: number;
   discount: number;
@@ -47,7 +67,15 @@ export type Payment = {
   sale?: {
     id: number;
     saleDate?: string | null;
+    clientId?: number;
+    subtotal?: number;
+    discount?: number;
     total: number;
-    clientName?: string;
+    notes?: string | null;
+    client?: {
+      id: number;
+      name: string;
+      phone01?: string | null;
+    };
   };
 };

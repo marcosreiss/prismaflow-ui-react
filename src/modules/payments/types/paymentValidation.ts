@@ -14,27 +14,36 @@ export type PaymentValidationStats = {
   paymentId: number;
   saleId: number;
   status: PaymentStatus;
+  subtotal: number;
   total: number;
   discount: number;
   paidAmount: number;
   installmentsPaid: number;
   methodsCount: number;
-  sumOfMethods: number;
+  sumMethods: number;
+  instantMethodsPaid: number;
   installmentsCreated: number;
-  sumOfInstallments: number;
 };
 
 export type PaymentValidationResponse = {
   valid: boolean;
   stats: PaymentValidationStats;
   issues?: IntegrityIssue[];
-  installments: Array<{
+  methods?: Array<{
     id: number;
     method: PaymentMethod;
-    sequence: number;
     amount: number;
-    paidAmount: number;
-    dueDate: string | null;
     isPaid: boolean;
+    paidAt: string | null;
+    installments?: number | null;
+    installmentItems: Array<{
+      id: number;
+      sequence: number;
+      amount: number;
+      paidAmount: number;
+      dueDate: string | null;
+      isPaid: boolean;
+      paidAt: string | null;
+    }>;
   }>;
 };

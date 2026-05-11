@@ -66,10 +66,8 @@ export default function PaymentView({
             ...fetchedPayment,
             clientName:
                 fetchedPayment.clientName ||
-                fetchedPayment.sale?.clientName ||
                 fetchedPayment.sale?.client?.name ||
                 initialPayment?.clientName ||
-                initialPayment?.sale?.clientName ||
                 initialPayment?.sale?.client?.name ||
                 "Cliente não informado",
         };
@@ -105,7 +103,7 @@ export default function PaymentView({
     // Valor pendente total do pagamento
     const pendingAmount = useMemo(() => {
         if (!payment) return 0;
-        return Math.max(0, payment.total - payment.discount - payment.paidAmount);
+        return Math.max(0, payment.total - payment.paidAmount);
     }, [payment]);
 
     // Métodos que possuem parcelas

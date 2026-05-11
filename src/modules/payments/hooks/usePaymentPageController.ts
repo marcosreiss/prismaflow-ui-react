@@ -6,7 +6,6 @@ import { useNotification } from "@/context/NotificationContext";
 
 import {
   useGetPayments,
-  useDeletePayment,
   useUpdatePaymentStatus,
   usePayInstallment,
 } from "./usePayments";
@@ -48,6 +47,24 @@ function buildPaymentsQueryParams(
     }),
     ...(filters.sortOrder && { sortOrder: filters.sortOrder }),
   };
+}
+
+function normalizePaymentFilters(
+  current: PaymentFilters,
+  next: Partial<PaymentFilters>,
+): PaymentFilters {
+  const merged = { ...current, ...next };
+
+  if (merged.hasOverdueInstallments && merged.dueDaysAhead !== undefined) {
+    merged.dueDaysAhead = undefined;
+  }
+
+  if (merged.method && merged.method !== "INSTALLMENT") {
+    merged.hasOverdueInstallments = undefined;
+    merged.dueDaysAhead = undefined;
+  }
+
+  return merged;
 }
 
 function mapPaymentsToListItems(
@@ -108,25 +125,6 @@ function useDrawerState() {
   };
 }
 
-function useConfirmationsState() {
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
-
-  return {
-    confirmDelete,
-    setConfirmDelete,
-    confirmDeleteSelected,
-    setConfirmDeleteSelected,
-  };
-}
-
-function useSelectionState() {
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [deletingIds, setDeletingIds] = useState<number[]>([]);
-
-  return { selectedIds, setSelectedIds, deletingIds, setDeletingIds };
-}
-
 function useErrorNotificationEffect(error: unknown) {
   const { addNotification } = useNotification();
   const addNotificationRef = useRef(addNotification);
@@ -166,15 +164,6 @@ export function usePaymentPageController() {
     selectedPayment,
     setSelectedPayment,
   } = useDrawerState();
-  const {
-    confirmDelete,
-    setConfirmDelete,
-    confirmDeleteSelected,
-    setConfirmDeleteSelected,
-  } = useConfirmationsState();
-  const { selectedIds, setSelectedIds, deletingIds, setDeletingIds } =
-    useSelectionState();
-
   const queryParams = useMemo(
     () => buildPaymentsQueryParams(page, limit, filters),
     [page, limit, filters],
@@ -183,7 +172,6 @@ export function usePaymentPageController() {
   const { data, isLoading, isFetching, refetch, error } =
     useGetPayments(queryParams);
 
-  const deletePayment = useDeletePayment();
   const updatePaymentStatus = useUpdatePaymentStatus();
   const payInstallment = usePayInstallment();
 
@@ -192,7 +180,7 @@ export function usePaymentPageController() {
   // Handlers de filtros
   const handleFilterChange = useCallback(
     (newFilters: Partial<PaymentFilters>) => {
-      setFilters((prev) => ({ ...prev, ...newFilters }));
+      setFilters((prev) => normalizePaymentFilters(prev, newFilters));
       setPage(0);
     },
     [setFilters],
@@ -233,39 +221,6 @@ export function usePaymentPageController() {
     if (!selectedPayment) return;
     handleOpenDrawer("edit", selectedPayment);
   }, [selectedPayment, handleOpenDrawer]);
-
-  const handleDrawerDelete = useCallback(
-    (payment: Payment | PaymentListItem) => {
-      setSelectedPayment(payment as PaymentDetails);
-      setConfirmDelete(true);
-    },
-    [setSelectedPayment, setConfirmDelete],
-  );
-
-  // Exclusão individual
-  const handleDelete = useCallback(async () => {
-    if (!selectedPayment) return;
-
-    try {
-      const res = await deletePayment.mutateAsync(selectedPayment.id);
-      addNotification(res.message, "success");
-      setConfirmDelete(false);
-      handleCloseDrawer();
-      refetch();
-    } catch (err) {
-      const axiosErr = err as AxiosError<ApiResponse<null>>;
-      const message =
-        axiosErr.response?.data?.message ?? "Erro ao excluir pagamento.";
-      addNotification(message, "error");
-    }
-  }, [
-    selectedPayment,
-    deletePayment,
-    addNotification,
-    setConfirmDelete,
-    handleCloseDrawer,
-    refetch,
-  ]);
 
   // Atualização de status
   const handleUpdateStatus = useCallback(
@@ -308,79 +263,9 @@ export function usePaymentPageController() {
     [payInstallment, addNotification, refetch],
   );
 
-  // Seleção de linhas
-  const handleSelectRow = useCallback(
-    (id: string | number, checked: boolean) => {
-      setSelectedIds((prev) =>
-        checked ? [...prev, id as number] : prev.filter((i) => i !== id),
-      );
-    },
-    [setSelectedIds],
-  );
-
-  const handleSelectAll = useCallback(
-    (checked: boolean, currentPageIds: (string | number)[]) => {
-      setSelectedIds(checked ? (currentPageIds as number[]) : []);
-    },
-    [setSelectedIds],
-  );
-
-  // Exclusão em massa
-  const handleDeleteSelected = useCallback(async () => {
-    if (selectedIds.length === 0) return;
-
-    setConfirmDeleteSelected(false);
-    setDeletingIds(selectedIds);
-
-    try {
-      const deletePromises = selectedIds.map((id) =>
-        deletePayment.mutateAsync(id),
-      );
-      const results = await Promise.allSettled(deletePromises);
-
-      let successCount = 0;
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
-          successCount++;
-        } else {
-          addNotification(
-            `Erro ao excluir pagamento ${selectedIds[index]}`,
-            "error",
-          );
-        }
-      });
-
-      if (successCount > 0) {
-        addNotification(
-          `${successCount} pagamento(s) excluído(s) com sucesso`,
-          "success",
-        );
-      }
-    } catch (err) {
-      const axiosErr = err as AxiosError<ApiResponse<null>>;
-      const message =
-        axiosErr?.response?.data?.message ??
-        "Erro ao excluir pagamentos selecionados";
-      addNotification(message, "error");
-    } finally {
-      setDeletingIds([]);
-      setSelectedIds([]);
-      refetch();
-    }
-  }, [
-    selectedIds,
-    setConfirmDeleteSelected,
-    setDeletingIds,
-    deletePayment,
-    addNotification,
-    setSelectedIds,
-    refetch,
-  ]);
-
   const payments: PaymentListItem[] = useMemo(() => mapPaymentsToListItems(data), [data]);
   const total = data?.data?.totalElements ?? 0;
 
-  const isDeleting = deletePayment.isPending;
   const isUpdatingStatus = updatePaymentStatus.isPending;
   const isPayingInstallment = payInstallment.isPending;
 
@@ -394,12 +279,6 @@ export function usePaymentPageController() {
     drawerOpen,
     drawerMode,
     selectedPayment,
-    confirmDelete,
-
-    // Seleção
-    selectedIds,
-    confirmDeleteSelected,
-    deletingIds,
 
     // Filtros
     filters,
@@ -411,7 +290,6 @@ export function usePaymentPageController() {
     isFetching,
 
     // Loading de mutations
-    isDeleting,
     isUpdatingStatus,
     isPayingInstallment,
 
@@ -422,18 +300,12 @@ export function usePaymentPageController() {
     setDrawerOpen,
     setDrawerMode,
     setSelectedPayment,
-    setConfirmDelete,
-    setConfirmDeleteSelected,
 
     // Handlers
     handleFilterChange,
     handleClearFilters,
     handleOpenDrawer,
     handleCloseDrawer,
-    handleDelete,
-    handleSelectRow,
-    handleSelectAll,
-    handleDeleteSelected,
     refetch,
 
     // Ações específicas
@@ -442,12 +314,10 @@ export function usePaymentPageController() {
 
     // Ações do drawer
     handleDrawerEdit,
-    handleDrawerDelete,
-
     // Utilitários
     addNotification,
-    hasSelectedItems: selectedIds.length > 0,
-    selectedCount: selectedIds.length,
-    isAnyMutationPending: isDeleting || isUpdatingStatus || isPayingInstallment,
+    hasSelectedItems: false,
+    selectedCount: 0,
+    isAnyMutationPending: isUpdatingStatus || isPayingInstallment,
   };
 }

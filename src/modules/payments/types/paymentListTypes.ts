@@ -6,7 +6,7 @@ export type PaymentListItem = {
   id: number;
   saleId: number;
   saleDate?: string | null;
-  clientName: string;
+  clientName?: string;
   status: PaymentStatus;
   total: number;
   paidAmount: number;
@@ -14,16 +14,23 @@ export type PaymentListItem = {
   createdAt: string;
   updatedAt: string;
   methods: PaymentMethodItem[];
+  subtotal?: number;
   discount?: number;
   lastPaymentAt?: string | null;
   isActive?: boolean;
   branchId?: string;
   tenantId?: string;
+  hasOverdueInstallments?: boolean;
+  overdueCount?: number;
+  nextDueDate?: string | null;
+  nextDueAmount?: number | null;
   sale?: {
     id: number;
     saleDate?: string | null;
+    clientId?: number;
     total: number;
     client?: {
+      id?: number;
       name: string;
     };
   };

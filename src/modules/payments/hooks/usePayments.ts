@@ -253,9 +253,10 @@ export const usePayInstallment = () => {
         queryKey: ["payment", "details"],
       });
 
-      if (res.data?.paymentMethodId) {
+      const paymentId = res.data?.paymentMethodItem?.payment.id;
+      if (paymentId) {
         queryClient.invalidateQueries({
-          queryKey: ["installments", "payment", res.data.paymentMethodId],
+          queryKey: ["installments", "payment", paymentId],
         });
       }
 
@@ -299,9 +300,10 @@ export const useUpdateInstallment = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["payments"] });
 
-      if (res.data?.paymentMethodId) {
+      const paymentId = res.data?.paymentMethodItem?.payment.id;
+      if (paymentId) {
         queryClient.invalidateQueries({
-          queryKey: ["payment", "details", res.data.paymentMethodId],
+          queryKey: ["payment", "details", paymentId],
         });
       }
 
@@ -309,36 +311,6 @@ export const useUpdateInstallment = () => {
     },
     onError: (err) => {
       console.error("Erro ao atualizar parcela:", err.response?.data?.message);
-    },
-  });
-};
-
-// =============================
-// HOOK: CREATE PAYMENT
-// Cria o registro de pagamento vinculado a uma venda.
-// Após criar, use useConfigurePayment para definir os métodos.
-// =============================
-export const useCreatePayment = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    ApiResponse<Payment>,
-    AxiosError<ApiResponse<null>>,
-    { saleId: number; branchId: string; tenantId: string }
-  >({
-    mutationFn: async (payload) => {
-      const { data } = await baseApi.post<ApiResponse<Payment>>(
-        "/api/payments",
-        payload,
-      );
-      return data;
-    },
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
-      console.log("Pagamento criado:", res.message);
-    },
-    onError: (err) => {
-      console.error("Erro ao criar pagamento:", err.response?.data?.message);
     },
   });
 };
@@ -378,29 +350,6 @@ export const useConfigurePayment = () => {
         "Erro ao configurar pagamento:",
         err.response?.data?.message,
       );
-    },
-  });
-};
-
-// =============================
-// HOOK: DELETE PAYMENT
-// =============================
-export const useDeletePayment = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<ApiResponse<null>, AxiosError<ApiResponse<null>>, number>({
-    mutationFn: async (id) => {
-      const { data } = await baseApi.delete<ApiResponse<null>>(
-        `/api/payments/${id}`,
-      );
-      return data;
-    },
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
-      console.log("Pagamento excluído:", res.message);
-    },
-    onError: (err) => {
-      console.error("Erro ao excluir pagamento:", err.response?.data?.message);
     },
   });
 };
@@ -478,15 +427,14 @@ function mapApiResponseToPaymentDetails(
   apiData: PaymentApiDetailResponse,
 ): PaymentDetails {
   const clientName =
-    apiData.sale?.clientName ||
     apiData.sale?.client?.name ||
-    apiData.clientName ||
     "Cliente não informado";
 
   return {
     id: apiData.id,
     saleId: apiData.saleId,
     saleDate: apiData.saleDate ?? apiData.sale?.saleDate ?? null,
+    subtotal: apiData.subtotal,
     status: apiData.status,
     total: apiData.total,
     discount: apiData.discount,
@@ -504,11 +452,11 @@ function mapApiResponseToPaymentDetails(
       ? {
           id: apiData.sale.id,
           saleDate: apiData.sale.saleDate ?? apiData.saleDate ?? null,
+          clientId: apiData.sale.clientId,
           subtotal: apiData.sale.subtotal,
           discount: apiData.sale.discount,
           total: apiData.sale.total,
           notes: apiData.sale.notes,
-          clientName: apiData.sale.clientName,
           client: apiData.sale.client,
         }
       : undefined,

@@ -1,7 +1,6 @@
-import { Paper, Button, Box } from "@mui/material";
+import { Paper, Box } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
-import PFConfirmDialog from "@/components/crud/PFConfirmDialog";
 import formatDateBR from "@/utils/format-date";
 import PaymentDrawer from "../components/paymentDrawer";
 import PaymentFilters from "../components/PaymentFilters";
@@ -28,23 +27,13 @@ export default function PaymentsPage() {
         drawerOpen,
         drawerMode,
         selectedPayment,
-        confirmDelete,
-        selectedIds,
-        confirmDeleteSelected,
-        deletingIds,
         filters,
 
         // Ações
         setPage,
         setLimit,
-        setConfirmDelete,
-        setConfirmDeleteSelected,
         handleOpenDrawer,
         handleCloseDrawer,
-        handleDelete,
-        handleSelectRow,
-        handleSelectAll,
-        handleDeleteSelected,
         refetch,
 
         // Filtros
@@ -52,14 +41,12 @@ export default function PaymentsPage() {
 
         // Drawer
         handleDrawerEdit,
-        handleDrawerDelete,
 
         // Específicos
         handleUpdateStatus,
         handlePayInstallment,
 
         // Loading
-        isDeleting,
         isAnyMutationPending,
     } = controller;
 
@@ -129,24 +116,6 @@ export default function PaymentsPage() {
                     [handleFilterChange]
                 )}
                 onRefresh={() => refetch()}
-                actionsExtra={
-                    selectedIds.length > 0 && (
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            onClick={() => setConfirmDeleteSelected(true)}
-                            sx={{
-                                whiteSpace: "nowrap",
-                                fontWeight: 500,
-                                textTransform: "none",
-                                borderWidth: 1.5,
-                                "&:hover": { borderWidth: 1.5 },
-                            }}
-                        >
-                            Excluir selecionados ({selectedIds.length})
-                        </Button>
-                    )
-                }
             />
 
             <Box sx={{ mb: 3, mt: 2 }}>
@@ -208,12 +177,6 @@ export default function PaymentsPage() {
                 getRowId={(row) => row.id}
                 onRowClick={(_, row) => handleOpenDrawer("view", row)}
                 onEdit={(row) => handleOpenDrawer("edit", row)}
-                onDelete={(row) => handleDrawerDelete(row)}
-                selectable
-                selectedRows={selectedIds}
-                onSelectRow={handleSelectRow}
-                onSelectAll={handleSelectAll}
-                isRowDisabled={(row) => deletingIds.includes(row.id)}
             />
 
             <PaymentDrawer
@@ -223,28 +186,9 @@ export default function PaymentsPage() {
                 paymentId={selectedPayment?.id || null}
                 onClose={handleCloseDrawer}
                 onEdit={handleDrawerEdit}
-                onDelete={handleDrawerDelete}
                 onUpdateStatus={handleUpdateStatus}
                 onPayInstallment={handlePayInstallment}
                 onUpdated={() => refetch()}
-            />
-
-            <PFConfirmDialog
-                open={confirmDelete}
-                title="Excluir pagamento"
-                description={`Deseja realmente excluir o pagamento #${selectedPayment?.id}?`}
-                onCancel={() => setConfirmDelete(false)}
-                onConfirm={handleDelete}
-                loading={isDeleting || isAnyMutationPending}
-            />
-
-            <PFConfirmDialog
-                open={confirmDeleteSelected}
-                title="Excluir pagamentos selecionados"
-                description={`Deseja realmente excluir ${selectedIds.length} pagamento${selectedIds.length > 1 ? "s" : ""} selecionado${selectedIds.length > 1 ? "s" : ""}?`}
-                onCancel={() => setConfirmDeleteSelected(false)}
-                onConfirm={handleDeleteSelected}
-                loading={isDeleting || isAnyMutationPending}
             />
         </Paper>
     );

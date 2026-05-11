@@ -22,7 +22,6 @@ interface UsePaymentDrawerControllerProps {
   payment?: PaymentDetails | null;
   onUpdated: (payment: Payment) => void;
   onEdit: () => void;
-  onDelete: (payment: Payment) => void;
   onUpdateStatus: (
     paymentId: number,
     status: PaymentStatus,
@@ -43,7 +42,6 @@ export function usePaymentDrawerController({
   payment,
   onUpdated,
   onEdit,
-  onDelete,
   onUpdateStatus,
   onPayInstallment,
 }: UsePaymentDrawerControllerProps) {
@@ -75,7 +73,7 @@ export function usePaymentDrawerController({
     if ((mode === "edit" || mode === "view") && payment) {
       reset({
         saleId: payment.saleId,
-        total: payment.total,
+        total: payment.subtotal ?? payment.total,
         discount: payment.discount,
         status: payment.status,
         methods: payment.methods.map((m) => ({
@@ -154,7 +152,6 @@ export function usePaymentDrawerController({
       }
 
       const payload: ConfigurePaymentPayload = {
-        total: values.total,
         discount: values.discount,
         methods: values.methods.map(
           (m): PaymentMethodPayload => ({
@@ -241,7 +238,6 @@ export function usePaymentDrawerController({
 
     // callbacks repassados para o JSX
     onEdit,
-    onDelete,
     onUpdateStatus,
     onPayInstallment,
 

@@ -58,6 +58,12 @@ export default function PaymentFilters({
     onPartiallyPaidChange,
     onDueDaysChange,
 }: PaymentFiltersProps) {
+    const installmentOnlyFiltersActive =
+        hasOverdueInstallments || dueDaysAhead !== undefined;
+    const methodBlocksInstallmentFilters =
+        method !== '' && method !== 'INSTALLMENT';
+    const dueDaysDisabled = hasOverdueInstallments === true;
+    const overdueDisabled = dueDaysAhead !== undefined;
 
     // ✅ ATUALIZADO: Limpar todos os filtros (incluindo novos)
     const handleClearFilters = () => {
@@ -171,7 +177,11 @@ export default function PaymentFilters({
                     >
                         <MenuItem value="">Todos</MenuItem>
                         {Object.entries(PaymentMethodLabels).map(([key, label]) => (
-                            <MenuItem key={key} value={key}>
+                            <MenuItem
+                                key={key}
+                                value={key}
+                                disabled={installmentOnlyFiltersActive && key !== 'INSTALLMENT'}
+                            >
                                 {label}
                             </MenuItem>
                         ))}
@@ -253,6 +263,7 @@ export default function PaymentFilters({
                                 checked={hasOverdueInstallments || false}
                                 onChange={(e) => onOverdueChange?.(e.target.checked)}
                                 size="small"
+                                disabled={overdueDisabled || methodBlocksInstallmentFilters}
                             />
                         }
                         label="Com parcelas vencidas"
@@ -278,6 +289,7 @@ export default function PaymentFilters({
                         type="number"
                         label="Vence nos próximos (dias)"
                         value={dueDaysAhead ?? ''}
+                        disabled={dueDaysDisabled || methodBlocksInstallmentFilters}
                         onChange={(e) => {
                             const value = e.target.value;
                             onDueDaysChange?.(value ? Number(value) : undefined);
@@ -288,7 +300,13 @@ export default function PaymentFilters({
                             placeholder: "Ex: 7"
                         }}
                         fullWidth
-                        helperText="Ex: 7 para próximos 7 dias"
+                        helperText={
+                            methodBlocksInstallmentFilters
+                                ? "Disponível apenas com método INSTALLMENT"
+                                : dueDaysDisabled
+                                    ? "Limpe o filtro de parcelas vencidas para usar este campo"
+                                    : "Ex: 7 para próximos 7 dias"
+                        }
                     />
                 </Box>
             </Stack>

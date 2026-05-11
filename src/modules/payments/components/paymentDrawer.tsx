@@ -9,7 +9,7 @@ import {
     Stack,
     Tooltip,
 } from "@mui/material";
-import { X, Pencil, Trash2, CreditCard } from "lucide-react";
+import { X, Pencil, CreditCard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
 
@@ -30,7 +30,6 @@ interface PaymentDrawerProps {
     paymentId: number | null;
     onClose: () => void;
     onEdit: () => void;
-    onDelete: (payment: PaymentDetails) => void;
     onUpdateStatus: (paymentId: number, status: PaymentStatus, reason?: string) => void;
     onPayInstallment: (installmentId: number, paidAmount: number, paidAt?: string) => void;
     onUpdated: (payment: Payment) => void;
@@ -45,7 +44,6 @@ export default function PaymentDrawer({
     payment,
     onClose,
     onEdit,
-    onDelete,
     onUpdateStatus,
     onPayInstallment,
     onUpdated,
@@ -55,7 +53,6 @@ export default function PaymentDrawer({
         payment,
         onUpdated,
         onEdit,
-        onDelete,
         onUpdateStatus,
         onPayInstallment,
     });
@@ -80,16 +77,6 @@ export default function PaymentDrawer({
         setCurrentPayment(payment ?? null);
     }, [payment]);
 
-    // Foca no primeiro campo ao abrir em modo edit
-    useEffect(() => {
-        if (open && isEdit) {
-            const firstInput = document.querySelector<HTMLInputElement>(
-                "input[name='total']"
-            );
-            firstInput?.focus();
-        }
-    }, [open, isEdit]);
-
     // Atualiza status e reflete localmente sem aguardar o React Query
     const handleStatusChangeWithOptimisticUpdate = async (
         status: PaymentStatus,
@@ -102,7 +89,9 @@ export default function PaymentDrawer({
 
     // Edição bloqueada quando qualquer método já foi pago — backend rejeita o replace
     const isEditBlocked =
-        !!currentPayment?.methods?.some((m) => m.isPaid);
+        !!currentPayment?.methods?.some(
+            (m) => m.isPaid || m.installmentItems.some((installment) => installment.paidAt !== null)
+        );
 
     return (
         <Drawer
@@ -175,17 +164,6 @@ export default function PaymentDrawer({
                                     </Button>
                                 </span>
                             </Tooltip>
-
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color="error"
-                                startIcon={<Trash2 size={14} />}
-                                onClick={() => onDelete(currentPayment)}
-                            >
-                                Remover
-                            </Button>
-
                             {currentPayment.status === "PENDING" && (
                                 <Button
                                     size="small"
@@ -199,18 +177,6 @@ export default function PaymentDrawer({
                                 </Button>
                             )}
 
-                            {currentPayment.status === "CONFIRMED" && (
-                                <Button
-                                    size="small"
-                                    variant="outlined"
-                                    color="warning"
-                                    onClick={() =>
-                                        handleStatusChangeWithOptimisticUpdate("PENDING")
-                                    }
-                                >
-                                    Reverter para pendente
-                                </Button>
-                            )}
                         </Stack>
 
                         <Divider sx={{ mb: 2 }} />
