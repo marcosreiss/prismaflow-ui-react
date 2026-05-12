@@ -1,3 +1,4 @@
+// src/modules/payments/hooks/usePaymentPageController.ts
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import type { AxiosError } from "axios";
 
@@ -222,6 +223,10 @@ export function usePaymentPageController() {
     handleOpenDrawer("edit", selectedPayment);
   }, [selectedPayment, handleOpenDrawer]);
 
+  const handleDrawerBackToView = useCallback(() => {
+    setDrawerMode("view");
+  }, [setDrawerMode]);
+
   // Atualização de status
   const handleUpdateStatus = useCallback(
     async (paymentId: number, status: PaymentStatus, reason?: string) => {
@@ -263,7 +268,10 @@ export function usePaymentPageController() {
     [payInstallment, addNotification, refetch],
   );
 
-  const payments: PaymentListItem[] = useMemo(() => mapPaymentsToListItems(data), [data]);
+  const payments: PaymentListItem[] = useMemo(
+    () => mapPaymentsToListItems(data),
+    [data],
+  );
   const total = data?.data?.totalElements ?? 0;
 
   const isUpdatingStatus = updatePaymentStatus.isPending;
@@ -314,10 +322,10 @@ export function usePaymentPageController() {
 
     // Ações do drawer
     handleDrawerEdit,
+    handleDrawerBackToView,
     // Utilitários
     addNotification,
     hasSelectedItems: false,
     selectedCount: 0,
-    isAnyMutationPending: isUpdatingStatus || isPayingInstallment,
   };
 }

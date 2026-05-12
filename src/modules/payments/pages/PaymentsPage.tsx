@@ -1,3 +1,4 @@
+// src/modules/payments/pages/PaymentsPage.tsx
 import { Paper, Box } from "@mui/material";
 import PFTable, { type ColumnDef } from "@/components/crud/PFTable";
 import PFTopToolbar from "@/components/crud/PFTopToolbar";
@@ -8,7 +9,6 @@ import { usePaymentPageController } from "../hooks/usePaymentPageController";
 import { PaymentMethodLabels } from "../types/paymentEnums";
 import type { PaymentListItem } from "../types/paymentListTypes";
 import { useCallback } from "react";
-// import PFMaintenance from "@/components/feedback/PFMaintenance";
 
 // ==============================
 // Página principal de pagamentos
@@ -41,13 +41,13 @@ export default function PaymentsPage() {
 
         // Drawer
         handleDrawerEdit,
+        handleDrawerBackToView,
 
         // Específicos
         handleUpdateStatus,
         handlePayInstallment,
 
         // Loading
-        isAnyMutationPending,
     } = controller;
 
     // ==============================
@@ -186,18 +186,11 @@ export default function PaymentsPage() {
                 paymentId={selectedPayment?.id || null}
                 onClose={handleCloseDrawer}
                 onEdit={handleDrawerEdit}
+                onBackToView={handleDrawerBackToView}
                 onUpdateStatus={handleUpdateStatus}
                 onPayInstallment={handlePayInstallment}
                 onUpdated={() => refetch()}
             />
         </Paper>
     );
-
-    // return (
-    //     <PFMaintenance
-    //         title="Pagamentos em Manutenção"
-    //         description="Os pagamentos estão em manutenção. Por favor, tente novamente mais tarde."
-    //         backUrl="/"
-    //     />
-    // )
 }

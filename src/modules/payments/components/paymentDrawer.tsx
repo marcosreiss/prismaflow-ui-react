@@ -1,3 +1,4 @@
+// src/modules/payments/components/paymentDrawer.tsx
 import {
     Drawer,
     Box,
@@ -30,6 +31,7 @@ interface PaymentDrawerProps {
     paymentId: number | null;
     onClose: () => void;
     onEdit: () => void;
+    onBackToView: () => void;
     onUpdateStatus: (paymentId: number, status: PaymentStatus, reason?: string) => void;
     onPayInstallment: (installmentId: number, paidAmount: number, paidAt?: string) => void;
     onUpdated: (payment: Payment) => void;
@@ -47,6 +49,7 @@ export default function PaymentDrawer({
     onUpdateStatus,
     onPayInstallment,
     onUpdated,
+    onBackToView,
 }: PaymentDrawerProps) {
     const controller = usePaymentDrawerController({
         mode,
@@ -55,6 +58,7 @@ export default function PaymentDrawer({
         onEdit,
         onUpdateStatus,
         onPayInstallment,
+        onBackToView,
     });
 
     const {

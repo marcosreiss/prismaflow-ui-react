@@ -245,7 +245,7 @@ export default function PaymentView({
                     </Typography>
                     <Stack spacing={1}>
                         <Row label="ID" value={payment.id} />
-                        <Row label="Venda ID" value={payment.saleId} />
+                        <Row label="ID da Venda" value={payment.saleId} />
                         <Row label="Cliente" value={payment.clientName ?? "-"} />
                         <Row
                             label="Status"
@@ -321,8 +321,9 @@ export default function PaymentView({
                         Valores
                     </Typography>
                     <Stack spacing={1}>
-                        <Row label="Valor Total" value={formatCurrency(payment.total)} />
+                        <Row label="Subtotal" value={formatCurrency(payment.subtotal)} />
                         <Row label="Desconto" value={formatCurrency(payment.discount)} />
+                        <Row label="Valor Total" value={formatCurrency(payment.total)} />
                         <Row label="Valor Pago" value={formatCurrency(payment.paidAmount)} />
                         <Row label="Valor Pendente" value={formatCurrency(pendingAmount)} />
                         <Row

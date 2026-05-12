@@ -1,3 +1,4 @@
+// src/modules/payments/hooks/usePaymentDrawerController.ts
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNotification } from "@/context/NotificationContext";
@@ -22,6 +23,7 @@ interface UsePaymentDrawerControllerProps {
   payment?: PaymentDetails | null;
   onUpdated: (payment: Payment) => void;
   onEdit: () => void;
+  onBackToView: () => void;
   onUpdateStatus: (
     paymentId: number,
     status: PaymentStatus,
@@ -42,6 +44,7 @@ export function usePaymentDrawerController({
   payment,
   onUpdated,
   onEdit,
+  onBackToView,
   onUpdateStatus,
   onPayInstallment,
 }: UsePaymentDrawerControllerProps) {
@@ -174,6 +177,7 @@ export function usePaymentDrawerController({
       if (res?.data) {
         onUpdated(res.data);
         addNotification("Pagamento configurado com sucesso!", "success");
+        onBackToView();
       }
     } catch (error) {
       const axiosErr = error as AxiosError<ApiResponse<null>>;
