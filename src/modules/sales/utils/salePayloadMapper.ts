@@ -1,3 +1,4 @@
+// src/modules/sales/utils/salePayloadMapper.ts
 // Transforma o estado do formulário no payload final para a API
 import type { Product } from "@/modules/products/types/productTypes";
 import type { SalePayload, Protocol } from "../types/salesTypes";
@@ -57,9 +58,6 @@ export function buildSalePayload(data: SalePayload): SalePayload {
     prescriptionId: data.prescriptionId ?? null,
     productItems,
     serviceItems,
-    subtotal: data.subtotal ?? 0,
-    discount: data.discount ?? 0,
-    total: data.total ?? 0,
     notes: normalizeString(data.notes),
     protocol,
   };

@@ -95,9 +95,6 @@ export type SalePayload = {
   prescriptionId?: number | null;
   productItems?: SaleProductItem[];
   serviceItems?: SaleServiceItem[];
-  subtotal?: number;
-  discount?: number;
-  total?: number;
   notes?: string;
   protocol?: Protocol | null;
 };
@@ -116,7 +113,6 @@ export const FrameMaterialTypeLabels: Record<FrameMaterialType, string> = {
   TR90: "TR-90",
   OTHER: "Outro",
 };
-
 
 export type SalesResponse = ApiResponse<PaginatedResponse<Sale>>;
 export type SaleResponse = ApiResponse<Sale>;
