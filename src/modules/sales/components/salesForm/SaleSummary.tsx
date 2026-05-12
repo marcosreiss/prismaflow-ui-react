@@ -1,5 +1,5 @@
-// Resumo financeiro e dados da receita selecionada
-import { useFormContext, Controller } from "react-hook-form";
+// src/modules/sales/components/salesForm/SaleSummary.tsx
+import { useFormContext } from "react-hook-form";
 import { useGetPrescriptionById } from "@/modules/clients/hooks/usePrescription";
 import CurrencyInput from "@/components/imask/CurrencyInput";
 import {
@@ -11,13 +11,22 @@ import type { SalePayload } from "@/modules/sales/types/salesTypes";
 import PrescriptionPreview from "./PrescriptionPreview";
 
 export default function SaleSummary() {
-    const { control, watch } = useFormContext<SalePayload>();
+    const { watch } = useFormContext<SalePayload>();
     const [showRx, setShowRx] = useState(false);
 
-    const subtotal = watch("subtotal") ?? 0;
-    const total = watch("total") ?? 0;
+    const productItems = watch("productItems") ?? [];
+    const serviceItems = watch("serviceItems") ?? [];
     const prescriptionId = watch("prescriptionId");
-    const discountValue = subtotal - total;
+
+    // Desconto é o único campo financeiro que ainda vive no form
+    // (usado apenas localmente para exibição — não é enviado à API)
+    const [discount, setDiscount] = useState(0);
+
+    const subtotal =
+        productItems.reduce((acc, item) => acc + (item.product?.salePrice ?? 0) * (item.quantity ?? 1), 0) +
+        serviceItems.reduce((acc, item) => acc + (item.service?.price ?? 0), 0);
+
+    const total = Math.max(0, subtotal - discount);
 
     const { data: prescriptionResponse } = useGetPrescriptionById(
         prescriptionId ?? undefined
@@ -42,28 +51,22 @@ export default function SaleSummary() {
                 {/* Desconto */}
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Typography variant="body1" color="text.secondary">Desconto</Typography>
-                    <Controller
-                        name="discount"
-                        control={control}
-                        render={({ field }) => (
-                            <CurrencyInput
-                                size="small"
-                                label=""
-                                value={typeof field.value === "number" ? field.value : 0}
-                                onChange={(val) => field.onChange(val)}
-                                sx={{ width: 120 }}
-                                inputProps={{ min: 0, max: subtotal }}
-                            />
-                        )}
+                    <CurrencyInput
+                        size="small"
+                        label=""
+                        value={discount}
+                        onChange={(val) => setDiscount(val ?? 0)}
+                        sx={{ width: 120 }}
+                        inputProps={{ min: 0, max: subtotal }}
                     />
                 </Stack>
 
                 {/* Valor do desconto */}
-                {discountValue > 0 && (
+                {discount > 0 && (
                     <Stack direction="row" justifyContent="space-between">
                         <Typography variant="body2" color="text.secondary">Valor do desconto</Typography>
                         <Typography variant="body2" color="error.main">
-                            -{discountValue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            -{discount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                         </Typography>
                     </Stack>
                 )}

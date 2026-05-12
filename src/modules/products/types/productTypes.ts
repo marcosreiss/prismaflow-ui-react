@@ -1,3 +1,4 @@
+// src/modules/products/types/productTypes.ts
 import type { ApiResponse, PaginatedResponse } from "@/utils/apiResponse";
 import type { Brand } from "@/modules/brands/types/brandTypes";
 
