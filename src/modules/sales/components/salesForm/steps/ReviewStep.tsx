@@ -1,3 +1,4 @@
+// src/modules/sales/components/salesForm/steps/ReviewStep.tsx
 // Step 4: revisão completa dos dados da venda antes do submit
 import { Box, Typography, Paper, Stack, Divider, Collapse, IconButton, Tooltip } from "@mui/material";
 import { CheckCircle, Eye } from "lucide-react";
@@ -9,9 +10,11 @@ import type { SalePayload, SaleProductItem, SaleServiceItem } from "@/modules/sa
 import PrescriptionPreview from "@/modules/sales/components/salesForm/PrescriptionPreview";
 import dayjs from "dayjs";
 
+
 export default function ReviewStep() {
     const { watch } = useFormContext<SalePayload>();
     const [showRx, setShowRx] = useState(false);
+    const [discount] = useState(0); // desconto vive localmente, alinhado com SaleSummary
 
     const clientId = watch("clientId");
     const saleDate = watch("saleDate");
@@ -19,9 +22,17 @@ export default function ReviewStep() {
     const productItems = watch("productItems") || [];
     const serviceItems = watch("serviceItems") || [];
     const protocol = watch("protocol");
-    const subtotal = watch("subtotal") || 0;
-    const discount = watch("discount") || 0;
-    const total = watch("total") || 0;
+
+    // Cálculo local — subtotal/total não existem mais no SalePayload
+    const subtotal =
+        productItems.reduce((acc, item: SaleProductItem) => {
+            return acc + (item.product?.salePrice ?? 0) * (item.quantity ?? 1);
+        }, 0) +
+        serviceItems.reduce((acc, item: SaleServiceItem) => {
+            return acc + (item.service?.price ?? 0);
+        }, 0);
+
+    const total = Math.max(0, subtotal - discount);
 
     const { data: clientResponse } = useGetClientById(clientId ?? undefined);
     const client = clientResponse?.data ?? null;
@@ -160,12 +171,14 @@ export default function ReviewStep() {
                                 {subtotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                             </Typography>
                         </Box>
-                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                            <Typography variant="subtitle2" color="text.secondary">Desconto</Typography>
-                            <Typography variant="body1" color="error.main">
-                                -{(discount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                            </Typography>
-                        </Box>
+                        {discount > 0 && (
+                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                                <Typography variant="subtitle2" color="text.secondary">Desconto</Typography>
+                                <Typography variant="body1" color="error.main">
+                                    -{discount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                </Typography>
+                            </Box>
+                        )}
                         <Box sx={{ display: "flex", justifyContent: "space-between", pt: 1, borderTop: 1, borderColor: "divider" }}>
                             <Typography variant="h6">Total</Typography>
                             <Typography variant="h6" color="primary.main">

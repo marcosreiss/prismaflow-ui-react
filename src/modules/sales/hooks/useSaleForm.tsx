@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
+// src/modules/sales/hooks/useSaleForm.tsx
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import type { DeepPartial } from "react-hook-form";
 import type { Product } from "@/modules/products/types/productTypes";
 import type {
@@ -9,18 +10,17 @@ import type {
     SaleServiceItem,
 } from "@/modules/sales/types/salesTypes";
 
+
 const defaultValues: DeepPartial<SalePayload> = {
     clientId: 0,
     saleDate: new Date().toISOString().split('T')[0],
     prescriptionId: null,
     productItems: [],
     serviceItems: [],
-    discount: 0,
     notes: "",
-    subtotal: 0,
-    total: 0,
     protocol: null,
 };
+
 
 const createDefaultProtocol = (): Protocol => ({
     book: "",
@@ -28,44 +28,18 @@ const createDefaultProtocol = (): Protocol => ({
     os: "",
 });
 
+
 export const useSaleForm = () => {
     const methods = useForm<SalePayload>({
         defaultValues: defaultValues as SalePayload,
     });
 
-    const { control, setValue, reset, getValues } = methods;
+    const { setValue, reset, getValues, watch } = methods;
     const [activeStep, setActiveStep] = useState(0);
-
-    // ✅ valores observados
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const productItems = useWatch({ control, name: "productItems" }) ?? [];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const serviceItems = useWatch({ control, name: "serviceItems" }) ?? [];
-    const discount = useWatch({ control, name: "discount" }) ?? 0;
-
-    // ✅ cálculo automático — simples e sem warnings
-    useEffect(() => {
-        const productSubtotal = productItems.reduce((acc, item: SaleProductItem) => {
-            const price = item.product?.salePrice ?? 0;
-            const quantity = item.quantity ?? 0;
-            return acc + price * quantity;
-        }, 0);
-
-        const serviceSubtotal = serviceItems.reduce((acc, item: SaleServiceItem) => {
-            const price = item.service?.price ?? 0;
-            return acc + price;
-        }, 0);
-
-        const subtotal = productSubtotal + serviceSubtotal;
-        const total = Math.max(0, subtotal - discount);
-
-        setValue("subtotal", subtotal, { shouldDirty: false });
-        setValue("total", total, { shouldDirty: false });
-    }, [productItems, serviceItems, discount, setValue]);
 
     // 🔹 adicionar produto
     const handleAddProduct = (product: Product & { quantity?: number }) => {
-        const currentItems = [...productItems];
+        const currentItems = [...(getValues("productItems") ?? [])];
         const quantity = product.quantity ?? 1;
 
         const frameDetails =
@@ -94,7 +68,7 @@ export const useSaleForm = () => {
 
     // 🔹 remover produto
     const handleRemoveProduct = (index: number) => {
-        const currentItems = [...productItems];
+        const currentItems = [...(getValues("productItems") ?? [])];
         currentItems.splice(index, 1);
         setValue("productItems", currentItems, { shouldValidate: true });
 
@@ -114,6 +88,25 @@ export const useSaleForm = () => {
         setActiveStep(0);
     };
 
+    // 🔹 helper para calcular subtotal/total/discount fora do form state
+    const computeFinancials = (discountOverride?: number) => {
+        const productItems = getValues("productItems") ?? [];
+        const serviceItems = getValues("serviceItems") ?? [];
+
+        const subtotal =
+            productItems.reduce((acc, item: SaleProductItem) => {
+                return acc + (item.product?.salePrice ?? 0) * (item.quantity ?? 1);
+            }, 0) +
+            serviceItems.reduce((acc, item: SaleServiceItem) => {
+                return acc + (item.service?.price ?? 0);
+            }, 0);
+
+        const discount = discountOverride ?? 0;
+        const total = Math.max(0, subtotal - discount);
+
+        return { subtotal, discount, total };
+    };
+
     return {
         methods,
         activeStep,
@@ -123,5 +116,7 @@ export const useSaleForm = () => {
         handleNext,
         handleBack,
         resetForm,
+        computeFinancials,
+        watch,
     };
 };
