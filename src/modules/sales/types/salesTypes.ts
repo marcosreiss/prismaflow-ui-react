@@ -97,6 +97,7 @@ export type SalePayload = {
   serviceItems?: SaleServiceItem[];
   notes?: string;
   protocol?: Protocol | null;
+  discount?: number;
 };
 
 export type FrameMaterialType =
