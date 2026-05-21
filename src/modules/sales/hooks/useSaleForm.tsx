@@ -17,6 +17,7 @@ const defaultValues: DeepPartial<SalePayload> = {
     prescriptionId: null,
     productItems: [],
     serviceItems: [],
+    discount: 0,
     notes: "",
     protocol: null,
 };
@@ -88,7 +89,7 @@ export const useSaleForm = () => {
         setActiveStep(0);
     };
 
-    // 🔹 helper para calcular subtotal/total/discount fora do form state
+    // 🔹 helper para calcular subtotal/total a partir do form state
     const computeFinancials = (discountOverride?: number) => {
         const productItems = getValues("productItems") ?? [];
         const serviceItems = getValues("serviceItems") ?? [];
@@ -101,7 +102,7 @@ export const useSaleForm = () => {
                 return acc + (item.service?.price ?? 0);
             }, 0);
 
-        const discount = discountOverride ?? 0;
+        const discount = discountOverride ?? getValues("discount") ?? 0;
         const total = Math.max(0, subtotal - discount);
 
         return { subtotal, discount, total };

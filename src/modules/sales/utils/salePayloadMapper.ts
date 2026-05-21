@@ -58,6 +58,7 @@ export function buildSalePayload(data: SalePayload): SalePayload {
     prescriptionId: data.prescriptionId ?? null,
     productItems,
     serviceItems,
+    discount: data.discount ?? 0,
     notes: normalizeString(data.notes),
     protocol,
   };

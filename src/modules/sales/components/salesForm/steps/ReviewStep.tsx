@@ -14,7 +14,6 @@ import dayjs from "dayjs";
 export default function ReviewStep() {
     const { watch } = useFormContext<SalePayload>();
     const [showRx, setShowRx] = useState(false);
-    const [discount] = useState(0); // desconto vive localmente, alinhado com SaleSummary
 
     const clientId = watch("clientId");
     const saleDate = watch("saleDate");
@@ -22,6 +21,7 @@ export default function ReviewStep() {
     const productItems = watch("productItems") || [];
     const serviceItems = watch("serviceItems") || [];
     const protocol = watch("protocol");
+    const discount = watch("discount") ?? 0;
 
     // Cálculo local — subtotal/total não existem mais no SalePayload
     const subtotal =

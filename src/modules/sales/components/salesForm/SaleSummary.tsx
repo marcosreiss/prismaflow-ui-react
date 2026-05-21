@@ -11,16 +11,13 @@ import type { SalePayload } from "@/modules/sales/types/salesTypes";
 import PrescriptionPreview from "./PrescriptionPreview";
 
 export default function SaleSummary() {
-    const { watch } = useFormContext<SalePayload>();
+    const { watch, setValue } = useFormContext<SalePayload>();
     const [showRx, setShowRx] = useState(false);
 
     const productItems = watch("productItems") ?? [];
     const serviceItems = watch("serviceItems") ?? [];
     const prescriptionId = watch("prescriptionId");
-
-    // Desconto é o único campo financeiro que ainda vive no form
-    // (usado apenas localmente para exibição — não é enviado à API)
-    const [discount, setDiscount] = useState(0);
+    const discount = watch("discount") ?? 0;
 
     const subtotal =
         productItems.reduce((acc, item) => acc + (item.product?.salePrice ?? 0) * (item.quantity ?? 1), 0) +
@@ -55,7 +52,7 @@ export default function SaleSummary() {
                         size="small"
                         label=""
                         value={discount}
-                        onChange={(val) => setDiscount(val ?? 0)}
+                        onChange={(val) => setValue("discount", val ?? 0, { shouldDirty: true, shouldValidate: true })}
                         sx={{ width: 120 }}
                         inputProps={{ min: 0, max: subtotal }}
                     />
