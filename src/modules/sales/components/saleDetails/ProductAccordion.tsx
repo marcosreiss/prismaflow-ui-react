@@ -116,7 +116,12 @@ function ProductAccordion({ products, expanded, onChange }: ProductAccordionProp
                                                             Categoria:
                                                         </Typography>
                                                         <Chip
-                                                            label={item.product.category}
+                                                            label={
+                                                                item.product.category === "LENS" ? "Lentes" :
+                                                                    item.product.category === "FRAME" ? "Armação" :
+                                                                        item.product.category === "ACCESSORY" ? "Acessório" :
+                                                                            item.product.category
+                                                            }
                                                             size="small"
                                                             variant="outlined"
                                                             color="secondary"

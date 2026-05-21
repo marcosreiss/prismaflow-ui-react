@@ -127,9 +127,36 @@ function ProtocolAccordion({ protocol, prescription, expanded, onChange }: Proto
                                             Informações do Protocolo
                                         </Typography>
                                         <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mt: 2 }}>
-                                            {protocol.book && <Box><Typography variant="caption" color="text.secondary">Livro</Typography><Typography>{protocol.book}</Typography></Box>}
-                                            {protocol.page && <Box><Typography variant="caption" color="text.secondary">Página</Typography><Typography>{protocol.page}</Typography></Box>}
-                                            {protocol.os && <Box><Typography variant="caption" color="text.secondary">Ordem de Serviço</Typography><Typography>{protocol.os}</Typography></Box>}
+                                            {protocol.book &&
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Livro
+                                                    </Typography>
+                                                    <Typography>
+                                                        {protocol.book}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                            {protocol.page &&
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Página
+                                                    </Typography>
+                                                    <Typography>
+                                                        {protocol.page}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                            {protocol.os &&
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Ordem de Serviço
+                                                    </Typography>
+                                                    <Typography>
+                                                        {protocol.os}
+                                                    </Typography>
+                                                </Box>
+                                            }
                                         </Box>
                                     </CardContent>
                                 </Card>

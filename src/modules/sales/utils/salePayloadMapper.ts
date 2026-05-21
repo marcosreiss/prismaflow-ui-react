@@ -6,6 +6,17 @@ import type { SalePayload, Protocol } from "../types/salesTypes";
 const normalizeString = (value?: string | null): string | undefined =>
   value?.trim().length ? value.trim() : undefined;
 
+const normalizeNumber = (value?: number | string | null): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
 export function buildSalePayload(data: SalePayload): SalePayload {
   // --- Produtos
   const productItems = (data.productItems ?? [])
@@ -38,16 +49,17 @@ export function buildSalePayload(data: SalePayload): SalePayload {
 
   // --- Protocolo (só inclui se tiver ao menos um campo preenchido)
   const p = data.protocol;
+  const normalizedPage = normalizeNumber(p?.page);
   const hasProtocol =
     p &&
     (normalizeString(p.book) ||
-      typeof p.page === "number" ||
+      normalizedPage !== null ||
       normalizeString(p.os));
 
   const protocol: Protocol | null = hasProtocol
     ? {
         book: normalizeString(p?.book) ?? null,
-        page: typeof p?.page === "number" ? p.page : null,
+        page: normalizedPage,
         os: normalizeString(p?.os) ?? null,
       }
     : null;

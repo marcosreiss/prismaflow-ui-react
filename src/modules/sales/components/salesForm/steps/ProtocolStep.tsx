@@ -62,6 +62,11 @@ export default function ProtocolStep() {
                                 label="Página"
                                 placeholder="Ex: 20"
                                 inputProps={{ min: 0 }}
+                                value={field.value ?? ""}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    field.onChange(value === "" ? null : Number(value));
+                                }}
                             />
                         )}
                     />
