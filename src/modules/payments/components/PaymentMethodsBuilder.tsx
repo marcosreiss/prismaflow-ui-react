@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { Plus, Trash2 } from "lucide-react";
 import { useFieldArray, useFormContext, useWatch, Controller } from "react-hook-form";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import CurrencyInput from "@/components/imask/CurrencyInput";
 import { PaymentMethodLabels } from "../types/paymentEnums";
 import type { PaymentMethod } from "../types/paymentEnums";
@@ -49,9 +49,16 @@ export default function PaymentMethodsBuilder() {
         () => watchedMethods?.reduce((acc, m) => acc + (Number(m.amount) || 0), 0) ?? 0,
         [watchedMethods]
     );
+    const previousPayableTotalRef = useRef<number | null>(null);
 
     useEffect(() => {
+        const previousPayableTotal = previousPayableTotalRef.current;
+        previousPayableTotalRef.current = payableTotal;
+
         if (fields.length !== 1) return;
+        if (previousPayableTotal !== null && Math.abs(previousPayableTotal - payableTotal) <= 0.01) {
+            return;
+        }
 
         const currentAmount = Number(watchedMethods?.[0]?.amount) || 0;
         if (Math.abs(currentAmount - payableTotal) <= 0.01) return;
