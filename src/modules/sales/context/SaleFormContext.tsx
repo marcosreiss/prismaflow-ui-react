@@ -16,6 +16,8 @@ import { buildSalePayload } from "../utils/salePayloadMapper";
 import { mapSaleApiToFormData } from "../utils/mapSaleApiToFormData";
 import type { ClientSelectItem } from "@/modules/clients/types/clientTypes";
 import type { Prescription } from "@/modules/clients/types/prescriptionTypes";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { AxiosError } from "axios";
 
 // tipo local para opção de receita
 export type PrescriptionOption = Prescription & { label: string };
@@ -167,6 +169,7 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
 
             try {
                 if (isEditMode && existingSale?.id) {
+                    console.log("Payload para atualização:", payload);
                     await updateSale.mutateAsync({ ...payload, id: existingSale.id });
                     addNotification("Venda atualizada com sucesso!", "success");
                 } else {
@@ -176,9 +179,10 @@ export const SaleFormProvider = ({ mode, existingSale, children }: ProviderProps
 
                 methods.reset();
                 window.location.href = "/sales";
-            } catch (error) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } catch (error: AxiosError | any) {
                 console.log(error);
-                addNotification("Erro ao salvar venda. Tente novamente.", "error");
+                addNotification(error.response.data.message || "Erro ao salvar venda. Tente novamente.", "error");
             }
         },
         [isEditMode, existingSale, addNotification, validateStock, createSale, updateSale, methods]

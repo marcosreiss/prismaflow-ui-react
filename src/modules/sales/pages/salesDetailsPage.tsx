@@ -26,6 +26,7 @@ import ServiceAccordion from "@/modules/sales/components/saleDetails/ServiceAcco
 import ProtocolAccordion from "@/modules/sales/components/saleDetails/ProtocolAccordion";
 import { useGetSaleById } from "../hooks/useSales";
 import formatDate from "@/utils/format-date";
+import formatDateBR from "@/utils/format-date";
 
 interface InfoCardProps {
     title: string;
@@ -100,7 +101,6 @@ export default function SalesDetailsPage() {
 
     // No SalesDetailsPage.tsx, antes do return principal
     console.log('Dados da venda:', sale);
-    console.log('Protocolo:', sale?.protocol);
 
     return (
         <Box>
@@ -206,7 +206,7 @@ export default function SalesDetailsPage() {
                                         ID da Venda
                                     </Typography>
                                     <Typography variant="body1" fontWeight="medium">
-                                        #{sale.id}
+                                        {sale.id}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -214,7 +214,7 @@ export default function SalesDetailsPage() {
                                         Data de Criação
                                     </Typography>
                                     <Typography variant="body1">
-                                        {sale.createdAt ? new Date(sale.createdAt).toLocaleString('pt-BR') : "-"}
+                                        {sale.createdAt ? formatDateBR(sale.createdAt) : "-"}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -222,7 +222,7 @@ export default function SalesDetailsPage() {
                                         Última Atualização
                                     </Typography>
                                     <Typography variant="body1">
-                                        {sale.updatedAt ? new Date(sale.updatedAt).toLocaleString('pt-BR') : "-"}
+                                        {sale.updatedAt ? formatDateBR(sale.updatedAt) : "-"}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -230,7 +230,10 @@ export default function SalesDetailsPage() {
                                         Status de Pagamento
                                     </Typography>
                                     <Typography variant="body1">
-                                        {sale.payment?.status || "Não informado"}
+                                        {sale.payment?.status === "CONFIRMED" ?
+                                            "Confirmado" : sale.payment?.status === "PENDING" ?
+                                                "Pendente" : sale.payment?.status === "CANCELED" ? "Cancelado" :
+                                                    "Não informado"}
                                     </Typography>
                                 </Box>
                             </Box>
