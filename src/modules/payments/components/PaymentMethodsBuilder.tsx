@@ -15,17 +15,34 @@ import { useEffect, useMemo, useRef } from "react";
 import CurrencyInput from "@/components/imask/CurrencyInput";
 import { PaymentMethodLabels } from "../types/paymentEnums";
 import type { PaymentMethod } from "../types/paymentEnums";
-import type { PaymentFormValues } from "../types/paymentFormTypes";
+import type { PaymentFormValues, PaymentMethodFormItem } from "../types/paymentFormTypes";
 
 const MAX_PAYMENT_METHODS = 2;
+const TODAY = new Date().toISOString().split("T")[0];
 
 const INSTALLMENT_METHODS: PaymentMethod[] = ["INSTALLMENT"];
 const isInstallmentMethod = (method: PaymentMethod) => INSTALLMENT_METHODS.includes(method);
 
+const buildMethodDraft = (
+    method: PaymentMethod,
+    amount: number
+): PaymentMethodFormItem => ({
+    _key: crypto.randomUUID(),
+    method,
+    amount,
+    ...(isInstallmentMethod(method)
+        ? {
+            installments: 1,
+            firstDueDate: TODAY,
+        }
+        : {
+            paidAt: TODAY,
+        }),
+});
+
 export default function PaymentMethodsBuilder() {
     const {
         control,
-        register,
         setValue,
         formState: { errors },
     } = useFormContext<PaymentFormValues>();
@@ -82,11 +99,14 @@ export default function PaymentMethodsBuilder() {
 
         if (!availableMethod) return;
 
-        append({
-            _key: crypto.randomUUID(),
-            method: availableMethod,
-            amount: fields.length === 0 ? Number(payableTotal.toFixed(2)) : Math.max(0, Number(difference.toFixed(2))),
-        });
+        append(
+            buildMethodDraft(
+                availableMethod,
+                fields.length === 0
+                    ? Number(payableTotal.toFixed(2))
+                    : Math.max(0, Number(difference.toFixed(2)))
+            )
+        );
     };
 
     return (
@@ -208,31 +228,82 @@ export default function PaymentMethodsBuilder() {
 
                             <Stack spacing={2}>
                                 {/* Tipo do método */}
-                                <TextField
-                                    {...register(`methods.${index}.method`)}
-                                    select
-                                    label="Tipo"
-                                    fullWidth
-                                    size="small"
-                                    error={!!fieldError?.method}
-                                    helperText={fieldError?.method?.message}
-                                    value={watchedMethods?.[index]?.method ?? ""}
-                                >
-                                    {(Object.entries(PaymentMethodLabels) as [PaymentMethod, string][]).map(
-                                        ([key, label]) => (
-                                            <MenuItem
-                                                key={key}
-                                                value={key}
-                                                disabled={
-                                                    usedTypes.has(key) &&
-                                                    watchedMethods?.[index]?.method !== key
+                                <Controller
+                                    name={`methods.${index}.method`}
+                                    control={control}
+                                    render={({ field }) => (
+                                        <TextField
+                                            {...field}
+                                            select
+                                            label="Tipo"
+                                            fullWidth
+                                            size="small"
+                                            error={!!fieldError?.method}
+                                            helperText={fieldError?.method?.message}
+                                            value={field.value ?? ""}
+                                            onChange={(event) => {
+                                                const nextMethod = event.target.value as PaymentMethod;
+                                                field.onChange(nextMethod);
+
+                                                if (isInstallmentMethod(nextMethod)) {
+                                                    setValue(`methods.${index}.paidAt`, undefined, {
+                                                        shouldDirty: true,
+                                                        shouldValidate: true,
+                                                    });
+                                                    setValue(
+                                                        `methods.${index}.installments`,
+                                                        Number(watchedMethods?.[index]?.installments) || 1,
+                                                        {
+                                                            shouldDirty: true,
+                                                            shouldValidate: true,
+                                                        }
+                                                    );
+                                                    setValue(
+                                                        `methods.${index}.firstDueDate`,
+                                                        watchedMethods?.[index]?.firstDueDate || TODAY,
+                                                        {
+                                                            shouldDirty: true,
+                                                            shouldValidate: true,
+                                                        }
+                                                    );
+                                                    return;
                                                 }
-                                            >
-                                                {label}
-                                            </MenuItem>
-                                        )
+
+                                                setValue(`methods.${index}.installments`, undefined, {
+                                                    shouldDirty: true,
+                                                    shouldValidate: true,
+                                                });
+                                                setValue(`methods.${index}.firstDueDate`, undefined, {
+                                                    shouldDirty: true,
+                                                    shouldValidate: true,
+                                                });
+                                                setValue(
+                                                    `methods.${index}.paidAt`,
+                                                    watchedMethods?.[index]?.paidAt || TODAY,
+                                                    {
+                                                        shouldDirty: true,
+                                                        shouldValidate: true,
+                                                    }
+                                                );
+                                            }}
+                                        >
+                                            {(Object.entries(PaymentMethodLabels) as [PaymentMethod, string][]).map(
+                                                ([key, label]) => (
+                                                    <MenuItem
+                                                        key={key}
+                                                        value={key}
+                                                        disabled={
+                                                            usedTypes.has(key) &&
+                                                            watchedMethods?.[index]?.method !== key
+                                                        }
+                                                    >
+                                                        {label}
+                                                    </MenuItem>
+                                                )
+                                            )}
+                                        </TextField>
                                     )}
-                                </TextField>
+                                />
 
                                 {/* Valor do método */}
                                 <Controller
@@ -253,41 +324,54 @@ export default function PaymentMethodsBuilder() {
 
                                 {/* Data do pagamento — obrigatória para métodos à vista */}
                                 {!isInstallment && (
-                                    <TextField
-                                        {...register(`methods.${index}.paidAt`, {
-                                            required: "Informe a data do pagamento",
-                                        })}
-                                        type="date"
-                                        label="Data do pagamento"
-                                        fullWidth
-                                        size="small"
-                                        InputLabelProps={{ shrink: true }}
-                                        error={!!fieldError?.paidAt}
-                                        helperText={
-                                            fieldError?.paidAt?.message ??
-                                            "Data em que o cliente realizou o pagamento"
-                                        }
-                                        defaultValue={new Date().toISOString().split("T")[0]}
+                                    <Controller
+                                        name={`methods.${index}.paidAt`}
+                                        control={control}
+                                        rules={{ required: "Informe a data do pagamento" }}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                type="date"
+                                                label="Data do pagamento"
+                                                fullWidth
+                                                size="small"
+                                                InputLabelProps={{ shrink: true }}
+                                                error={!!fieldError?.paidAt}
+                                                helperText={
+                                                    fieldError?.paidAt?.message ??
+                                                    "Data em que o cliente realizou o pagamento"
+                                                }
+                                                value={field.value ?? TODAY}
+                                            />
+                                        )}
                                     />
                                 )}
 
                                 {/* Campos exclusivos de carnê */}
                                 {isInstallment && (
                                     <>
-                                        <TextField
-                                            {...register(`methods.${index}.installments`, {
-                                                valueAsNumber: true,
-                                            })}
-                                            type="number"
-                                            label="Número de parcelas"
-                                            fullWidth
-                                            size="small"
-                                            inputProps={{ min: 1, max: 99, step: 1 }}
-                                            error={!!fieldError?.installments}
-                                            helperText={
-                                                fieldError?.installments?.message ??
-                                                "Parcelas geradas automaticamente pelo sistema"
-                                            }
+                                        <Controller
+                                            name={`methods.${index}.installments`}
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    {...field}
+                                                    type="number"
+                                                    label="Número de parcelas"
+                                                    fullWidth
+                                                    size="small"
+                                                    inputProps={{ min: 1, max: 99, step: 1 }}
+                                                    error={!!fieldError?.installments}
+                                                    helperText={
+                                                        fieldError?.installments?.message ??
+                                                        "Parcelas geradas automaticamente pelo sistema"
+                                                    }
+                                                    value={field.value ?? 1}
+                                                    onChange={(event) =>
+                                                        field.onChange(Number(event.target.value) || 1)
+                                                    }
+                                                />
+                                            )}
                                         />
 
                                         {installments > 0 && (
@@ -299,17 +383,23 @@ export default function PaymentMethodsBuilder() {
                                             </Typography>
                                         )}
 
-                                        <TextField
-                                            {...register(`methods.${index}.firstDueDate`, {
-                                                required: "Informe a primeira data de vencimento",
-                                            })}
-                                            type="date"
-                                            label="Primeira data de vencimento"
-                                            fullWidth
-                                            size="small"
-                                            InputLabelProps={{ shrink: true }}
-                                            error={!!fieldError?.firstDueDate}
-                                            helperText={fieldError?.firstDueDate?.message}
+                                        <Controller
+                                            name={`methods.${index}.firstDueDate`}
+                                            control={control}
+                                            rules={{ required: "Informe a primeira data de vencimento" }}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    {...field}
+                                                    type="date"
+                                                    label="Primeira data de vencimento"
+                                                    fullWidth
+                                                    size="small"
+                                                    InputLabelProps={{ shrink: true }}
+                                                    error={!!fieldError?.firstDueDate}
+                                                    helperText={fieldError?.firstDueDate?.message}
+                                                    value={field.value ?? TODAY}
+                                                />
+                                            )}
                                         />
                                     </>
                                 )}

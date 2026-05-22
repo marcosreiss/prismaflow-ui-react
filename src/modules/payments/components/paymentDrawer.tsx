@@ -51,10 +51,19 @@ export default function PaymentDrawer({
     onUpdated,
     onBackToView,
 }: PaymentDrawerProps) {
+    const [currentPayment, setCurrentPayment] = useState<PaymentDetails | null>(
+        payment ?? null
+    );
+
+    const handleUpdatedPayment = (updatedPayment: Payment) => {
+        setCurrentPayment(updatedPayment as PaymentDetails);
+        onUpdated(updatedPayment);
+    };
+
     const controller = usePaymentDrawerController({
         mode,
         payment,
-        onUpdated,
+        onUpdated: handleUpdatedPayment,
         onEdit,
         onUpdateStatus,
         onPayInstallment,
@@ -71,11 +80,6 @@ export default function PaymentDrawer({
 
     const isEdit = mode === "edit";
     const isView = mode === "view";
-
-    // Estado local para refletir atualizações de status sem aguardar refetch
-    const [currentPayment, setCurrentPayment] = useState<PaymentDetails | null>(
-        payment ?? null
-    );
 
     useEffect(() => {
         setCurrentPayment(payment ?? null);
