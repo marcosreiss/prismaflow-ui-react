@@ -33,7 +33,7 @@ interface PaymentDrawerProps {
     onEdit: () => void;
     onBackToView: () => void;
     onUpdateStatus: (paymentId: number, status: PaymentStatus, reason?: string) => void;
-    onPayInstallment: (installmentId: number, paidAmount: number, paidAt?: string) => void;
+    onPayInstallment: (installmentId: number, paidAmount: number, paidAt?: string) => Promise<void>;
     onUpdated: (payment: Payment) => void;
 }
 

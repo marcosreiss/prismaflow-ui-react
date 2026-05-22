@@ -33,7 +33,7 @@ interface UsePaymentDrawerControllerProps {
     installmentId: number,
     paidAmount: number,
     paidAt?: string,
-  ) => void;
+  ) => Promise<void>;
 }
 
 // ==============================
@@ -113,7 +113,10 @@ export function usePaymentDrawerController({
       }
 
       if (values.discount > values.total) {
-        addNotification("Desconto não pode ser maior que o valor total.", "error");
+        addNotification(
+          "Desconto não pode ser maior que o valor total.",
+          "error",
+        );
         return;
       }
 
@@ -217,12 +220,12 @@ export function usePaymentDrawerController({
   };
 
   // Apenas repassa para o callback da página — a mutation vive no page controller
-  const handlePayInstallment = (
+  const handlePayInstallment = async (
     installmentId: number,
     paidAmount: number,
     paidAt?: string,
   ) => {
-    onPayInstallment(installmentId, paidAmount, paidAt);
+    await onPayInstallment(installmentId, paidAmount, paidAt);
   };
 
   // ==========================

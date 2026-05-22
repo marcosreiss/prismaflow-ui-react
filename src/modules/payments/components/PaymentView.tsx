@@ -29,7 +29,7 @@ import formatDateBR from "@/utils/format-date";
 interface PaymentViewProps {
     paymentId: number | undefined;
     initialPayment?: PaymentDetails | null;
-    onPayInstallment?: (installmentId: number, paidAmount: number, paidAt?: string) => void;
+    onPayInstallment?: (installmentId: number, paidAmount: number, paidAt?: string) => Promise<void>;
     onEditInstallment?: (
         installmentId: number,
         data: { sequence?: number; amount?: number; dueDate?: string }

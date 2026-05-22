@@ -257,12 +257,13 @@ export function usePaymentPageController() {
           data: { paidAmount, paidAt },
         });
         addNotification(res.message, "success");
-        refetch();
+        await refetch();
       } catch (err) {
         const axiosErr = err as AxiosError<ApiResponse<null>>;
         const message =
           axiosErr.response?.data?.message ?? "Erro ao pagar parcela.";
         addNotification(message, "error");
+        throw err;
       }
     },
     [payInstallment, addNotification, refetch],
